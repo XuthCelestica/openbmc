@@ -29,6 +29,9 @@
 #include "i2c_dev_sysfs.h"
 
 #define DEBUG
+#define SYSCPLD_ALARM_NODE 0xff /*just for flag using*/
+#define SYSFS_READ 0
+#define SYSFS_WRITE 1
 
 #ifdef DEBUG
 #define SYSCPLD_DEBUG(fmt, ...) do {                   \
@@ -46,11 +49,104 @@ enum chips {
 	SYSCPLD = 1,
 };
 
+struct temp_data_t {
+	int max;
+	int max_hyst;
+};
+
+struct temp_data {
+	struct temp_data_t temp1;
+};
+
+struct temp_data switch_temp_data;
 
 static const struct i2c_device_id syscpld_id[] = {
 	{"syscpld", SYSCPLD },
 	{ }
 };
+
+static int temp_value_rw(const char *name, int opcode, int value)
+{
+	int *p = NULL;
+
+	if(strcmp(name, "temp1_max") == 0) {
+		p = &switch_temp_data.temp1.max;
+	} else if(strcmp(name, "temp1_max_hyst") == 0) {
+		p = &switch_temp_data.temp1.max_hyst;
+	} else {
+		return -1;
+	}
+
+	if(opcode == SYSFS_READ)
+		return *p;
+	else if(opcode == SYSFS_WRITE)
+		*p = value;
+	else
+		return -1;
+
+	return 0;
+}
+
+static ssize_t switch_temp_show(struct device *dev,
+        struct device_attribute *attr, char *buf)
+{
+	int freq = i2c_dev_read_word_bigendian(dev,attr);
+	if(freq < 0)
+		SYSCPLD_DEBUG("Read Swich chip temperature error!\n");
+
+	int temp_val = 434100 - (12500000 / freq - 1) * 535;
+
+	return scnprintf(buf, PAGE_SIZE, "%d\n", temp_val);
+}
+
+static ssize_t sys_alarm_show(struct device *dev,
+                                    struct device_attribute *attr,
+                                    char *buf)
+{
+	int value = -1;
+	struct i2c_client *client = to_i2c_client(dev);
+	i2c_dev_data_st *data = i2c_get_clientdata(client);
+	i2c_sysfs_attr_st *i2c_attr = TO_I2C_SYSFS_ATTR(attr);
+	const i2c_dev_attr_st *dev_attr = i2c_attr->isa_i2c_attr;
+	const char *name = dev_attr->ida_name;
+
+	if(!name)
+		return -1;
+
+	value = temp_value_rw(name, SYSFS_READ, 0);
+
+	return scnprintf(buf, PAGE_SIZE, "%d\n", value);
+}
+
+static ssize_t sys_alarm_store(struct device *dev,
+        											 struct device_attribute *attr,
+														   const char *buf, size_t count)
+{
+	int rc;
+	int write_value = 0;
+	struct i2c_client *client = to_i2c_client(dev);
+	i2c_dev_data_st *data = i2c_get_clientdata(client);
+	i2c_sysfs_attr_st *i2c_attr = TO_I2C_SYSFS_ATTR(attr);
+	const i2c_dev_attr_st *dev_attr = i2c_attr->isa_i2c_attr;
+	const char *name = dev_attr->ida_name;
+
+	if(!name)
+		return -1;
+
+	if (buf == NULL) {
+		return -ENXIO;
+	}
+
+	rc = kstrtol(buf, 10, &write_value);
+	if (rc != 0)	{
+		return count;
+	}
+	rc = temp_value_rw(name, SYSFS_WRITE, write_value * 1000);
+	if(rc < 0)
+		return -1;
+
+	return count;
+}
 
 static i2c_dev_data_st syscpld_data;
 static const i2c_dev_attr_st syscpld_attr_table[] = {
@@ -494,6 +590,27 @@ static const i2c_dev_attr_st syscpld_attr_table[] = {
 	  I2C_DEV_ATTR_SHOW_DEFAULT,
 	  I2C_DEV_ATTR_STORE_DEFAULT,
 	  0x75, 0, 1,
+	},
+	{
+	  "temp1_input",
+	  "Switch chip Temperature",
+	  switch_temp_show,
+	  I2C_DEV_ATTR_STORE_DEFAULT,
+	  0x7A, 0, 8,
+	},
+	{
+	  "temp1_max",
+	  "Switch chip Temperature",
+	  sys_alarm_show,
+	  sys_alarm_store,
+	  SYSCPLD_ALARM_NODE, 0, 8,
+	},
+	{
+	  "temp1_max_hyst",
+	  "Switch chip Temperature",
+	  sys_alarm_show,
+	  sys_alarm_store,
+	  SYSCPLD_ALARM_NODE, 0, 8,
 	},
 };
 
