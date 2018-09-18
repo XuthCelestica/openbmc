@@ -240,3 +240,55 @@ BCM5387_reset() {
 	sleep 1
 	echo 1 > $SYSLED_BCM5387_RST_SYSFS
 }
+
+sys_temp_usage(){
+	echo "option: "
+	echo "<cpu| switch> #Chip selection"
+	echo "<input| max| max_hyst> #Chip temperaure params"
+	echo "<#value> #Chip value"
+	echo 
+}
+
+sys_temp_show() {
+	cat $SYSCPLD_SYSFS_DIR/temp1_input
+	cat $SYSCPLD_SYSFS_DIR/temp1_max
+	cat $SYSCPLD_SYSFS_DIR/temp1_max_hyst
+	cat $SYSCPLD_SYSFS_DIR/temp2_input
+	cat $SYSCPLD_SYSFS_DIR/temp2_max
+	cat $SYSCPLD_SYSFS_DIR/temp2_max_hyst
+}
+
+sys_temp() {
+	if [ $# -eq 0 ]; then
+		sys_temp_show
+		return 0
+	fi
+
+	if [ $# -lt 3 ]; then
+		sys_temp_usage
+		return 1
+	fi
+
+	if [ "$1" == "switch" ]; then
+		file_prefix="temp1_"
+	elif [ "$1" == "cpu" ]; then
+		file_prefix="temp2_"
+	else
+		sys_temp_usage
+		return 1
+	fi
+
+	if [ "$2" == "input" ]; then
+		file_suffix="input"
+	elif [ "$2" == "max" ]; then
+		file_suffix="max"
+	elif [ "$2" == "max_hyst" ]; then
+		file_suffix="max_hyst"
+	else
+		sys_temp_usage
+		return 1
+	fi
+
+	echo $3 > $SYSCPLD_SYSFS_DIR/$file_prefix$file_suffix
+	return 0
+}

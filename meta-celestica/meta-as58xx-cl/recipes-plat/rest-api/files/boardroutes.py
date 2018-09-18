@@ -30,5 +30,6 @@ board_routes = [
     '/api/sys/fruid/fan',
     '/api/sys/fruid/sys',
     '/api/sys/eth',
-    '/api/sys/raw'
+    '/api/sys/raw',
+    '/api/sys/temp',
 ]

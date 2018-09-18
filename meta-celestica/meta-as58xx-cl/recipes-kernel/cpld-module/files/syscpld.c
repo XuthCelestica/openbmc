@@ -50,6 +50,7 @@ enum chips {
 };
 
 struct temp_data_t {
+	int input;
 	int max;
 	int max_hyst;
 };
@@ -59,6 +60,7 @@ struct temp_data {
 };
 
 struct temp_data switch_temp_data;
+struct temp_data cpu_temp_data;
 
 static const struct i2c_device_id syscpld_id[] = {
 	{"syscpld", SYSCPLD },
@@ -73,6 +75,12 @@ static int temp_value_rw(const char *name, int opcode, int value)
 		p = &switch_temp_data.temp1.max;
 	} else if(strcmp(name, "temp1_max_hyst") == 0) {
 		p = &switch_temp_data.temp1.max_hyst;
+	} else if(strcmp(name, "temp2_input") == 0) {
+		p = &cpu_temp_data.temp1.input;
+	} else if(strcmp(name, "temp2_max") == 0) {
+		p = &cpu_temp_data.temp1.max;
+	}else if(strcmp(name, "temp2_max_hyst") == 0) {
+		p = &cpu_temp_data.temp1.max_hyst;
 	} else {
 		return -1;
 	}
@@ -608,6 +616,26 @@ static const i2c_dev_attr_st syscpld_attr_table[] = {
 	{
 	  "temp1_max_hyst",
 	  "Switch chip Temperature",
+	  sys_alarm_show,
+	  sys_alarm_store,
+	  SYSCPLD_ALARM_NODE, 0, 8,
+	},{
+	  "temp2_input",
+	  "CPU chip Temperature",
+	  sys_alarm_show,
+	  sys_alarm_store,
+	  0x7A, 0, 8,
+	},
+	{
+	  "temp2_max",
+	  "CPU chip Temperature",
+	  sys_alarm_show,
+	  sys_alarm_store,
+	  SYSCPLD_ALARM_NODE, 0, 8,
+	},
+	{
+	  "temp2_max_hyst",
+	  "CPU chip Temperature",
 	  sys_alarm_show,
 	  sys_alarm_store,
 	  SYSCPLD_ALARM_NODE, 0, 8,
