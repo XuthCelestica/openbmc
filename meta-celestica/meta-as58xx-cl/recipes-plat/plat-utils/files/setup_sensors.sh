@@ -131,7 +131,7 @@ set_hwmon_value 24 58 $val temp1_min 0
 set_hwmon_value 24 58 $val temp1_max 70000
 set_hwmon_value 24 58 $val temp2_min 0
 set_hwmon_value 24 58 $val temp2_max 70000
-set_hwmon_value 24 58 $val power1_max 122200000
+set_hwmon_value 24 58 $val power1_max 1222000000
 set_hwmon_value 24 58 $val power2_max 1100000000
 set_hwmon_value 24 58 $val curr1_min 0
 set_hwmon_value 24 58 $val curr1_max 7000
@@ -152,7 +152,7 @@ set_hwmon_value 25 59 $val temp1_min 0
 set_hwmon_value 25 59 $val temp1_max 70000
 set_hwmon_value 25 59 $val temp2_min 0
 set_hwmon_value 25 59 $val temp2_max 70000
-set_hwmon_value 25 59 $val power1_max 122200000
+set_hwmon_value 25 59 $val power1_max 1222000000
 set_hwmon_value 25 59 $val power2_max 1100000000
 set_hwmon_value 25 59 $val curr1_min 0
 set_hwmon_value 25 59 $val curr1_max 7000
