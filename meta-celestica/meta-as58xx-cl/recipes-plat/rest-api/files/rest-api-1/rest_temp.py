@@ -18,9 +18,8 @@ import subprocess
 import bmc_command
 
 def get_temp():
-    fresult = []
-    proc = subprocess.Popen(['source /usr/local/bin/openbmc-utils.sh;'
-                            'sys_temp'],
+    result = []
+    proc = subprocess.Popen(['sensors syscpld-i2c-0-0d'],
                             shell=True,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
@@ -31,8 +30,21 @@ def get_temp():
         data = ex.output
         err = ex.error
 
+    for edata in data.split('\n\n'):
+        adata = edata.split('\n', 1)
+        sresult = {}
+        if (len(adata) < 2):
+            break;
+        sresult['name'] = adata[0]
+        for sdata in adata[1].split('\n'):
+            tdata = sdata.split(':')
+            if (len(tdata) < 2):
+                continue
+            sresult[tdata[0].strip()] = tdata[1]
+        result.append(sresult)
+
     fresult = {
-                "Information": data,
+                "Information": result,
                 "Actions": [],
                 "Resources": [],
               }

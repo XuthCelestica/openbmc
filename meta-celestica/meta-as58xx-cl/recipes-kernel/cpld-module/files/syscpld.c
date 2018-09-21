@@ -61,6 +61,7 @@ struct temp_data {
 
 struct temp_data switch_temp_data;
 struct temp_data cpu_temp_data;
+struct temp_data optical_temp_data;
 
 static const struct i2c_device_id syscpld_id[] = {
 	{"syscpld", SYSCPLD },
@@ -81,6 +82,12 @@ static int temp_value_rw(const char *name, int opcode, int value)
 		p = &cpu_temp_data.temp1.max;
 	}else if(strcmp(name, "temp2_max_hyst") == 0) {
 		p = &cpu_temp_data.temp1.max_hyst;
+	}else if(strcmp(name, "temp3_input") == 0) {
+		p = &optical_temp_data.temp1.input;
+	} else if(strcmp(name, "temp3_max") == 0) {
+		p = &optical_temp_data.temp1.max;
+	}else if(strcmp(name, "temp3_max_hyst") == 0) {
+		p = &optical_temp_data.temp1.max_hyst;
 	} else {
 		return -1;
 	}
@@ -98,11 +105,14 @@ static int temp_value_rw(const char *name, int opcode, int value)
 static ssize_t switch_temp_show(struct device *dev,
         struct device_attribute *attr, char *buf)
 {
+	int temp_val = 0;
 	int freq = i2c_dev_read_word_bigendian(dev,attr);
+
 	if(freq < 0)
 		SYSCPLD_DEBUG("Read Swich chip temperature error!\n");
 
-	int temp_val = 434100 - (12500000 / freq - 1) * 535;
+	temp_val = 434100 - (12500000 / freq - 1) * 535;
+	if(temp_val > 200000 || temp_val < 0) temp_val = 0;
 
 	return scnprintf(buf, PAGE_SIZE, "%d\n", temp_val);
 }
@@ -619,12 +629,13 @@ static const i2c_dev_attr_st syscpld_attr_table[] = {
 	  sys_alarm_show,
 	  sys_alarm_store,
 	  SYSCPLD_ALARM_NODE, 0, 8,
-	},{
+	},
+	{
 	  "temp2_input",
 	  "CPU chip Temperature",
 	  sys_alarm_show,
 	  sys_alarm_store,
-	  0x7A, 0, 8,
+	  SYSCPLD_ALARM_NODE, 0, 8,
 	},
 	{
 	  "temp2_max",
@@ -636,6 +647,27 @@ static const i2c_dev_attr_st syscpld_attr_table[] = {
 	{
 	  "temp2_max_hyst",
 	  "CPU chip Temperature",
+	  sys_alarm_show,
+	  sys_alarm_store,
+	  SYSCPLD_ALARM_NODE, 0, 8,
+	},
+	{
+	  "temp3_input",
+	  "Optical chip Temperature",
+	  sys_alarm_show,
+	  sys_alarm_store,
+	  SYSCPLD_ALARM_NODE, 0, 8,
+	},
+	{
+	  "temp3_max",
+	  "Optical chip Temperature",
+	  sys_alarm_show,
+	  sys_alarm_store,
+	  SYSCPLD_ALARM_NODE, 0, 8,
+	},
+	{
+	  "temp3_max_hyst",
+	  "Optical chip Temperature",
 	  sys_alarm_show,
 	  sys_alarm_store,
 	  SYSCPLD_ALARM_NODE, 0, 8,

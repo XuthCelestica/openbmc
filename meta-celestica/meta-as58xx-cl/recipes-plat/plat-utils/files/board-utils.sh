@@ -243,19 +243,14 @@ BCM5387_reset() {
 
 sys_temp_usage(){
 	echo "option: "
-	echo "<cpu| switch> #Chip selection"
+	echo "<cpu| switch| optical> #Chip selection"
 	echo "<input| max| max_hyst> #Chip temperaure params"
 	echo "<#value> #Chip value"
 	echo 
 }
 
 sys_temp_show() {
-	cat $SYSCPLD_SYSFS_DIR/temp1_input
-	cat $SYSCPLD_SYSFS_DIR/temp1_max
-	cat $SYSCPLD_SYSFS_DIR/temp1_max_hyst
-	cat $SYSCPLD_SYSFS_DIR/temp2_input
-	cat $SYSCPLD_SYSFS_DIR/temp2_max
-	cat $SYSCPLD_SYSFS_DIR/temp2_max_hyst
+	sensors syscpld-i2c-0-0d
 }
 
 sys_temp() {
@@ -273,6 +268,8 @@ sys_temp() {
 		file_prefix="temp1_"
 	elif [ "$1" == "cpu" ]; then
 		file_prefix="temp2_"
+	elif [ "$1" == "optical" ]; then
+		file_prefix="temp3_"
 	else
 		sys_temp_usage
 		return 1
