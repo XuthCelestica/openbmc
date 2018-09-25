@@ -8,13 +8,13 @@ import syslog
 
 
 PSU_NUM = 2
-IR358X_NUM = 7
+IR358X_NUM = 8
 TEMP_NUM = 6
 MONITOR_POLL_TIME = (60 * 10) #10 mins
 MonitorItem = [
 ######sensors#######
 ['PSU', 'dps1100-i2c-24-58', 'dps1100-i2c-25-59'], #PSU
-['IR358x', 'ir38060-i2c-4-43', 'ir38062-i2c-4-49', 'ir3595-i2c-16-12', 'ir38060-i2c-17-47', 'ir3584-i2c-18-70', 'ir3584-i2c-4-15', 'ir3584-i2c-4-16'], #IR358x
+['IR358x', 'ir38060-i2c-4-43', 'ir38062-i2c-4-49', 'ir3595-i2c-16-12', 'ir38060-i2c-17-47', 'ir3584-i2c-18-70', 'ir3584-i2c-18-71', 'ir3584-i2c-4-15', 'ir3584-i2c-4-16'], #IR358x
 ['Temp', 'tmp75-i2c-7-4a', 'tmp75-i2c-7-4b', 'tmp75-i2c-7-4c', 'tmp75-i2c-7-4d', 'tmp75-i2c-39-48', 'tmp75-i2c-39-49'], #Temp
 ]
 
@@ -25,7 +25,7 @@ temp_obj = [0]*TEMP_NUM
 INITIAL_VALUE = 123456
 VARIABLE_DISABLE = 515151
 VALID_VALUE = 0
-INVALID_VALUE = 1
+INVALID_VALUE = -1
 
 class Alarm_Data():
 	def __init__(self, s):
@@ -62,9 +62,9 @@ class Alarm_Data():
 			if recv.strip() != 'N/A':
 				self.value = recv.strip()
 			else:
-				self.value = INITIAL_VALUE
+				self.value = INVALID_VALUE
 		else:
-			self.value = INITIAL_VALUE
+			self.value = INVALID_VALUE
 
 
 	def get_threshold(self, strline):
@@ -76,7 +76,7 @@ class Alarm_Data():
 		if recv != '':
 			self.alarm_min = recv.strip()
 		else:
-			self.alarm_min = INITIAL_VALUE
+			self.alarm_min = INVALID_VALUE
 
 		#cmd = 'echo ' + strline + ' |  awk -F \'+\' \'{print $4}\' |awk -F \' \' \'{print $1}\''
 		cmd = 'val=$(echo \"' + strline + '\" |  awk -F \'=\' \'{print $3}\' |awk -F \' \' \'{print $1}\');echo ${val#+}'
@@ -85,7 +85,7 @@ class Alarm_Data():
 		if recv != '':
 			self.alarm_max = recv.strip()
 		else:
-			self.alarm_max = INITIAL_VALUE
+			self.alarm_max = INVALID_VALUE
 
 		syslog.syslog(self.alarm_name + ': (min: ' + str(self.alarm_min) + ', max: ' + str(self.alarm_max) + ')')
 
@@ -98,7 +98,7 @@ class Alarm_Data():
 		if recv != '':
 			self.alarm_max = recv.strip()
 		else:
-			self.alarm_max = INITIAL_VALUE
+			self.alarm_max = INVALID_VALUE
 
 		#cmd = 'echo ' + strline + ' |  awk -F \'+\' \'{print $4}\' |awk -F \' \' \'{print $1}\''
 		cmd = 'val=$(echo \"' + strline + '\" |  awk -F \'=\' \'{print $3}\' |awk -F \' \' \'{print $1}\');echo ${val#+}'
@@ -107,7 +107,7 @@ class Alarm_Data():
 		if recv != '':
 			self.alarm_max_hyst = recv.strip()
 		else:
-			self.alarm_max_hyst = INITIAL_VALUE
+			self.alarm_max_hyst = INVALID_VALUE
 		syslog.syslog(self.alarm_name + ': (max: ' + str(self.alarm_max) + ', hyst: ' + str(self.alarm_max_hyst) + ')')
 
 	def get_power_threshold(self, strline):
@@ -125,7 +125,7 @@ class Alarm_Data():
 			else:
 				self.alarm_max = recv.strip()
 		else:
-			self.alarm_max = INITIAL_VALUE
+			self.alarm_max = INVALID_VALUE
 		syslog.syslog(self.alarm_name + ': (max: ' + str(self.alarm_max) + ')')
 
 
@@ -190,8 +190,8 @@ class PSU_Obj():
 class IR358x_Obj():
 	def __init__(self, name):
 		self.name = name
-		self.in0 = Alarm_Data('Switch chip Voltage')
-		self.curr1 = Alarm_Data('Switch chip Current')
+		self.in0 = Alarm_Data('Voltage')
+		self.curr1 = Alarm_Data('Current')
 
 class TEMP_Obj():
 	def __init__(self, name):

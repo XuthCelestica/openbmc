@@ -46,6 +46,7 @@
 #define TO_IR3595_DATA(x)  container_of(x, struct ir3595_data_t, dev_data)
 #define SYSFS_READ 0
 #define SYSFS_WRITE 1
+#define LABEL_NAME_MAX 50
 enum chips {
 	IR3595 = 1,
 };
@@ -66,6 +67,8 @@ struct alarm_data_t {
 struct ir3595_alarm_data {
 	struct alarm_data_t in0; //Vout
 	struct alarm_data_t curr1;
+	char in0_label[LABEL_NAME_MAX + 1];
+	char curr1_label[LABEL_NAME_MAX + 1];
 };
 
 
@@ -153,6 +156,36 @@ static int alarm_value_rw(struct ir3595_data_t *data, int reg, int opcode, int v
 
 	return 0;
 }
+
+static char *alarm_label_rw(struct ir3595_data_t *data, int reg, int opcode, char *name)
+{
+	int len;
+	char *p = NULL;
+
+	switch(reg) {
+		case IN0_MIN:
+		case IN0_MAX:
+			p = data->alarm_data.in0_label;
+			break;
+		case CURR1_MIN:
+		case CURR1_MAX:
+			p = data->alarm_data.curr1_label;
+			break;
+		default:
+			return NULL;
+	}
+
+	if(opcode == SYSFS_READ)
+		return p;
+	else if(opcode == SYSFS_WRITE) {
+		len = (strlen(name) > LABEL_NAME_MAX) ? LABEL_NAME_MAX : strlen(name);
+		memcpy(p, name, len);
+	} else
+		return NULL;
+
+	return NULL;
+}
+
 static ssize_t ir3595_alarm_show(struct device *dev,
         struct device_attribute *attr, char *buf)
 {
@@ -202,8 +235,53 @@ static int ir3595_alarm_store(struct device *dev,
 	return count;
 }
 
+static ssize_t ir358x_label_show(struct device *dev,
+        struct device_attribute *attr, char *buf)
+{
+	char *label;
+	struct i2c_client *client = to_i2c_client(dev);
+	i2c_dev_data_st *data = i2c_get_clientdata(client);
+	i2c_sysfs_attr_st *i2c_attr = TO_I2C_SYSFS_ATTR(attr);
+	const i2c_dev_attr_st *dev_attr = i2c_attr->isa_i2c_attr;
+	struct ir3595_data_t *ir3595_data = TO_IR3595_DATA(data);
+	struct ir3595_alarm_data alarm_data;
 
+	if(!ir3595_data)
+		return -1;
 
+	label = alarm_label_rw(ir3595_data, dev_attr->ida_reg, SYSFS_READ, NULL);
+
+	return scnprintf(buf, PAGE_SIZE, "%s\n", label);
+}
+
+static int ir358x_label_store(struct device *dev,
+        struct device_attribute *attr, const char *buf, size_t count)
+{
+	int rc, len;
+	char *name[LABEL_NAME_MAX + 1];
+	struct i2c_client *client = to_i2c_client(dev);
+	i2c_dev_data_st *data = i2c_get_clientdata(client);
+	i2c_sysfs_attr_st *i2c_attr = TO_I2C_SYSFS_ATTR(attr);
+	const i2c_dev_attr_st *dev_attr = i2c_attr->isa_i2c_attr;
+	struct ir3595_data_t *ir3595_data = TO_IR3595_DATA(data);
+	struct ir3595_alarm_data alarm_data;
+
+	if(!ir3595_data)
+		return -1;
+
+	if (buf == NULL) {
+		return -ENXIO;
+	}
+
+	len = (strlen(buf) > LABEL_NAME_MAX) ? LABEL_NAME_MAX : strlen(buf);
+	snprintf(name, len, "%s", buf);
+	name[len] = '\0';
+	rc = alarm_label_rw(ir3595_data, dev_attr->ida_reg, SYSFS_WRITE, name);
+	if(rc < 0)
+		return -1;
+
+	return count;
+}
 
 static const i2c_dev_attr_st ir3595_attr_table[] = {
 	{
@@ -223,16 +301,16 @@ static const i2c_dev_attr_st ir3595_attr_table[] = {
 	{
 	  "in0_label",
 	  "Switch chip Voltage",
-	  i2c_dev_show_label,
-	  NULL,
-	  0x0, 0, 0,
+	  ir358x_label_show,
+	  ir358x_label_store,
+	  IN0_MIN, 0, 0,
 	},
 	{
 	  "curr1_label",
 	  "Switch chip Current",
-	  i2c_dev_show_label,
-	  NULL,
-	  0x0, 0, 0,
+	  ir358x_label_show,
+	  ir358x_label_store,
+	  CURR1_MIN, 0, 0,
 	},
 	{
 	  "in0_min",
