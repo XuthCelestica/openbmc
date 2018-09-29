@@ -37,6 +37,8 @@ IMAGE_INSTALL += " \
   fan-ctrl \
   peci-util \
   e2fsprogs \
+  fruid \
+  eeprom-bin \
   "
 
 IMAGE_FEATURES += " \

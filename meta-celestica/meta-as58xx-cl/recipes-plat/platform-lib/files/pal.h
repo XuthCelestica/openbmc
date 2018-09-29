@@ -33,17 +33,19 @@ extern "C" {
 
 #define BIT(value, index) ((value >> index) & 1)
 
+#define LARGEST_DEVICE_NAME 128
 #define MAX_NODES     2
-#define MAX_NUM_FRUS  2
 #define LAST_KEY "last_key"
 
 #define WEDGE100_SYSCPLD_RESTART_CAUSE "/sys/bus/i2c/drivers/syscpld/12-0031/reset_reason"
 #define FRU_EEPROM "/sys/class/i2c-adapter/i2c-6/6-0051/eeprom"
 #define PAGE_SIZE  0x1000
 
-#define W100_PLATFORM_NAME "wedge100"
+#define OPENBMC_PLATFORM_NAME "AS58xx-CL"
 #define LAST_KEY "last_key"
-#define W100_MAX_NUM_SLOTS 1
+#define OPENBMC_MAX_NUM_SLOTS 1
+
+#define FRU_TMP_PATH "/tmp/fruid_%s.bin"
 
 enum {
   SERVER_POWER_OFF,
@@ -58,8 +60,19 @@ enum {
 
 enum {
   FRU_ALL   = 0,
-  FRU_MB = 1,
+  FRU_SYS,
+  FRU_BMC,
+  FRU_CPU,
+  FRU_FB,
+  FRU_PSU1,
+  FRU_PSU2,
+  FRU_FAN1,
+  FRU_FAN2,
+  FRU_FAN3,
+  FRU_FAN4,
+  MAX_NUM_FRUS
 };
+
 
 typedef struct _sensor_info_t {
   bool valid;
@@ -69,5 +82,8 @@ typedef struct _sensor_info_t {
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+extern const char pal_fru_list[];
+
 
 #endif /* __PAL_H__ */

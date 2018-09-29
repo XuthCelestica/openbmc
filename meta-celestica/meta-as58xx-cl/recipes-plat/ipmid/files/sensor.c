@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018-present Facebook. All Rights Reserved.
+ * Copyright 2014-present Facebook. All Rights Reserved.
  *
  * This file provides platform specific implementation of sensor information
  *
@@ -64,7 +64,7 @@ static void
 populate_mgmt_sensors(void) {
   sensor_mgmt_t sensor = {0};
 
-  // Add record for the AST2520 BMC
+  // Add record for the AST2100 BMC
   sensor.slave_addr = BMC_SLAVE_ADDR;
   sensor.chan_no = 0x0; // Primary BMC controller
 
@@ -77,7 +77,7 @@ populate_mgmt_sensors(void) {
   // Device ID string
   // Type - 0xC0: ASCII, Length - 0x09
   sensor.str_type_len = 0xC0 + 0x09;
-  strncpy(sensor.str, "MINIPACK-BMC ", 0x09);
+  strncpy(sensor.str, "Yosemite-BMC", 0x09);
 
   // Add this sensor to the global table
   if (g_sensor_mgmt.num >= SENSOR_MGMT_MAX) {

@@ -1,7 +1,7 @@
 /*
  * lan.c
  *
- * Copyright 2018-present Facebook. All Rights Reserved.
+ * Copyright 2015-present Facebook. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,20 +48,16 @@ void plat_lan_init(lan_config_t *lan)
   struct ifaddrs *ifaddr, *ifa;
   struct sockaddr_in *addr;
   struct sockaddr_in6 *addr6;
-  int family, n, i;
+  int family, n;
   unsigned long ip;
-  unsigned char *ip6, *netmask6;
+  unsigned char *ip6;
   int sd;
   struct ifreq ifr;
   uint8_t eui_64_addr[8] = {0x0};
+  bool slaac_flag = false;
 
   if (getifaddrs(&ifaddr) == -1) {
     return;
-  }
-
-  sd = socket(PF_INET, SOCK_DGRAM, 0);
-  if (sd < 0) {
-    goto init_done;
   }
 
   for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++) {
@@ -88,15 +84,13 @@ void plat_lan_init(lan_config_t *lan)
       addr6 = (struct sockaddr_in6*) ifa->ifa_addr;
       ip6 = addr6->sin6_addr.s6_addr;
 
-      // If the address is Link Local, get the MAC address, then Ignore it
+      // If the address is Link Local, Ignore it
       if ((ip6[0] == IPV6_LINK_LOCAL_BYTE1) && (ip6[1] == IPV6_LINK_LOCAL_BYTE2)) {
-        strcpy(ifr.ifr_name, ifa->ifa_name);
-        if(ioctl(sd, SIOCGIFHWADDR, &ifr) != -1)
-          memcpy(lan->mac_addr, ifr.ifr_hwaddr.sa_data, SIZE_MAC_ADDR);
         continue;
       }
 
       // Get the MAC address
+      sd = socket(PF_INET, SOCK_DGRAM, 0);
       strcpy(ifr.ifr_name, ifa->ifa_name);
       if(ioctl(sd, SIOCGIFHWADDR, &ifr) != -1) {
         uint8_t* mac_addr = (uint8_t*)ifr.ifr_hwaddr.sa_data;
@@ -115,26 +109,17 @@ void plat_lan_init(lan_config_t *lan)
 
         // Check if the address is SLAAC address. If yes, skip it.
         if (!memcmp((void *)&ip6[8], (void *)eui_64_addr, 8)) {
-          continue;
+          slaac_flag = true;
         }
       }
 
+      if (slaac_flag)
+        continue;
+
       // copy the ip address from array with MSB first
       memcpy(lan->ip6_addr, ip6, SIZE_IP6_ADDR);
-
-      // calculate the Address Prefix Length
-      netmask6 = ((struct sockaddr_in6*)ifa->ifa_netmask)->sin6_addr.s6_addr;
-      for (i=0; i<SIZE_IP6_ADDR*8; i++) {
-        if (!((netmask6[i/8] << (i%8)) & 0x80))
-          break;
-      }
-      lan->ip6_prefix = i;
     }
   }
 
-  // close socket descriptor
-  close(sd);
-
-init_done:
   freeifaddrs(ifaddr);
 }

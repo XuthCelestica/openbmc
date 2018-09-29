@@ -1,4 +1,4 @@
-# Copyright 2018-present Facebook. All Rights Reserved.
+# Copyright 2014-present Facebook. All Rights Reserved.
 #
 # This program file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -15,32 +15,20 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
-SUMMARY = "ipmi daemon for Minipack"
-DESCRIPTION = "ipmi daemon for Minipack, uses LPC bus"
-SECTION = "base"
-PR = "r1"
-LICENSE = "GPLv2"
-LIC_FILES_CHKSUM = "file://ipmid.c;beginline=8;endline=20;md5=da35978751a9d71b73679307c4d296ec"
-
-LDFLAGS_append = " -lwedge_eeprom"
-
-DEPENDS_append = " libwedge-eeprom libipmi libfruid libsdr update-rc.d-native"
-RDEPENDS_${PN} += "libipmi libkv libwedge-eeprom"
+DEPENDS_append = " libipmi libfruid update-rc.d-native"
+RDEPENDS_${PN} += "libipmi libfruid"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
-SRC_URI += "file://Makefile \
-            file://ipmid.c \
-            file://setup-ipmid.sh \
-            file://run-ipmid.sh \
-            file://sensor.c \
-            file://fruid.c \
-            file://lan.c \
-           "
+SRC_URI += "file://setup-ipmid.sh \
+           file://sensor.c \
+           file://fruid.c \
+           file://lan.c \
+           file://run-ipmid.sh \
+          "
+
 S = "${WORKDIR}"
 
-binfiles = "ipmid"
-
-pkgdir = "ipmid"
+CFLAGS_prepend = " -DDEBUG "
 
 do_install() {
   dst="${D}/usr/local/fbpackages/${pkgdir}"
@@ -60,4 +48,8 @@ do_install() {
 }
 
 FBPACKAGEDIR = "${prefix}/local/fbpackages"
+
 FILES_${PN} = "${FBPACKAGEDIR}/ipmid ${prefix}/local/bin ${sysconfdir} "
+
+INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
+INHIBIT_PACKAGE_STRIP = "1"
