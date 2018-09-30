@@ -34,6 +34,7 @@ IMAGE_INSTALL += " \
   openbmc-gpio \
   plat-utils \
   tlv-eeprom \
+  psu-fru \
   fan-ctrl \
   peci-util \
   e2fsprogs \
