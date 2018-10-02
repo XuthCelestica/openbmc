@@ -115,6 +115,10 @@ sys_led() {
 	elif [ "$1" == "yellow" ]; then
 		echo 0x2 > $SYSLED_SEL_SYSFS
 	elif [ "$1" == "mix" ]; then
+		if [ "$2" == "on" ];then
+			echo "Mode [mix on] not support!"
+			return 1
+		fi
 		echo 0x0 > $SYSLED_SEL_SYSFS
 	elif [ "$1" == "off" ]; then
 		echo 0x3 > $SYSLED_SEL_SYSFS

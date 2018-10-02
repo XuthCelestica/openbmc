@@ -39,7 +39,7 @@
 
 #include "pal.h"
 
-const char pal_fru_list[] = "all, sys, bmc, cpu, fb, psu1, psu2, fan1, fan2, fan3, fan4";
+const char pal_fru_list[] = "all, sys, bmc, cpu, fb, switch, psu1, psu2, fan1, fan2, fan3, fan4";
 
 static int read_device(const char *device, int *value)
 {
@@ -118,6 +118,8 @@ int pal_get_fru_id(char *str, uint8_t *fru)
 		*fru = FRU_CPU;
 	} else if (!strcmp(str, "fb")) {
 		*fru = FRU_FB;
+	} else if (!strcmp(str, "switch")) {
+		*fru = FRU_SWITCH;
 	} else if (!strcmp(str, "psu1")) {
 		*fru = FRU_PSU1;
 	} else if (!strcmp(str, "psu2")) {
@@ -158,6 +160,9 @@ int pal_get_fruid_path(uint8_t fru, char *path)
 			break;
 		case FRU_FB:
 			sprintf(fname, "fb");
+			break;
+		case FRU_SWITCH:
+			sprintf(fname, "switch");
 			break;
 		case FRU_PSU1:
 			sprintf(fname, "psu1");
@@ -200,6 +205,9 @@ int pal_get_fruid_eeprom_path(uint8_t fru, char *path)
 		case FRU_FB:
 			sprintf(path, "/sys/bus/i2c/devices/i2c-39/39-0056/eeprom");
 			break;
+		case FRU_SWITCH:
+			sprintf(path, "/sys/bus/i2c/devices/i2c-2/2-0051/eeprom");
+			break;
 		case FRU_PSU1:
 			sprintf(path, "/sys/bus/i2c/devices/i2c-24/24-0050/eeprom");
 			break;
@@ -239,6 +247,9 @@ int pal_get_fruid_name(uint8_t fru, char *name)
 			break;
 		case FRU_FB:
 			sprintf(name, "FAN Board");
+			break;
+		case FRU_SWITCH:
+			sprintf(name, "Switch Board");
 			break;
 		case FRU_PSU1:
 			sprintf(name, "PSU1");
@@ -287,6 +298,7 @@ int pal_is_fru_prsnt(uint8_t fru, uint8_t *status)
 		case FRU_BMC:
 		case FRU_CPU:
 		case FRU_FB:
+		case FRU_SWITCH:
 			*status = 1;
 			break;
 		case FRU_PSU1:

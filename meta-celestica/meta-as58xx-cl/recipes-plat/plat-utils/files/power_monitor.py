@@ -222,10 +222,10 @@ def psu_init(item):
 			psu_obj[i].fan1.get_threshold(fan1_line)
 
 			temp1_line = get_mached_line(recv, psu_obj[i].temp1.alarm_name)
-			psu_obj[i].temp1.get_threshold(temp1_line)
+			psu_obj[i].temp1.get_temp_threshold(temp1_line)
 
 			temp2_line = get_mached_line(recv, psu_obj[i].temp2.alarm_name)
-			psu_obj[i].temp2.get_threshold(temp2_line)
+			psu_obj[i].temp2.get_temp_threshold(temp2_line)
 
 			pin_line = get_mached_line(recv, psu_obj[i].pin.alarm_name)
 			psu_obj[i].pin.get_power_threshold(pin_line)

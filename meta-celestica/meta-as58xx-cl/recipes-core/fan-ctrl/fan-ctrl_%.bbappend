@@ -27,6 +27,7 @@ SRC_URI += "file://get_fan_speed.sh \
             file://watchdog.cpp \
             file://watchdog.h \
             file://Makefile \
+            file://pid_config.ini \
            "
 
 S = "${WORKDIR}"
@@ -46,6 +47,7 @@ do_install() {
   done
   install -d ${D}${sysconfdir}/init.d
   install -d ${D}${sysconfdir}/rcS.d
+  install -m 644 pid_config.ini ${D}${sysconfdir}/pid_config.ini
   install -m 755 setup-fan.sh ${D}${sysconfdir}/init.d/setup-fan.sh
   update-rc.d -r ${D} setup-fan.sh start 91 S .
 }

@@ -316,7 +316,7 @@ static const struct i2c_dev_attr_t psu_attr_table[] = {
 		0,
 	},
 	{
-		"temp1_min",
+		"temp1_max_hyst",
 		NULL,
 		I2C_DEV_ATTR_SHOW_DEFAULT,
 		I2C_DEV_ATTR_STORE_DEFAULT,
@@ -330,7 +330,7 @@ static const struct i2c_dev_attr_t psu_attr_table[] = {
 		0,
 	},
 	{
-		"temp2_min",
+		"temp2_max_hyst",
 		NULL,
 		I2C_DEV_ATTR_SHOW_DEFAULT,
 		I2C_DEV_ATTR_STORE_DEFAULT,

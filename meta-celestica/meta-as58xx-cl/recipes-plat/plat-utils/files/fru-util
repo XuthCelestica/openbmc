@@ -22,12 +22,13 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 
 command=(
 "status fru_status"
-"psu psu_fru"
+"psu psu_fru_"
 "sys sys_fru"
 "fan fan_fru"
 "bmc bmc_fru"
 "come come_fru"
 "fb fb_fru"
+"switch switch_fru"
 "lb lc_fru"
 )
 
@@ -121,6 +122,11 @@ psu_acok() {
     fi
 }
 
+psu_eeprom_path()
+{
+	echo "/sys/bus/i2c/devices/${1}-00${2}/eeprom"
+}
+
 psu_info() {
 	if [ "$1" == "1" ]; then
 		echo "PSU1 FRU:"
@@ -129,21 +135,15 @@ psu_info() {
 			echo "Present: Absent"
 			return 1
 		fi
-		echo "MFR ID:  $(read_info 24 50 mfr_id)"
-		echo "Product Name: $(read_info 24 50 mfr_name)"
-		echo "Serial Number: $(read_info 24 50 mfr_serial)"
-		echo "Product Version: $(read_info 24 50 mfr_version)"
+		echo -e "$(psu_fru $(psu_eeprom_path 24 50))"
 	elif [ "$1" == "2" ]; then
-		echo -e "\nPSU2 FRU:"
+		echo "PSU2 FRU:"
 		$(psu_present 2)
 		if [ $? -eq 0 ]; then
 			echo "Present: Absent"
 			return 1
 		fi
-		echo "MFR ID:  $(read_info 25 51 mfr_id)"
-		echo "Product Name: $(read_info 25 51 mfr_name)"
-		echo "Serial Number: $(read_info 25 51 mfr_serial)"
-		echo "Product Version: $(read_info 25 51 mfr_version)"
+		echo -e "$(psu_fru $(psu_eeprom_path 25 51))"
 	else
 		echo "Invalid PSU number"
 	fi
@@ -159,7 +159,7 @@ fan_usage() {
 	echo "<fanID> [arg]    get/set FAN FRU"
 }
 
-psu_fru() {
+psu_fru_() {
 	if [ $# -lt 1 ]; then
 		psu_usage
 		return 1		
@@ -168,6 +168,7 @@ psu_fru() {
 		case $opt in
 		a)
 			psu_info 1
+			echo
 			psu_info 2
 			;;
 		p)
@@ -180,47 +181,31 @@ psu_fru() {
 }
 
 sys_fru() {
-	echo "System FRU:"
-	if [ -L ${EEPROM_LINK_FILE} ]; then
-		rm -rf ${EEPROM_LINK_FILE}
-	fi
-	ln -s /sys/bus/i2c/devices/i2c-${SYSEEPROM_I2C_BUS}/${SYSEEPROM_I2C_BUS}-00${SYSEEPROM_I2C_ADDR}/eeprom  ${EEPROM_LINK_FILE}
-	syseeprom $@
+	fruid-util sys
 }
 
 bmc_fru() {
-	echo "BMC FRU:"
-	if [ -L ${EEPROM_LINK_FILE} ]; then
-		rm -rf ${EEPROM_LINK_FILE}
-	fi
-	ln -s /sys/bus/i2c/devices/i2c-${BMCEEPROM_I2C_BUS}/${BMCEEPROM_I2C_BUS}-00${BMCEEPROM_I2C_ADDR}/eeprom  ${EEPROM_LINK_FILE}
-	syseeprom $@
+	fruid-util bmc
 }
 
 come_fru() {
-	echo "COMe FRU:"
-	if [ -L ${EEPROM_LINK_FILE} ]; then
-		rm -rf ${EEPROM_LINK_FILE}
-	fi
-	ln -s /sys/bus/i2c/devices/i2c-${COMEEEPROM_I2C_BUS}/${COMEEEPROM_I2C_BUS}-00${COMEEEPROM_I2C_ADDR}/eeprom  ${EEPROM_LINK_FILE}
-	syseeprom $@
+	fruid-util cpu
 }
 
 fb_fru() {
-	echo "FAN Board FRU:"
-	if [ -L ${EEPROM_LINK_FILE} ]; then
-		rm -rf ${EEPROM_LINK_FILE}
-	fi
-	ln -s /sys/bus/i2c/devices/i2c-${FBEEPROM_I2C_BUS}/${FBEEPROM_I2C_BUS}-00${FBEEPROM_I2C_ADDR}/eeprom  ${EEPROM_LINK_FILE}
-	syseeprom $@
+	fruid-util fb
+}
+
+switch_fru() {
+	fruid-util switch
 }
 
 fan_present() {
-	((val=$(read_info 8 0d fan${i}_present)))
+	(( val=$(read_info 8 0d fan${i}_present )))
 	if [ $val -eq 0 ]; then
-		return 1
-	else
 		return 0
+	else
+		return 1
 	fi
 }
 
@@ -230,18 +215,12 @@ fan_fru() {
 		return 1
 	fi
 	i=$1
-	echo "FAN${i} FRU:"
-	if [ $# -eq 1 ] ; then
-		echo "Present: $(fan_present $1)"
+	$(fan_present $i)
+	if [ $? -eq 1 ] ; then
+		echo "FAN${i} Present: Absent"
+		return 1
 	fi
-	i2c_bus=$((FAN${i}_EEPROM_I2C_BUS))
-	i2c_addr=$((FAN${i}_EEPROM_I2C_ADDR))
-	if [ -L ${EEPROM_LINK_FILE} ]; then
-		rm -rf ${EEPROM_LINK_FILE}
-	fi
-	ln -s /sys/bus/i2c/devices/i2c-${i2c_bus}/${i2c_bus}-00${i2c_addr}/eeprom  ${EEPROM_LINK_FILE}
-	shift
-	syseeprom $@
+	fruid-util fan${i}
 }
 
 lc_fru() {
@@ -272,6 +251,9 @@ show_psu_status() {
         echo "Present: Present"
     else
         echo "Present: Absent"
+        echo "Power Status: Not OK"
+        echo "AC Status: Not OK"
+		return 1
     fi
 
 	$(psu_power $1)

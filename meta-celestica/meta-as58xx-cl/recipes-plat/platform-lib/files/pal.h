@@ -64,6 +64,7 @@ enum {
   FRU_BMC,
   FRU_CPU,
   FRU_FB,
+  FRU_SWITCH,
   FRU_PSU1,
   FRU_PSU2,
   FRU_FAN1,

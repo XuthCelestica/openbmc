@@ -252,6 +252,13 @@ static const i2c_dev_attr_st fancpld_attr_table[] = {
 	  0xc, 0, 1,
 	},
 	{
+	  "wdt_time",
+	  NULL,
+	  I2C_DEV_ATTR_SHOW_DEFAULT,
+	  I2C_DEV_ATTR_STORE_DEFAULT,
+	  0xc, 1, 7,
+	},
+	{
 	  "fan1_input",
 	  NULL,
 	  fan_rpm_show,
