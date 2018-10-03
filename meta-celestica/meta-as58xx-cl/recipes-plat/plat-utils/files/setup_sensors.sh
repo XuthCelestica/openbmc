@@ -143,7 +143,7 @@ set_hwmon_value 24 58 $val in1_max 264000
 set_hwmon_value 24 58 $val in2_min 11640
 set_hwmon_value 24 58 $val in2_max 12360
 set_hwmon_value 24 58 $val fan1_min 1000
-set_hwmon_value 24 58 $val fan1_max 20000
+set_hwmon_value 24 58 $val fan1_max 30000
 set_hwmon_value 24 58 $val temp1_max_hyst 60000
 set_hwmon_value 24 58 $val temp1_max 70000
 set_hwmon_value 24 58 $val temp2_max_hyst 60000
@@ -164,7 +164,7 @@ set_hwmon_value 25 59 $val in1_max 264000
 set_hwmon_value 25 59 $val in2_min 11640
 set_hwmon_value 25 59 $val in2_max 12360
 set_hwmon_value 25 59 $val fan1_min 1000
-set_hwmon_value 25 59 $val fan1_max 20000
+set_hwmon_value 25 59 $val fan1_max 30000
 set_hwmon_value 25 59 $val temp1_max_hyst 60000
 set_hwmon_value 25 59 $val temp1_max 70000
 set_hwmon_value 25 59 $val temp2_max_hyst 60000
