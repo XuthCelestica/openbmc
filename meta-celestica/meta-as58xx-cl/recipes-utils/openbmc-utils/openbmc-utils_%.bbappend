@@ -16,6 +16,7 @@ SRC_URI += " \
       file://disable_watchdog.sh \
       file://boot_info.sh \
       file://create_vlan_intf \
+      file://config_bmc_mac.sh \
       "
 
 RDEPENDS_${PN} += " python3 bash"
@@ -31,6 +32,9 @@ do_install_append() {
 
     install -m 0755 ${WORKDIR}/disable_watchdog.sh ${D}${sysconfdir}/init.d/disable_watchdog.sh
     update-rc.d -r ${D} disable_watchdog.sh start 99 2 3 4 5 .
+
+    install -m 0755 ${WORKDIR}/config_bmc_mac.sh ${D}${sysconfdir}/init.d/config_bmc_mac.sh
+    update-rc.d -r ${D} config_bmc_mac.sh start 70 5 .
 
 	install -m 0755 boot_info.sh ${D}${localbindir}/boot_info.sh
 
