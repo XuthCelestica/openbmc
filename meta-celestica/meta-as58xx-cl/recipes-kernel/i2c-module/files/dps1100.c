@@ -151,7 +151,7 @@ struct dps1100_data {
 	int id;
 	int shutdown_state;
 	int fan1_speed;
-	int fan1_pwm;
+	int fan1_pct;
 	struct i2c_client *client;
 	struct dps1100_alarm_data alarm_data;
 	struct pmbus_driver_info info;
@@ -175,7 +175,7 @@ static ssize_t dps1100_shutdown_show(struct device *dev,
 	const struct pmbus_driver_info *info = pmbus_get_driver_info(client);
 	struct dps1100_data *data = TO_DPS1100_DATA(info);
 
-	client->flags |= I2C_CLIENT_PEC;
+	//client->flags |= I2C_CLIENT_PEC;
 	read_val = pmbus_read_byte_data(client, 0, DPS1100_OP_REG_ADDR);
 	if (read_val >= 0)
 	{
@@ -198,12 +198,12 @@ static int dps1100_shutdown_store(struct device *dev,
 	const struct pmbus_driver_info *info = pmbus_get_driver_info(client);
 	struct dps1100_data *data = TO_DPS1100_DATA(info);
 
-	client->flags |= I2C_CLIENT_PEC;
+	//client->flags |= I2C_CLIENT_PEC;
 	if (buf == NULL) {
 		return -ENXIO;
 	}
 
-	rc = kstrtol(buf, 10, &shutdown);
+	rc = kstrtol(buf, 0, &shutdown);
 	if (rc != 0)	{
 		return count;
 	}
@@ -222,50 +222,94 @@ static int dps1100_shutdown_store(struct device *dev,
 	return count;
 }
 
-static ssize_t dps1100_fan1_show(struct device *dev,
+static ssize_t dps1100_reg_byte_show(struct device *dev,
         struct device_attribute *attr, char *buf)
 {
-	int len = 0;
 	int read_val = 0;
 	struct pmbus_data *pdata = dev_get_drvdata(dev);
 	struct i2c_client *client = to_i2c_client(pdata->dev);
-	const struct pmbus_driver_info *info = pmbus_get_driver_info(client);
-	struct dps1100_data *data = TO_DPS1100_DATA(info);
+	struct sysfs_attr_t *sysfs_attr = TO_I2C_SYSFS_ATTR(attr);
+	struct i2c_dev_attr_t *dev_attr = sysfs_attr->i2c_attr;
 
-	client->flags |= I2C_CLIENT_PEC;
-	read_val = pmbus_read_word_data(client, 0, DPS1100_FAN1_SPEED_REG);
-	if (read_val >= 0)
-	{
-		data->fan1_speed = read_val;
-	}
+	//client->flags |= I2C_CLIENT_PEC;
+	read_val = pmbus_read_byte_data(client, 0, dev_attr->reg);
+	if(read_val < 0)
+		return -1;
 
-	len = sprintf(buf, "%d\n", data->fan1_speed);
-	return len;
+	return sprintf(buf, "%d\n", read_val);
 }
 
-static int dps1100_fan1_store(struct device *dev,
+static int dps1100_reg_byte_store(struct device *dev,
         struct device_attribute *attr, const char *buf, size_t count)
 {
 	int rc = 0;
 	int write_value = 0;
 	struct pmbus_data *pdata = dev_get_drvdata(dev);
 	struct i2c_client *client = to_i2c_client(pdata->dev);
-	const struct pmbus_driver_info *info = pmbus_get_driver_info(client);
-	struct dps1100_data *data = TO_DPS1100_DATA(info);
+	struct sysfs_attr_t *sysfs_attr = TO_I2C_SYSFS_ATTR(attr);
+	struct i2c_dev_attr_t *dev_attr = sysfs_attr->i2c_attr;
 
-	client->flags |= I2C_CLIENT_PEC;
+	//client->flags |= I2C_CLIENT_PEC;
 	if (buf == NULL) {
 		return -ENXIO;
 	}
 
-	rc = kstrtol(buf, 10, &write_value);
+	rc = kstrtol(buf, 0, &write_value);
 	if (rc != 0)	{
 		return count;
 	}
 
-	rc = pmbus_write_word_data(client, 0, DPS1100_FAN1_PWM_REG, write_value);
-	if (rc == 0) {
-		data->fan1_pwm= write_value;
+	rc = pmbus_write_byte_data(client, 0, dev_attr->reg, write_value);
+	if (rc < 0) {
+		return -1;
+	}
+
+	return count;
+}
+
+
+static ssize_t dps1100_reg_word_show(struct device *dev,
+        struct device_attribute *attr, char *buf)
+{
+	int read_val = 0;
+	struct pmbus_data *pdata = dev_get_drvdata(dev);
+	struct i2c_client *client = to_i2c_client(pdata->dev);
+	struct sysfs_attr_t *sysfs_attr = TO_I2C_SYSFS_ATTR(attr);
+	struct i2c_dev_attr_t *dev_attr = sysfs_attr->i2c_attr;
+
+	//client->flags |= I2C_CLIENT_PEC;
+	read_val = pmbus_read_word_data(client, 0, dev_attr->reg);
+	if (read_val < 0)
+	{
+		return -1;
+	}
+
+	return sprintf(buf, "%d\n", read_val);
+}
+
+static int dps1100_reg_word_store(struct device *dev,
+        struct device_attribute *attr, const char *buf, size_t count)
+{
+	int rc = 0;
+	int write_value = 0;
+	struct pmbus_data *pdata = dev_get_drvdata(dev);
+	struct i2c_client *client = to_i2c_client(pdata->dev);
+	struct sysfs_attr_t *sysfs_attr = TO_I2C_SYSFS_ATTR(attr);
+	struct i2c_dev_attr_t *dev_attr = sysfs_attr->i2c_attr;
+
+	//client->flags |= I2C_CLIENT_PEC;
+	if (buf == NULL) {
+		return -ENXIO;
+	}
+
+	rc = kstrtol(buf, 0, &write_value);
+	if (rc != 0)	{
+		return count;
+	}
+
+	rc = pmbus_write_word_data(client, 0, dev_attr->reg, write_value);
+	if (rc < 0) {
+		return -1;
 	}
 
 	return count;
@@ -399,15 +443,21 @@ static const struct i2c_dev_attr_t psu_attr_table[] = {
 		I2C_DEV_ATTR_STORE_DEFAULT,
 		0,
 	},
-#if 0
 	{
-		"fan1_input",
+		"fan1_cfg",
 		NULL,
-		dps1100_fan1_show,
-		dps1100_fan1_store,
-		0,
+		dps1100_reg_byte_show,
+		dps1100_reg_byte_store,
+		0x3a,
 	},
-#endif
+	{
+		"fan1_pct",
+		NULL,
+		dps1100_reg_word_show,
+		dps1100_reg_word_store,
+		0x3b,
+	},
+
 };
 
 
@@ -416,7 +466,7 @@ static struct pmbus_platform_data platform_data = {
 	.flags = PMBUS_SKIP_STATUS_CHECK,
 };
 
-static int syffs_value_rw(int *reg, int opcode, int val)
+static int sysfs_value_rw(int *reg, int opcode, int val)
 {
 	if(opcode == SYSFS_READ)
 		return *reg;
@@ -440,7 +490,7 @@ static ssize_t i2c_dev_sysfs_show(struct device *dev, struct device_attribute *a
 	if (dev_attr->show != I2C_DEV_ATTR_SHOW_DEFAULT) {
 		return dev_attr->show(dev, attr, buf);
 	}
-	val = syffs_value_rw(&dev_attr->reg, SYSFS_READ, 0);
+	val = sysfs_value_rw(&dev_attr->reg, SYSFS_READ, 0);
 	if (val < 0) {
 		return val;
 	}
@@ -469,7 +519,7 @@ static ssize_t i2c_dev_sysfs_store(struct device *dev,
 	if (sscanf(buf, "%i", &val) <= 0) {
 		return -EINVAL;
 	}
-	ret = syffs_value_rw(&dev_attr->reg, SYSFS_WRITE, val);
+	ret = sysfs_value_rw(&dev_attr->reg, SYSFS_WRITE, val);
 	if (ret < 0) {
 		return ret;
 	}

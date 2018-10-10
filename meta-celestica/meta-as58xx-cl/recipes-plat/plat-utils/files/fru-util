@@ -203,9 +203,9 @@ switch_fru() {
 fan_present() {
 	(( val=$(read_info 8 0d fan${i}_present )))
 	if [ $val -eq 0 ]; then
-		return 0
-	else
 		return 1
+	else
+		return 0
 	fi
 }
 
@@ -216,7 +216,7 @@ fan_fru() {
 	fi
 	i=$1
 	$(fan_present $i)
-	if [ $? -eq 1 ] ; then
+	if [ $? -eq 0 ] ; then
 		echo "FAN${i} Present: Absent"
 		return 1
 	fi

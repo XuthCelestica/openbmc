@@ -78,6 +78,13 @@
 
 #define BAD_TEMP (-60)
 
+#define FAN_FAIL_COUNT 3
+#define FAN_FAIL_RPM 1000
+#define FAN_FRONTT_SPEED_MAX 24150
+#define FAN_REAR_SPEED_MAX 28950
+#define PSU_SPEED_MAX 26496
+
+#define WARN_RECOVERY_COUNT (100) //remain 5mins to recovery nomal speed
 
 #define FAN_DIR_B2F 0
 #define FAN_DIR_F2B 1
@@ -91,6 +98,8 @@
 #define FAN_WDT_TIME_SYSFS "/sys/bus/i2c/devices/i2c-8/8-000d/wdt_time"
 #define PSU1_SHUTDOWN_SYSFS "/sys/bus/i2c/devices/i2c-24/24-0058/control/shutdown"
 #define PSU2_SHUTDOWN_SYSFS "/sys/bus/i2c/devices/i2c-25/25-0059/control/shutdown"
+#define PSU_SPEED_CTRL_NODE "fan1_cfg"
+#define PSU_SPEED_CTRL_ENABLE 0x90
 
 #define PID_CONFIG_PATH "/mnt/data/pid_config.ini"
 #define PID_FILE_LINE_MAX 100
@@ -101,6 +110,7 @@
 #define HIGH_WARN_BIT (0x1 << 1)
 #define PID_CTRL_BIT (0x1 << 2)
 #define SWITCH_SENSOR_BIT (0x1 << 3)
+#define CRITICAL_SENSOR_BIT (0x1 << 4)
 
 
 struct sensor_info_sysfs {
@@ -127,7 +137,8 @@ struct fan_info_stu_sysfs {
   char *fan_led_prefix;
   char *fan_present_prefix;
   //uchar present; //for chassis using, other ignore it
-  uchar failed;  //for single fan fail
+  uchar front_failed;  //for single fan fail
+  uchar rear_failed;
 };
 
 struct psu_info_sysfs {
@@ -328,7 +339,8 @@ static struct fan_info_stu_sysfs fan1_info = {
   .fan_led_prefix = "fan1_led",
   .fan_present_prefix = "fan1_present",
   //.present = 1,
-  .failed = 0,
+  .front_failed = 0,
+  .rear_failed = 0,
 };
 
 static struct fan_info_stu_sysfs fan2_info = {
@@ -339,7 +351,8 @@ static struct fan_info_stu_sysfs fan2_info = {
   .fan_led_prefix = "fan2_led",
   .fan_present_prefix = "fan2_present",
   //.present = 1,
-  .failed = 0,
+  .front_failed = 0,
+  .rear_failed = 0,
 };
 
 static struct fan_info_stu_sysfs fan3_info = {
@@ -350,7 +363,8 @@ static struct fan_info_stu_sysfs fan3_info = {
   .fan_led_prefix = "fan3_led",
   .fan_present_prefix = "fan3_present",
   //.present = 1,
-  .failed = 0,
+  .front_failed = 0,
+  .rear_failed = 0,
 };
 
 static struct fan_info_stu_sysfs fan4_info = {
@@ -361,28 +375,31 @@ static struct fan_info_stu_sysfs fan4_info = {
   .fan_led_prefix = "fan4_led",
   .fan_present_prefix = "fan4_present",
   //.present = 1,
-  .failed = 0,
+  .front_failed = 0,
+  .rear_failed = 0,
 };
 
 static struct fan_info_stu_sysfs psu1_fan_info = {
   .prefix = "/sys/bus/i2c/devices/i2c-0/0-000d",
   .front_fan_prefix = "fan1_input",
   .rear_fan_prefix = "/sys/bus/i2c/devices/i2c-24/24-0058",
-  .pwm_prefix = "fan4_pwm",
-  .fan_led_prefix = "fan4_led",
+  .pwm_prefix = "fan1_pct",
+  .fan_led_prefix = "psu_led",
   .fan_present_prefix = "psu_l_present",
   //.present = 1,
-  .failed = 0,
+  .front_failed = 0,
+  .rear_failed = 0,
 };
 static struct fan_info_stu_sysfs psu2_fan_info = {
   .prefix = "/sys/bus/i2c/devices/i2c-0/0-000d",
   .front_fan_prefix = "fan1_input",
   .rear_fan_prefix = "/sys/bus/i2c/devices/i2c-25/25-0059",
-  .pwm_prefix = "fan4_pwm",
-  .fan_led_prefix = "fan4_led",
+  .pwm_prefix = "fan1_pct",
+  .fan_led_prefix = "psu_led",
   .fan_present_prefix = "psu_r_present",
   //.present = 1,
-  .failed = 0,
+  .front_failed = 0,
+  .rear_failed = 0,
 };
 
 
@@ -398,7 +415,7 @@ static struct board_info_stu_sysfs board_info[] = {
 		.lwarn = 45,
 		.hwarn = BAD_TEMP,
 		.warn_count = 0,
-		.flag = 0,
+		.flag = CRITICAL_SENSOR_BIT,
 		.critical = &sensor_inlet_u17_critical_info,
 		.alarm = &sensor_inlet_u17_critical_info,
 	},
@@ -409,7 +426,7 @@ static struct board_info_stu_sysfs board_info[] = {
 		.lwarn = 45,
 		.hwarn = BAD_TEMP,
 		.warn_count = 0,
-		.flag = 0,
+		.flag = CRITICAL_SENSOR_BIT,
 		.critical = &sensor_inlet_u52_critical_info,
 		.alarm = &sensor_inlet_u52_critical_info,
 	},
@@ -468,7 +485,7 @@ static struct board_info_stu_sysfs board_info[] = {
 		.lwarn = 45,
 		.hwarn = BAD_TEMP,
 		.warn_count = 0,
-		.flag = 0,
+		.flag = CRITICAL_SENSOR_BIT,
 		.critical = &sensor_inlet_u28_critical_info,
 		.alarm = &sensor_inlet_u28_critical_info,
 	},
@@ -479,7 +496,7 @@ static struct board_info_stu_sysfs board_info[] = {
 		.lwarn = 45,
 		.hwarn = BAD_TEMP,
 		.warn_count = 0,
-		.flag = 0,
+		.flag = CRITICAL_SENSOR_BIT,
 		.critical = &sensor_inlet_u29_critical_info,
 		.alarm = &sensor_inlet_u29_critical_info,
 	},
@@ -615,23 +632,23 @@ struct rpm_to_pct_map rpm_rear_map[] = {{20, 6000},
                                         {95, 28350},
                                         {100, 28950}};
 
-struct rpm_to_pct_map psu_rpm_map[] = {{20, 2130},
-                                        {25, 3180},
-                                        {30, 3690},
-                                        {35, 4620},
-                                        {40, 5130},
-                                        {45, 6120},
-                                        {50, 7050},
-                                        {55, 7560},
-                                        {60, 8580},
-                                        {65, 9180},
-                                        {70, 10230},
-                                        {75, 11280},
-                                        {80, 11820},
-                                        {85, 12870},
-                                        {90, 13350},
-                                        {95, 14370},
-                                        {100, 14850}};
+struct rpm_to_pct_map psu_rpm_map[] = {{20, 8800},
+                                        {25, 8800},
+                                        {30, 8800},
+                                        {35, 8800},
+                                        {40, 8800},
+                                        {45, 9920},
+                                        {50, 11520},
+                                        {55, 13120},
+                                        {60, 14560},
+                                        {65, 16192},
+                                        {70, 17760},
+                                        {75, 19296},
+                                        {80, 20800},
+                                        {85, 21760},
+                                        {90, 23424},
+                                        {95, 24800},
+                                        {100, 26496}};
 
 #define FRONT_MAP_SIZE (sizeof(rpm_front_map) / sizeof(struct rpm_to_pct_map))
 #define REAR_MAP_SIZE (sizeof(rpm_rear_map) / sizeof(struct rpm_to_pct_map))
@@ -680,6 +697,8 @@ static int direction = 0;
 
 
 static int write_fan_led(const int fan, const int color);
+static int write_fan_speed(const int fan, const int value);
+static int write_psu_fan_speed(const int fan, int value);
 
 /*
  * Initialize path cache by writing 0-length string
@@ -1023,7 +1042,9 @@ static int read_critical_max_temp(void)
 
 	for(i = 0; i < BOARD_INFO_SIZE; i++) {
 		info = &board_info[i];
-		if(info->critical && info->flag == 0) {
+		if(info->slot_id != direction)
+			continue;
+		if(info->critical && (info->flag & CRITICAL_SENSOR_BIT)) {
 			temp = info->critical->read_sysfs(info->critical);
 			if(temp != -1) {
 				info->critical->temp = temp;
@@ -1041,7 +1062,68 @@ static int read_critical_max_temp(void)
 	return max_temp;
 }
 
-static int alarm_temp_update(void)
+static int read_pid_max_temp(void)
+{
+  int i;
+  int temp, max_temp = 0;
+  struct board_info_stu_sysfs *info;
+
+	for(i = 0; i < BOARD_INFO_SIZE; i++) {
+		info = &board_info[i];
+		if(info->slot_id != direction)
+			continue;
+		if(info->critical && (info->flag & PID_CTRL_BIT)) {
+			temp = info->critical->read_sysfs(info->critical);
+			if(temp != -1) {
+				info->critical->temp = temp;
+				if(info->critical->t1 == 0)
+					info->critical->t1 = temp;
+				if(info->critical->t2 == 0)
+					info->critical->t2 = temp;
+				if(temp > max_temp)
+					max_temp = temp;
+			}
+			syslog(LOG_DEBUG, "[zmzhan]%s: %s: temp=%d", __func__, info->name, temp);
+		}
+	}
+
+	return max_temp;
+}
+
+static int calculate_pid_pwm(int fan_pwm)
+{
+	int i;
+	int pwm, max_pwm = 0;
+	struct board_info_stu_sysfs *info;
+	struct sensor_info_sysfs *critical;
+
+	for(i = 0; i < BOARD_INFO_SIZE; i++) {
+		info = &board_info[i];
+		if(info->slot_id != direction)
+			continue;
+		if(info->critical && (info->flag & PID_CTRL_BIT)) {
+			critical = info->critical;
+			if(critical->old_pwm == 0)
+				critical->old_pwm = fan_pwm;
+			pwm = critical->old_pwm + critical->p * (critical->temp - critical->t1 + 
+				critical->i * (critical->temp - critical->setpoint)) + critical->d *
+				(critical->temp - 2 * critical->t1 + critical->t2);
+			if(pwm < critical->min_output)
+				pwm = critical->min_output;
+			if(pwm > max_pwm)
+				max_pwm = pwm;
+
+			syslog(LOG_DEBUG, "[zmzhan]%s: %s: pwm=%d, old_pwm=%d, p=%f, i=%f, d=%f, setporint=%f \
+				temp=%d, t1=%d, t2=%d", __func__, info->name, pwm, critical->old_pwm, critical->p,
+				critical->i, critical->d, critical->setpoint, critical->temp, critical->t1, critical->t2);
+		}
+	}
+
+	return max_pwm;
+}
+
+
+static int alarm_temp_update(int *alarm)
 {
 	int i, fan;
 	int temp, max_temp = 0;
@@ -1049,6 +1131,8 @@ static int alarm_temp_update(void)
 
 	for(i = 0; i < BOARD_INFO_SIZE; i++) {
 		info = &board_info[i];
+		if(info->slot_id != direction)
+			continue;
 		if(info->alarm) {
 			temp = info->alarm->read_sysfs(info->alarm);
 			if(temp != -1) {
@@ -1060,9 +1144,11 @@ static int alarm_temp_update(void)
 							info->name, temp, info->hwarn);
 						info->warn_count = 0;
 						for (fan = 0; fan < TOTAL_FANS; fan++) {
-							write_fan_led(fan, FAN_LED_GREEN);
+							write_fan_speed(fan, FAN_MAX);
 						}
+						write_psu_fan_speed(fan, FAN_MAX);
 						info->flag |= HIGH_WARN_BIT;
+						*alarm |= HIGH_WARN_BIT;
 					}
 				} else if(info->lwarn != BAD_TEMP && 
 						(temp >= info->lwarn || ((info->lwarn - temp <= ALARM_TEMP_THRESHOLD) && info->warn_count))) {
@@ -1070,15 +1156,20 @@ static int alarm_temp_update(void)
 						syslog(LOG_WARNING, "Warning: %s arrived %d C(Low Warning: >= %d C)",
 							info->name, temp, info->lwarn);
 						info->warn_count = 0;
-						info->flag |= HIGH_WARN_BIT;
+						info->flag |= LOW_WARN_BIT;
+						*alarm |= LOW_WARN_BIT;
 					}
 				} else {
 					if(info->flag & HIGH_WARN_BIT) {
 						syslog(LOG_INFO, "Recovery: %s arrived %d C", info->name, temp);
 						info->flag &= ~HIGH_WARN_BIT;
+						*alarm &= ~HIGH_WARN_BIT;
 					} else if(info->flag & LOW_WARN_BIT) {
 						syslog(LOG_INFO, "Recovery: %s arrived %d C", info->name, temp);
-						info->flag &= ~LOW_WARN_BIT;
+						if(++info->warn_count >= WARN_RECOVERY_COUNT) {
+							info->flag &= ~LOW_WARN_BIT;
+							*alarm &= ~LOW_WARN_BIT;
+						}
 					}
 				}
 			}
@@ -1179,7 +1270,10 @@ static int fan_is_present_sysfs(int fan, struct fan_info_stu_sysfs *fan_info)
 	usleep(11000);
 
 	if (ret != 0) {
-		syslog(LOG_ERR, "%s: Fantray-%d not present", __func__, fan + 1);
+		if(fan < TOTAL_FANS)
+			syslog(LOG_ERR, "%s: Fantray-%d not present", __func__, fan + 1);
+		else
+			syslog(LOG_ERR, "%s: PSU-%d not present", __func__, fan - TOTAL_FANS + 1);
 		return 0;
 	} else {
 		return 1;
@@ -1267,6 +1361,8 @@ static int write_fan_speed(const int fan, const int value)
 /* Set up fan LEDs */
 static int write_fan_led(const int fan, const int color)
 {
+	if(fan >= TOTAL_FANS)
+		return 0; //not support write PSU LED
 	return write_fan_led_sysfs(fan, color);
 }
 
@@ -1278,9 +1374,7 @@ static int get_psu_pwm(void)
 	struct fantray_info_stu_sysfs *fantray;
 	struct fan_info_stu_sysfs *fan_info;
 
-
-
-	for(i = TOTAL_FANS; i < TOTAL_PSUS; i++) {
+	for(i = TOTAL_FANS; i < TOTAL_FANS + TOTAL_PSUS; i++) {
 		fantray = &fantray_info[i];
 		fan_info = &fantray->fan1;
 		
@@ -1299,15 +1393,19 @@ static int get_psu_pwm(void)
 		snprintf(fullpath, PATH_CACHE_SIZE, "%s/%s", fan_info->rear_fan_prefix, fan_info->pwm_prefix);
 		adjust_sysnode_path(fan_info->rear_fan_prefix, fan_info->pwm_prefix, fullpath, sizeof(fullpath));
 		read_sysfs_int(fullpath, &tmp);
+		if(tmp > 100)
+			tmp = 0;
 		if(tmp > pwm)
 			pwm = tmp;
 		usleep(11000);
 	}
 
+	pwm = pwm * 255 / 100;
+
 	return pwm;
 }
 /* Set PSU fan speed as a percentage */
-static int write_psu_fan_speed(const int fan, const int value)
+static int write_psu_fan_speed(const int fan, int value)
 {
 	int i;
 	int ret;
@@ -1315,14 +1413,13 @@ static int write_psu_fan_speed(const int fan, const int value)
 	struct fantray_info_stu_sysfs *fantray;
 	struct fan_info_stu_sysfs *fan_info;
 
-	//int unit;
 
-	//unit = value * PWM_UNIT_MAX / 100;
-	for(i = TOTAL_FANS; i < TOTAL_PSUS; i++) {
-		fantray = &fantray_info[fan];
+	value = value * 100 /255; //convert it to pct
+	for(i = TOTAL_FANS; i < TOTAL_FANS + TOTAL_PSUS; i++) {
+		fantray = &fantray_info[i];
 		fan_info = &fantray->fan1;
 		
-		ret = fan_is_present_sysfs(fan, fan_info);
+		ret = fan_is_present_sysfs(i, fan_info);
 		if(ret == 0) {
 			fantray->present = 0; //not preset
 			continue;
@@ -1331,7 +1428,13 @@ static int write_psu_fan_speed(const int fan, const int value)
 		} else {
 			continue;
 		}
-		
+		snprintf(fullpath, PATH_CACHE_SIZE, "%s/%s", fan_info->rear_fan_prefix, PSU_SPEED_CTRL_NODE);
+		adjust_sysnode_path(fan_info->rear_fan_prefix, PSU_SPEED_CTRL_NODE, fullpath, sizeof(fullpath));
+		ret = write_sysfs_int(fullpath, PSU_SPEED_CTRL_ENABLE);
+		if(ret < 0) {
+			syslog(LOG_ERR, "failed to enable control PSU speed");
+		}
+
 		snprintf(fullpath, PATH_CACHE_SIZE, "%s/%s", fan_info->rear_fan_prefix, fan_info->pwm_prefix);
 		adjust_sysnode_path(fan_info->rear_fan_prefix, fan_info->pwm_prefix, fullpath, sizeof(fullpath));
 		ret = write_sysfs_int(fullpath, value);
@@ -1396,10 +1499,9 @@ int fan_speed_okay(const int fan, int speed, const int slop)
 {
 	int ret;
 	char buf[PATH_CACHE_SIZE];
-	int rc = 0;
+	int rc = 1;
 	int front_speed, front_pct;
 	int rear_speed, rear_pct;
-	int front_fail = 0, rear_fail = 0;
 	struct fantray_info_stu_sysfs *fantray;
 	struct fan_info_stu_sysfs *fan_info;
 	
@@ -1414,55 +1516,63 @@ int fan_speed_okay(const int fan, int speed, const int slop)
 		fantray->present = 1;
 	}
 
-	speed = speed * 100 / 255; //convert to pct
 	snprintf(buf, PATH_CACHE_SIZE, "%s/%s", fan_info->prefix, fan_info->front_fan_prefix);
 
 	rc = read_sysfs_int(buf, &ret);
 	if(rc < 0) {
-		syslog(LOG_ERR, "failed to read module present %s node", fan_info->front_fan_prefix);
+		syslog(LOG_ERR, "failed to read %s node", fan_info->front_fan_prefix);
 		return -1;
 	}
-	usleep(11000);
 	front_speed = ret;
-	front_pct = fan_rpm_to_pct(rpm_front_map, FRONT_MAP_SIZE, front_speed);
+	usleep(11000);
+	if(front_speed < FAN_FAIL_RPM) {
+		if(fan_info->front_failed++ >= FAN_FAIL_COUNT) {
+			syslog(LOG_WARNING, "%s front speed %d, less than %d ", fantray->name, front_speed, FAN_FAIL_RPM);
+		}
+	} else if(speed == FAN_MAX && (front_speed < (FAN_FRONTT_SPEED_MAX * (100 - slop) / 100))){
+		if(fan_info->front_failed++ >= FAN_FAIL_COUNT) {
+			syslog(LOG_WARNING, "%s front speed %d, less than %d%% of max speed(%d)", 
+				fantray->name, front_speed, 100 - slop, speed);
+		}
+	} else {
+		fan_info->front_failed = 0;
+	}
 
 	memset(buf, 0, PATH_CACHE_SIZE);
 	snprintf(buf, PATH_CACHE_SIZE, "%s/%s", fan_info->prefix, fan_info->rear_fan_prefix);
 
 	rc = read_sysfs_int(buf, &ret);
 	if(rc < 0) {
-		syslog(LOG_ERR, "failed to read module present %s node", fan_info->front_fan_prefix);
+		syslog(LOG_ERR, "failed to read %s node", fan_info->front_fan_prefix);
 		return -1;
 	}
 	rear_speed = ret;
-	rear_pct = fan_rpm_to_pct(rpm_rear_map, FRONT_MAP_SIZE, rear_speed);
+	if(rear_speed < FAN_FAIL_RPM) {
+		if(fan_info->rear_failed++ >= FAN_FAIL_COUNT) {
+			syslog(LOG_WARNING, "%s rear speed %d, less than %d ", fantray->name, rear_speed, FAN_FAIL_RPM);
+		}
+	} else if(speed == FAN_MAX && (rear_speed < (FAN_REAR_SPEED_MAX * (100 - slop) / 100))){
+		if(fan_info->rear_failed++ >= FAN_FAIL_COUNT) {
+			syslog(LOG_WARNING, "%s rear speed %d, less than %d%% of max speed(%d)", 
+				fantray->name, rear_speed, 100 - slop, speed);
+		}
+	} else {
+		fan_info->rear_failed = 0;
+	}
 
-	front_fail = abs(front_pct - speed) * 100 / speed < slop;
-	if(!front_fail)
-		fan_info->failed = 1;
-	else if(fan_info->failed > 0)
-		fan_info->failed--;
-
-	rear_fail = abs(rear_pct - speed) * 100 / speed < slop;
-	if(!rear_fail)
-		fan_info->failed = 2;
-	else if(fan_info->failed > 0)
-		fan_info->failed--;
-
-	if(fan_info->failed >= 2) {
-		fan_info->failed = 0;
+	if(fan_info->front_failed >= FAN_FAIL_COUNT && fan_info->rear_failed >= FAN_FAIL_COUNT) {
+		fan_info->front_failed = 0;
+		fan_info->rear_failed = 0;
 		fantray->failed = 1;
 	}
-	syslog(LOG_DEBUG, "[zmzhan]%s: front_speed = %d, rear_speed = %d", __func__, front_speed, rear_speed);
-	//rc = (abs(front_speed - speed) * 100 / speed < slop) &&
-	//		(abs(rear_speed - speed) * 100 / speed < slop);
-	rc = front_fail && rear_fail;
-	if(!rc) {
-		 syslog(LOG_WARNING, "%s front %d (%d%%), rear %d (%d%%), expected %d",
-		 	fantray->name, front_speed, front_pct, rear_speed, rear_pct, speed);
+	//syslog(LOG_DEBUG, "[zmzhan]%s: front_speed = %d, rear_speed = %d", __func__, front_speed, rear_speed);
+	if(fan_info->front_failed >= FAN_FAIL_COUNT || fan_info->rear_failed >= FAN_FAIL_COUNT) {
+		 //syslog(LOG_WARNING, "%s front %d, rear %d, expected %d",
+		 //	fantray->name, front_speed, rear_speed, speed);
+		 return 0;
 	}
 
-	return rc;
+	return 1;
 
 }
 
@@ -1473,7 +1583,6 @@ int psu_speed_okay(const int fan, int speed, const int slop)
 	char buf[PATH_CACHE_SIZE];
 	int rc = 0;
 	int psu_speed, pct;
-	int fail = 0;
 	struct fantray_info_stu_sysfs *fantray;
 	struct fan_info_stu_sysfs *fan_info;
 	
@@ -1488,31 +1597,32 @@ int psu_speed_okay(const int fan, int speed, const int slop)
 		fantray->present = 1;
 	}
 
-	speed = speed * 100 / 255; //convert to pct
-	snprintf(buf, PATH_CACHE_SIZE, "%s/%s", fan_info->prefix, fan_info->front_fan_prefix);
-	adjust_sysnode_path(fan_info->prefix, fan_info->front_fan_prefix, buf, sizeof(buf));
+	snprintf(buf, PATH_CACHE_SIZE, "%s/%s", fan_info->rear_fan_prefix, fan_info->front_fan_prefix);
+	adjust_sysnode_path(fan_info->rear_fan_prefix, fan_info->front_fan_prefix, buf, sizeof(buf));
 	rc = read_sysfs_int(buf, &ret);
 	if(rc < 0) {
-		syslog(LOG_ERR, "failed to read module present %s node", fan_info->front_fan_prefix);
+		syslog(LOG_ERR, "failed to read %s node", fan_info->front_fan_prefix);
 		return -1;
 	}
-	usleep(11000);
 	psu_speed = ret;
-	pct = fan_rpm_to_pct(psu_rpm_map, PSU_MAP_SIZE, psu_speed);
-
-	syslog(LOG_DEBUG, "[zmzhan]%s: psu_speed = %d", __func__, psu_speed);
-	fail = abs(pct - speed) * 100 / speed < slop;
-	if(!fail)
-		fan_info->failed = 1;
-	else
-		fan_info->failed = 0;
-
-	if(!fail) {
-		 syslog(LOG_WARNING, "%s speed %d (%d%%), expected %d",
-		 	fantray->name, psu_speed, pct, speed);
+	usleep(11000);
+	if(psu_speed < FAN_FAIL_RPM) {
+		if(fan_info->front_failed++ >= FAN_FAIL_COUNT) {
+			syslog(LOG_WARNING, "%s speed %d, less than %d ", fantray->name, psu_speed, FAN_FAIL_RPM);
+		}
+	} else if(speed == FAN_MAX && (psu_speed < (PSU_SPEED_MAX * (100 - slop) / 100))){
+		if(fan_info->front_failed++ >= FAN_FAIL_COUNT) {
+			syslog(LOG_WARNING, "%s speed %d, less than %d%% of max speed(%d)", 
+				fantray->name, psu_speed, 100 - slop, speed);
+		}
+	} else {
+		fan_info->front_failed = 0;
 	}
 
-	return fail;
+	if(fan_info->front_failed >= FAN_FAIL_COUNT)
+		return 0;
+
+	return 1;
 
 }
 
@@ -1734,7 +1844,7 @@ static int policy_init(void)
 	load_pid_config(tmp);
 	if(pid_using == 0) {
 		syslog(LOG_NOTICE, "PID configure: not using PID");
-		return 0;
+		//return 0;
 	}
 
 	policy->k1 = (policy->medium_pwm - policy->low_pwm) /
@@ -1743,7 +1853,6 @@ static int policy_init(void)
 	policy->k2 = (policy->high_pwm - policy->medium_pwm) /
 		(policy->high_temp - policy->medium_temp);
 
-	syslog(LOG_DEBUG, "[zmzhan]%s: k1 = %d, k2 = %d", __func__, policy->k1, policy->k2);
 
 	return 0;
 }
@@ -1798,13 +1907,15 @@ int main(int argc, char **argv) {
 	int fan_failure = 0;
 	int sub_failed = 0;
 	int old_speed = FAN_MEDIUM;
-	int fan_bad[TOTAL_FANS + TOTAL_PSUS];
+	int fan_bad[TOTAL_FANS + TOTAL_PSUS] = {0};
 	int fan;
 	unsigned log_count = 0; // How many times have we logged our temps?
 	int prev_fans_bad = 0;
 	int shutdown_delay = 0;
 	int psu_pwm;
 	int switch_pwm = 0;
+	int pid_pwm = 0;
+	int alarm = 0;
 #ifdef CONFIG_PSU_FAN_CONTROL_INDEPENDENT
 	int psu_old_temp = 0;
 	int psu_raising_pwm;
@@ -1840,7 +1951,7 @@ int main(int argc, char **argv) {
 	while (1) {
 		/* Read sensors */
 		critical_temp = read_critical_max_temp();
-		alarm_temp_update();
+		alarm_temp_update(&alarm);
 
 		if (critical_temp == BAD_TEMP) {
 			if(bad_reads++ >= 10) {
@@ -1885,9 +1996,7 @@ int main(int argc, char **argv) {
 			}
 		}
 #ifndef CONFIG_PSU_FAN_CONTROL_INDEPENDENT
-		syslog(LOG_DEBUG, "[zmzhan]%s: fan_speed=%d", __func__, fan_speed);
 		psu_pwm = get_psu_pwm();
-		syslog(LOG_DEBUG, "[zmzhan]%s: psu_pwm=%d", __func__, psu_pwm);
 		if(fan_speed < psu_pwm)
 			fan_speed = psu_pwm;
 		if(pid_using == 0) {
@@ -1896,6 +2005,14 @@ int main(int argc, char **argv) {
 				fan_speed = switch_pwm;
 		}
 #endif
+		if(pid_using) {
+			read_pid_max_temp();
+			pid_pwm = calculate_pid_pwm(fan_speed);
+			if(pid_pwm > fan_speed)
+				fan_speed = pid_pwm;
+		}
+		syslog(LOG_DEBUG, "[zmzhan]%s: fan_speed=%d, psu_pwm=%d, pid_pwm=%d, switch_pwm=%d", 
+			__func__, fan_speed, psu_pwm, pid_pwm, switch_pwm);
 		policy->pwm = fan_speed;
 		old_temp = critical_temp;
 #ifdef CONFIG_PSU_FAN_CONTROL_INDEPENDENT
@@ -1927,12 +2044,14 @@ int main(int argc, char **argv) {
 					old_speed * 100 / FAN_MAX, fan_speed * 100 / FAN_MAX);
 			}
 			for (fan = 0; fan < TOTAL_FANS; fan++) {
-				write_fan_speed(fan, fan_speed);
+				if(alarm == 0)
+					write_fan_speed(fan, fan_speed);
 			}
 #ifdef CONFIG_PSU_FAN_CONTROL_INDEPENDENT
 			write_psu_fan_speed(fan, psu_fan_speed);
 #else
-			write_psu_fan_speed(fan, fan_speed);
+			if(alarm == 0)
+				write_psu_fan_speed(fan, fan_speed);
 #endif
 		}
 
@@ -1965,7 +2084,7 @@ int main(int argc, char **argv) {
 				fan_bad[fan]++;
 			}
 		}
-		for(fan = TOTAL_FANS; fan < TOTAL_PSUS; fan++) {
+		for(fan = TOTAL_FANS; fan < TOTAL_FANS + TOTAL_PSUS; fan++) {
 			if (psu_speed_okay(fan, fan_speed, FAN_FAILURE_OFFSET)) {
 				if (fan_bad[fan] >= FAN_FAILURE_THRESHOLD) {
 					//write_fan_led(fan, FAN_LED_GREEN);
@@ -1983,7 +2102,9 @@ int main(int argc, char **argv) {
 			if (fan_bad[fan] >= FAN_FAILURE_THRESHOLD) {
 				fantray = &fantray_info[fan];
 				fan_info = &fantray->fan1;
-				if(fan_info->failed > 0)
+				if(fan_info->front_failed >= FAN_FAIL_COUNT)
+					sub_failed++;
+				if(fan_info->rear_failed >= FAN_FAIL_COUNT)
 					sub_failed++;
 				if(fantray->failed > 0)
 					fan_failure++;
