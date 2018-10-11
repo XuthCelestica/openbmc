@@ -28,7 +28,7 @@
 #include <linux/i2c/pmbus.h>
 #include "i2c_dev_sysfs.h"
 
-#define DEBUG
+// #define DEBUG
 #define SYSCPLD_ALARM_NODE 0xff /*just for flag using*/
 #define SYSFS_READ 0
 #define SYSFS_WRITE 1
@@ -108,8 +108,11 @@ static ssize_t switch_temp_show(struct device *dev,
 	int temp_val = 0;
 	int freq = i2c_dev_read_word_bigendian(dev,attr);
 
-	if(freq < 0)
+	if(freq <= 0)
+	{
+		freq = 1;
 		SYSCPLD_DEBUG("Read Swich chip temperature error!\n");
+	}
 
 	temp_val = 434100 - (12500000 / freq - 1) * 535;
 	if(temp_val > 200000 || temp_val < 0) temp_val = 0;
@@ -181,6 +184,13 @@ static const i2c_dev_attr_st syscpld_attr_table[] = {
 	  I2C_DEV_ATTR_SHOW_DEFAULT,
 	  I2C_DEV_ATTR_STORE_DEFAULT,
 	  0x1, 0, 8,
+	},
+	{
+	  "hardware_version",
+	  NULL,
+	  I2C_DEV_ATTR_SHOW_DEFAULT,
+	  NULL,
+	  0x2, 0, 2,
 	},
 	{
 	  "sb_reset",

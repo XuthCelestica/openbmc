@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SYSCPLD_SYSFS_DIR="/sys/bus/i2c/devices/i2c-0/0-000d"
+HARDWARE_VERSION="${SYSCPLD_SYSFS_DIR}/hardware_version"
 USRV_STATUS_SYSFS="${SYSCPLD_SYSFS_DIR}/come_status"
 PWR_BTN_SYSFS="${SYSCPLD_SYSFS_DIR}/cb_pwr_btn_n"
 PWR_RESET_SYSFS="${SYSCPLD_SYSFS_DIR}/come_rst_n"
@@ -8,7 +9,10 @@ SYSLED_CTRL_SYSFS="${SYSCPLD_SYSFS_DIR}/sysled_ctrl"
 SYSLED_SEL_SYSFS="${SYSCPLD_SYSFS_DIR}/sysled_select"
 SYSLED_SOL_CTRL_SYSFS="${SYSCPLD_SYSFS_DIR}/sol_control"
 SYSLED_BCM5387_RST_SYSFS="${SYSCPLD_SYSFS_DIR}/bcm5387_reset"
-
+BIOS_CHIPSELECTION="${SYSCPLD_SYSFS_DIR}/bios_cs"
+BIOS_CTRL="${SYSCPLD_SYSFS_DIR}/bios_ctrl"
+BIOS_BOOT_STATUS="${SYSCPLD_SYSFS_DIR}/bios_boot_ok"
+BIOS_BOOT_CHIP="${SYSCPLD_SYSFS_DIR}/bios_boot_cs"
 
 wedge_power() {
 	if [ "$1" == "on" ]; then
@@ -142,8 +146,12 @@ sys_led() {
 }
 
 board_type() {
-	echo 'Fishbone'
-	#echo 'Phalanx'
+	((val=$(cat $HARDWARE_VERSION 2> /dev/null | head -n 1)))
+	if [ $val -eq '3' ]; then
+		echo 'Phalanx'
+	else
+		echo 'Fishbone'
+	fi
 }
 
 sol_ctrl() {
@@ -185,9 +193,11 @@ bios_upgrade() {
         modprobe spidev
 
         if [ "$1" == "master" ]; then
-                i2cset -f -y 0 0x0d 0x23 0xe1
+                echo 0x2 > $BIOS_CTRL
+                echo 0x1 > $BIOS_CHIPSELECTION
         elif [ "$1" == "slave" ]; then
-                i2cset -f -y 0 0x0d 0x23 0xe3
+                echo 0x2 > $BIOS_CTRL
+                echo 0x3 > $BIOS_CHIPSELECTION
         else
                 echo "bios_upgrade [master/slave] [flash type] [operation:r/w/e] [file name]"
         fi
@@ -201,32 +211,29 @@ bios_upgrade() {
         fi
 
         gpio_set E4 0
-        i2cset -f -y 0 0x0d 0x23 0xd1
+        echo 0x1 > $BIOS_CTRL
+        echo 0x1 > $BIOS_CHIPSELECTION
 }
 
 come_reset() {
         if [ "$1" == "master" ]; then
-                i2cset -f -y 0 0x0d 0x23 0x01
-                i2cset -f -y 0 0x0d 0x21 0
-                sleep 10
-                i2cset -f -y 0 0x0d 0x21 1
+                echo 0x0 > $BIOS_CTRL
+                echo 0x1 > $BIOS_CHIPSELECTION
+                wedge_power.sh cycle
         elif [ "$1" == "slave" ]; then
-                i2cset -f -y 0 0x0d 0x23 0x03
-                i2cset -f -y 0 0x0d 0x21 0
-                sleep 10
-                i2cset -f -y 0 0x0d 0x21 1
+                echo 0x0 > $BIOS_CTRL
+                echo 0x3 > $BIOS_CHIPSELECTION
+                wedge_power.sh cycle
         else
                 echo "come_reset [master/slave]"
         fi
 }
 
 come_boot_info() {
-        reg1=$(i2cget -f -y 0 0x0d 0x70)
-        reg2=$(i2cget -f -y 0 0x0d 0x22)
-        let "boot_status = (reg2 & 0xf)"
-        let "boot_source = (reg1 & 0x2) >> 1"
+        ((boot_source=$(cat $BIOS_BOOT_CHIP | head -n 1)))
+        ((boot_status=$(cat $BIOS_BOOT_STATUS | head -n 1)))
 
-        if [ $boot_status -eq 15 ]; then
+        if [ $boot_status -eq 1 ]; then
                 echo "COMe CPU boots OK"
         else
                 echo "COMe CPU boots not OK"

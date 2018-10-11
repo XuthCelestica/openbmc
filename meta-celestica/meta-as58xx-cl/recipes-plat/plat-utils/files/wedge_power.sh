@@ -34,6 +34,8 @@ usage() {
     echo
     echo "  reset: Power reset microserver ungracefully"
     echo
+    echo "  cycle: Power cycle microserver ungracefully"
+    echo
 }
 
 do_status() {
@@ -122,6 +124,10 @@ do_reset() {
     return 0
 }
 
+do_cycle() {
+    echo 0 > /sys/bus/i2c/devices/0-000d/pwr_cycle
+    return $?
+}
 
 if [ $# -lt 1 ]; then
     usage
@@ -143,6 +149,9 @@ case "$command" in
         ;;
     reset)
         do_reset $@
+        ;;
+    cycle)
+        do_cycle
         ;;
     *)
         usage
