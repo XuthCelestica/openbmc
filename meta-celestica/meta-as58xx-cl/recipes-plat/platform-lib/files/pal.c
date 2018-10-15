@@ -209,22 +209,22 @@ int pal_get_fruid_eeprom_path(uint8_t fru, char *path)
 			sprintf(path, "/sys/bus/i2c/devices/i2c-2/2-0051/eeprom");
 			break;
 		case FRU_PSU1:
-			sprintf(path, "/sys/bus/i2c/devices/i2c-24/24-0050/eeprom");
-			break;
-		case FRU_PSU2:
 			sprintf(path, "/sys/bus/i2c/devices/i2c-25/25-0051/eeprom");
 			break;
+		case FRU_PSU2:
+			sprintf(path, "/sys/bus/i2c/devices/i2c-24/24-0050/eeprom");
+			break;
 		case FRU_FAN1:
-			sprintf(path, "/sys/bus/i2c/devices/i2c-36/36-0050/eeprom");
+			sprintf(path, "/sys/bus/i2c/devices/i2c-34/34-0050/eeprom");
 			break;
 		case FRU_FAN2:
-			sprintf(path, "/sys/bus/i2c/devices/i2c-38/38-0050/eeprom");
-			break;
-		case FRU_FAN3:
 			sprintf(path, "/sys/bus/i2c/devices/i2c-32/32-0050/eeprom");
 			break;
+		case FRU_FAN3:
+			sprintf(path, "/sys/bus/i2c/devices/i2c-38/38-0050/eeprom");
+			break;
 		case FRU_FAN4:
-			sprintf(path, "/sys/bus/i2c/devices/i2c-34/34-0050/eeprom");
+			sprintf(path, "/sys/bus/i2c/devices/i2c-36/36-0050/eeprom");
 			break;
 		default:
 			return -1;
@@ -302,42 +302,42 @@ int pal_is_fru_prsnt(uint8_t fru, uint8_t *status)
 			*status = 1;
 			break;
 		case FRU_PSU1:
-			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-0/0-000d/psu_l_present");
-			if (read_device(full_name, &value)) {
-				return -1;
-			}
-			*status = !value;
-			break;
-		case FRU_PSU2:
 			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-0/0-000d/psu_r_present");
 			if (read_device(full_name, &value)) {
 				return -1;
 			}
 			*status = !value;
 			break;
+		case FRU_PSU2:
+			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-0/0-000d/psu_l_present");
+			if (read_device(full_name, &value)) {
+				return -1;
+			}
+			*status = !value;
+			break;
 		case FRU_FAN1:
-			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan1_present");
+			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan4_present");
 			if (read_device(full_name, &value)) {
 				return -1;
 			}
 			*status = !value;
 			break;
 		case FRU_FAN2:
-			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan2_present");
-			if (read_device(full_name, &value)) {
-				return -1;
-			}
-			*status = !value;
-			break;
-		case FRU_FAN3:
 			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan3_present");
 			if (read_device(full_name, &value)) {
 				return -1;
 			}
 			*status = !value;
 			break;
+		case FRU_FAN3:
+			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan2_present");
+			if (read_device(full_name, &value)) {
+				return -1;
+			}
+			*status = !value;
+			break;
 		case FRU_FAN4:
-			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan4_present");
+			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan1_present");
 			if (read_device(full_name, &value)) {
 				return -1;
 			}

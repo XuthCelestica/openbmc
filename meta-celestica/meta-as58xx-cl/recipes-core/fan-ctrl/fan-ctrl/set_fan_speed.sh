@@ -49,6 +49,10 @@ if [ "$#" -eq 1 ]; then
     	FANS="1 2 3 4"
 	fi
 else
+    if [ $2 -gt $FAN_TOTAL ]; then
+        usage
+        exit 1
+    fi
     FANS="$2"
 fi
 
@@ -56,7 +60,8 @@ fi
 unit=$(( ( $1 * 255 ) / 100 ))
 
 for fan in $FANS; do
-    pwm="${FAN_DIR}/fan${fan}_pwm"
+    real_fan=$(($FAN_TOTAL-$fan+1))
+    pwm="${FAN_DIR}/fan${real_fan}_pwm"
     echo "$unit" > $pwm
     echo "Successfully set fan ${fan} speed to $1%"
 done

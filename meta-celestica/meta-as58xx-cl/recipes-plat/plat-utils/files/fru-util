@@ -84,7 +84,7 @@ read_info() {
 }
 
 psu_present() {
-	if [ $1 -eq 1  ]; then
+	if [ $1 -ne 1  ]; then
 		((val=$(read_info 0 0d psu_l_present)))
 	else
 		((val=$(read_info 0 0d psu_r_present)))
@@ -97,7 +97,7 @@ psu_present() {
 }
 
 psu_power() {
-	if [ $1 -eq 1  ]; then
+	if [ $1 -ne 1  ]; then
 		((val=$(read_info 0 0d psu_l_status)))
 	else
 		((val=$(read_info 0 0d psu_r_status)))
@@ -110,7 +110,7 @@ psu_power() {
 }
 
 psu_acok() {
-    if [ $1 -eq 1  ]; then
+    if [ $1 -ne 1  ]; then
         ((val=$(read_info 0 0d psu_l_ac_status)))
     else
         ((val=$(read_info 0 0d psu_r_ac_status)))
@@ -201,7 +201,9 @@ switch_fru() {
 }
 
 fan_present() {
-	(( val=$(read_info 8 0d fan${i}_present )))
+	i=$1
+	real_index=$(($FAN_EEPROM_MAX-$i+1))
+	(( val=$(read_info 8 0d fan${real_index}_present )))
 	if [ $val -eq 0 ]; then
 		return 1
 	else

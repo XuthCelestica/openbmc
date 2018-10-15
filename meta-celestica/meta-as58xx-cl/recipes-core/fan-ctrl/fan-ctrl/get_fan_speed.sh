@@ -71,5 +71,6 @@ else
 fi
 
 for fan in $FANS; do
-    echo "Fan $fan RPMs: $(show_rpm $fan), ($(show_pwm $fan))"
+    real_fan=$(($FAN_TOTAL-$fan+1))
+    echo "Fan $fan RPMs: $(show_rpm $real_fan), ($(show_pwm $real_fan))"
 done
