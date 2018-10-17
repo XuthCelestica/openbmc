@@ -40,6 +40,11 @@ IMAGE_INSTALL += " \
   e2fsprogs \
   fruid \
   eeprom-bin \
+  ipmbd \
+  ipmitool \
+  ipmb-util \
+  crashdump \
+  me-util \
   "
 
 IMAGE_FEATURES += " \

@@ -99,7 +99,6 @@ int plat_fruid_init(void) {
   char eeprom[128];
   char binfile[128];
 
-      syslog(LOG_WARNING, "[zmzhan]plat_fruid_init: run ......");
   for (fru = 1; fru < MAX_NUM_FRUS; fru++) {
     ret = pal_get_fruid_eeprom_path(fru, eeprom);
     if (ret < 0) {
