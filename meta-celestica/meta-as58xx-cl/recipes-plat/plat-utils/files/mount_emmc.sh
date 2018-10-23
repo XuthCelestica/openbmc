@@ -36,6 +36,7 @@ else
 	if [ ! -d "$MOUNT_POINT" ]; then
 		mkdir $MOUNT_POINT
 	fi
+	e2fsck -a $DEV
 	mount $DEV $MOUNT_POINT
 	if [ ! -d "$MOUNT_POINT/sol_log" ]; then
 		mkdir $MOUNT_POINT/sol_log

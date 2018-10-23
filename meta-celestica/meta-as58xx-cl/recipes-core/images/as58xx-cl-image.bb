@@ -45,6 +45,7 @@ IMAGE_INSTALL += " \
   ipmb-util \
   crashdump \
   me-util \
+  ethtool \
   "
 
 IMAGE_FEATURES += " \

@@ -13,9 +13,9 @@ DWR_FILE='/tmp/DWR'
 echo $PID > $PID_FILE
 
 # Set crashdump timestamp
-sys_runtime=$(awk '{print $1}' /proc/uptime)
-sys_runtime=$(printf "%0.f" $sys_runtime)
-echo $((sys_runtime+630)) > /tmp/cache_store/fru1_crashdump
+#sys_runtime=$(awk '{print $1}' /proc/uptime)
+#sys_runtime=$(printf "%0.f" $sys_runtime)
+#echo $((sys_runtime+630)) > /tmp/cache_store/fru1_crashdump
  
 # kill previous autodump if exist
 if [ ! -z "$OLDPID" ] && (grep "autodump" /proc/$OLDPID/cmdline &> /dev/null) ; then
@@ -98,11 +98,11 @@ fi
 $DUMP_SCRIPT pcie >> $LOG_FILE 2>&1
 
 # Sensors
-echo "Sensor history of last ${SENSOR_HISTORY}s at dump:" >> $LOG_FILE 2>&1
-/usr/local/bin/sensor-util all --history $SENSOR_HISTORY >> $LOG_FILE 2>&1
+#echo "Sensor history of last ${SENSOR_HISTORY}s at dump:" >> $LOG_FILE 2>&1
+#/usr/local/bin/sensor-util all --history $SENSOR_HISTORY >> $LOG_FILE 2>&1
 
-echo "Sensor threshold at dump: " >> $LOG_FILE 2>&1
-/usr/local/bin/sensor-util all --threshold >> $LOG_FILE 2>&1
+#echo "Sensor threshold at dump: " >> $LOG_FILE 2>&1
+#/usr/local/bin/sensor-util all --threshold >> $LOG_FILE 2>&1
 
 # only second/dwr autodump need to rename accordingly
 if [ "$DWR" == "1" ] || [ "$SECOND_DUMP" == "1" ]; then
