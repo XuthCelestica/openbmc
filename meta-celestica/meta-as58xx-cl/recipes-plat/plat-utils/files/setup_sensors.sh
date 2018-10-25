@@ -60,7 +60,7 @@ if [ "$board_type" = "Fishbone" ]; then
 	set_value 4 43 in0_min 950
 	set_value 4 43 in0_max 1100
 	set_value 4 43 curr1_min 0
-	set_value 4 43 curr1_max 3000
+	set_value 4 43 curr1_max 6000
 	set_value 4 43 in0_label "XP1R0V_FPGA Voltage"
 	set_value 4 43 curr1_label "XP1R0V_FPGA Current"
 fi
@@ -69,7 +69,7 @@ if [ "$board_type" = "Fishbone" ]; then
 	set_value 17 47 in0_min 1160
 	set_value 17 47 in0_max 1240
 	set_value 17 47 curr1_min 0
-	set_value 17 47 curr1_max 1700
+	set_value 17 47 curr1_max 6000
 	set_value 17 47 in0_label "XP1R2V Voltage"
 	set_value 17 47 curr1_label "XP1R2V Current"
 fi
@@ -79,7 +79,7 @@ if [ "$board_type" = "Fishbone" ]; then
 	set_value 4 49 in0_min 3130
 	set_value 4 49 in0_max 3470
 	set_value 4 49 curr1_min 0
-	set_value 4 49 curr1_max 10000
+	set_value 4 49 curr1_max 15000
 	set_value 4 49 in0_label "XP3R3V Voltage"
 	set_value 4 49 curr1_label "XP3R3V Current"
 fi

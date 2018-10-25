@@ -5,7 +5,11 @@
 count=0
 while [ $count -lt 3 ]
 do
-    mac=$(/usr/local/bin/fruid-util sys |grep "Product Custom Data 2" |awk -F ":" '{printf "%s:%s:%s:%s:%s:%s\n",  $2,$3,$4,$5,$6,$7+1}')
+    info=$(/usr/local/bin/fruid-util sys)
+    str1=$(echo "$info" |grep "Product Custom Data 2" |awk -F ":" '{printf "%s:%s:%s:%s:%s\n",  $2,$3,$4,$5,$6}')
+    str2=$(echo "$info" |grep "Product Custom Data 2" |awk -F ":" '{printf "0x%s\n", $7}')
+    val=$(($str2+1))
+    mac=$(printf "%s:%X\n" $str1 $val)
 
     if [ -n "$mac" -a "${mac/X/}" = "${mac}" ]; then
         echo "Configure BMC MAC: $mac"
