@@ -84,18 +84,6 @@ if [ "$board_type" = "Fishbone" ]; then
 	i2c_device_add 7 0x4a tmp75 #temp
 	i2c_device_add 7 0x4b tmp75
 	i2c_device_add 7 0x4c tmp75 #temp
-	# Bus 32 for i2c-8 PCA9548
-	#bus 32 channel 0
-	i2c_device_add 32 0x50 24c64 #Fan EEPROM
-	#bus 33 channel 1
-	#bus 34 channel 2
-	i2c_device_add 34 0x50 24c64
-	#bus 35 channel 3
-	#bus 36 channel 4
-	i2c_device_add 36 0x50 24c64
-	#bus 37 channel 5
-	#bus 38 channel 6
-	i2c_device_add 38 0x50 24c64
 
 	# Bus 16 for i2c-4 PCA9548
 	#bus 16 channel 0
