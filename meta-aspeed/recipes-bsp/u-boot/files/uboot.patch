@@ -1,0 +1,159 @@
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 445399e..900ed1b 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -167,6 +167,11 @@ config TARGET_FBCMM
+ 	select CPU_ARM1176
+ 	select SUPPORT_SPL
+ 
++config TARGET_VOYAGER
++	bool "Support Facebook's OpenBMC VOYAGER"
++	select CPU_ARM1176
++	select SUPPORT_SPL
++
+ config TARGET_FBYAMP
+ 	bool "Support Facebook's OpenBMC YAMP"
+ 	select CPU_ARM1176
+diff --git a/board/facebook/Kconfig b/board/facebook/Kconfig
+index e7f924e..b9d7341 100644
+--- a/board/facebook/Kconfig
++++ b/board/facebook/Kconfig
+@@ -63,6 +63,19 @@ config SYS_CONFIG_NAME
+   default "fbcmm"
+ endif
+ 
++if TARGET_VOYAGER
++config SYS_CPU
++  default "arm1176"
++config SYS_BOARD
++  default "ast-g5"
++config SYS_VENDOR
++  default "aspeed"
++config SYS_SOC
++  default "aspeed"
++config SYS_CONFIG_NAME
++  default "voyager"
++endif
++
+ if TARGET_FBTP
+ config SYS_CPU
+   default "arm1176"
+diff --git a/board/fb-obmc/Kconfig b/board/fb-obmc/Kconfig
+index 39f88dd..3639e3d 100644
+--- a/board/fb-obmc/Kconfig
++++ b/board/fb-obmc/Kconfig
+@@ -89,6 +89,19 @@ config SYS_CONFIG_NAME
+   default "fbcmm"
+ endif
+ 
++if TARGET_VOYAGER
++config SYS_CPU
++  default "arm1176"
++config SYS_BOARD
++  default "ast-g5"
++config SYS_VENDOR
++  default "aspeed"
++config SYS_SOC
++  default "aspeed"
++config SYS_CONFIG_NAME
++  default "voyager"
++endif
++
+ if TARGET_FBYAMP
+ config SYS_CPU
+   default "arm1176"
+diff --git a/configs/fb_voyager_defconfig b/configs/fb_voyager_defconfig
+new file mode 100644
+index 0000000..1684df4
+--- /dev/null
++++ b/configs/fb_voyager_defconfig
+@@ -0,0 +1,26 @@
++CONFIG_ARM=y
++CONFIG_TARGET_VOYAGER=y
++CONFIG_SPI_BOOT=y
++CONFIG_HUSH_PARSER=y
++# CONFIG_CMD_IMLS is not set
++# CONFIG_CMD_FLASH is not set
++# CONFIG_CMD_FPGA is not set
++# CONFIG_CMD_SETEXPR is not set
++CONFIG_OF_LIBFDT=y
++CONFIG_FIT=y
++CONFIG_FIT_VERBOSE=y
++CONFIG_FIT_SIGNATURE=y
++# CONFIG_DM=y
++# CONFIG_OF_CONTROL=y
++# CONFIG_OF_EMBED=y
++CONFIG_NETCONSOLE=y
++CONFIG_PHYLIB=y
++CONFIG_NETDEVICES=y
++CONFIG_DEBUG_UART=y
++CONFIG_DEBUG_UART_BASE=0x1E783000
++CONFIG_DEBUG_UART_CLOCK=24000000
++CONFIG_SYS_NS16550=y
++CONFIG_SPI_FLASH=y
++CONFIG_SPI_FLASH_MACRONIX=y
++CONFIG_SPI_FLASH_MTD=y
++CONFIG_SYS_PROMPT="VOYAGER-boot=> "
+diff --git a/include/configs/voyager.h b/include/configs/voyager.h
+new file mode 100644
+index 0000000..23b1d4a
+--- /dev/null
++++ b/include/configs/voyager.h
+@@ -0,0 +1,57 @@
++/*
++ * (C) Copyright 2004-Present
++ * Teddy Reed <reed@fb.com>, Facebook, Inc.
++ *
++ * SPDX-License-Identifier: GPL-2.0+
++ */
++
++#ifndef __VOYAGER_CONFIG_H
++#define __VOYAGER_CONFIG_H
++
++#define CONFIG_VOYAGER 1
++
++#define CONFIG_SYS_LONGHELP
++
++#define CONFIG_BOOTARGS   "debug console=ttyS1,9600n8 root=/dev/ram rw"
++#define CONFIG_BOOTFILE   "flash-cmm"
++
++/*
++ * Serial configuration
++ */
++#define CONFIG_SYS_NS16550_COM1 AST_UART1_BASE
++#define CONFIG_CONS_INDEX       1
++#define CONFIG_ASPEED_COM       AST_UART1_BASE
++#define CONFIG_BAUDRATE         9600
++
++/*
++ * UART configurtion
++ */
++#define CONFIG_ASPEED_UART1_ENABLE
++#define CONFIG_ASPEED_UART1_BMC // by default, src is LPC for UART1
++#define CONFIG_ASPEED_UART2_ENABLE
++#define CONFIG_ASPEED_UART2_BMC // by default, src is LPC for UART2
++#define CONFIG_ASPEED_UART3_ENABLE
++#define CONFIG_ASPEED_UART4_ENABLE
++#define CONFIG_ASPEED_UART5_MAP_IO6
++
++/*
++ * NIC configuration
++ */
++#define CONFIG_MAC2_ENABLE
++#define CONFIG_MAC1_PHY_SETTING     0
++#define CONFIG_MAC2_PHY_SETTING     0
++#define CONFIG_ASPEED_MAC_NUMBER  2
++#define CONFIG_ASPEED_MAC_CONFIG  2
++
++#define CONFIG_MII_
++#define CONFIG_CMD_MII
++
++/*
++ * Enable DRAM ECC, going to lose 1/8 of memory
++ */
++#define CONFIG_DRAM_ECC
++
++#include "facebook_common.h"
++#include "ast2500_common.h"
++
++#endif  /* __FBCMM_CONFIG_H */
