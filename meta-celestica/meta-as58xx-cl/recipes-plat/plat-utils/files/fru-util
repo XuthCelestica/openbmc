@@ -71,12 +71,13 @@ FAN4_EEPROM_I2C_BUS=34
 FAN4_EEPROM_I2C_ADDR=50
 
 #For Phalanx
+if [ "$board_type" = "Phalanx" ]; then
 LC_EEPROM_MAX=2
-LC1_EEPROM_I2C_BUS=40
+LC1_EEPROM_I2C_BUS=9
 LC1_EEPROM_I2C_ADDR=52
-LC2_EEPROM_I2C_BUS=41
-LC2_EEPROM_I2C_ADDR=54
-
+LC2_EEPROM_I2C_BUS=10
+LC2_EEPROM_I2C_ADDR=52
+fi
 
 ############################################
 read_info() {

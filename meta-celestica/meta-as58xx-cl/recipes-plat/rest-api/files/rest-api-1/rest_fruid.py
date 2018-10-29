@@ -81,7 +81,24 @@ def get_fruid_psu():
 def get_fruid_fan():
     fresult = []
     result = []
-    for i in range(4):
+    fan_num = 0
+    cmd = 'source /usr/local/bin/openbmc-utils.sh; board_type'
+    proc = subprocess.Popen([cmd],
+                            shell=True,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    try:
+        data, err = bmc_command.timed_communicate(proc)
+        data = data.decode()
+    except bmc_command.TimeoutError as ex:
+        data = ex.output
+        err = ex.error
+    if not data.find('Fishbone'):
+        fan_num = 4
+    elif not data.find('Phalanx'):
+        fan_num = 5
+
+    for i in range(fan_num):
         cmd = '/usr/local/bin/fru-util fan ' + str(i + 1) 
         proc = subprocess.Popen([cmd],
                             shell=True,

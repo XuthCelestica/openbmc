@@ -57,8 +57,6 @@ i2c_device_add 8 0x0d fancpld #Fan CPLD
 
 # Bus 24 for i2c-6 PCA9548
 #bus 24 channel 0
-i2c_device_add 24 0x50 24c32 #PSU1 FRU EEPROM
-i2c_device_add 24 0x58 dps1100 #PSU1 PMBUS
 #bus 25 channel 1
 #bus 26 channel 2
 #bus 27 channel 3
@@ -101,6 +99,8 @@ if [ "$board_type" = "Fishbone" ]; then
 
 	# Bus 24 for i2c-6 PCA9548
 	#bus 24 channel 0
+	i2c_device_add 24 0x50 24c32 #PSU1 FRU EEPROM
+	i2c_device_add 24 0x58 dps1100 #PSU1 PMBUS
 	#bus 25 channel 1
 	i2c_device_add 25 0x51 24c32 #PSU2 FRU EEPROM
 	i2c_device_add 25 0x59 dps1100 #PSU2 PMBUS
@@ -173,16 +173,18 @@ if [ "$board_type" = "Phalanx" ]; then
 	# Bus 26 for i2c-6 PCA9548
 	#bus 24 channel 0
 	#bus 25 channel 1
-	i2c_device_add 25 0x50 24c32 #PSU3 FRU EEPROM
-	i2c_device_add 25 0x58 dps1100 #PSU3 PMBUS
+	i2c_device_add 25 0x50 24c32 #PSU1 FRU EEPROM
+	i2c_device_add 25 0x58 dps1100 #PSU1 PMBUS
 	#bus 26 channel 2
-	i2c_device_add 26 0x50 24c32 #PSU3 FRU EEPROM
-	i2c_device_add 26 0x58 dps1100 #PSU3 PMBUS
+	i2c_device_add 26 0x50 24c32 #PSU2 FRU EEPROM
+	i2c_device_add 26 0x58 dps1100 #PSU2 PMBUS
 	#bus 27 channel 3
-	i2c_device_add 27 0x50 24c32 #PSU4 FRU EEPROM
-	i2c_device_add 27 0x58 dps1100 #PSU4 PMBUS
 	#bus 28 channel 4
+	i2c_device_add 28 0x50 24c32 #PSU3 FRU EEPROM
+	i2c_device_add 28 0x58 dps1100 #PSU3 PMBUS
 	#bus 29 channel 5
+	i2c_device_add 29 0x50 24c32 #PSU4 FRU EEPROM
+	i2c_device_add 29 0x58 dps1100 #PSU4 PMBUS
 	#bus 30 channel 6
 	i2c_device_add 30 0x20 pca9505
 	#bus 31 channel 7

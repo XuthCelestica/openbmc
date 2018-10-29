@@ -1,6 +1,6 @@
-From bc365d05c5f92fb002d95ec40f5711cb6c211c4c Mon Sep 17 00:00:00 2001
-From: zmzhan <mzhan@celestica.com>
-Date: Tue, 4 Sep 2018 12:42:41 +0800
+From 6f801805c1f29db1b22d12c1b935d79fc15a97fd Mon Sep 17 00:00:00 2001
+From: Xuth <tianhui@celestica.com>
+Date: Fri, 12 Oct 2018 16:02:14 +0800
 Subject: [PATCH] Support Celestica Questone2 and AS58XX-CL projects
 
 ---
@@ -9,10 +9,10 @@ Subject: [PATCH] Support Celestica Questone2 and AS58XX-CL projects
  board/celestica/MAINTAINERS     |   8 ++
  configs/cel_as58xx-cl_defconfig |  26 ++++
  configs/cel_questone2_defconfig |  26 ++++
- drivers/net/aspeednic.c         |  11 ++
+ drivers/net/aspeednic.c         |  16 +++
  include/configs/cel_as58xx-cl.h | 261 ++++++++++++++++++++++++++++++++++++++++
  include/configs/cel_questone2.h | 252 ++++++++++++++++++++++++++++++++++++++
- 8 files changed, 620 insertions(+)
+ 8 files changed, 625 insertions(+)
  create mode 100644 board/celestica/Kconfig
  create mode 100644 board/celestica/MAINTAINERS
  create mode 100644 configs/cel_as58xx-cl_defconfig
@@ -159,7 +159,7 @@ index 0000000..ed9c090
 +CONFIG_SPI_FLASH_MTD=y
 +CONFIG_SYS_PROMPT="Cel-boot=> "
 diff --git a/drivers/net/aspeednic.c b/drivers/net/aspeednic.c
-index 473aee2..d7b0ded 100644
+index 473aee2..8ea8e08 100644
 --- a/drivers/net/aspeednic.c
 +++ b/drivers/net/aspeednic.c
 @@ -1114,6 +1114,9 @@ static void aspeednic_probe_phy(struct eth_device *dev)
@@ -172,7 +172,7 @@ index 473aee2..d7b0ded 100644
  		phy_id = phy_read_register(dev, MII_PHYSID1, phy_addr);
  		/*
  		 * When it is unable to found PHY,
-@@ -1139,6 +1142,14 @@ static int aspeednic_init(struct eth_device* dev, bd_t* bis)
+@@ -1139,6 +1142,19 @@ static int aspeednic_init(struct eth_device* dev, bd_t* bis)
  
  	aspeednic_write_hwaddr(dev);
  
@@ -182,6 +182,11 @@ index 473aee2..d7b0ded 100644
 +	phy_write_register(dev, 0x1c, 0x0e, 0x8804);
 +	phy_write_register(dev, 0x1c, 0x0e, 0xb4e3);
 +	phy_write_register(dev, 0x1c, 0x0e, 0xb864);
++	
++    phy_write_register(dev, 0x04, 0x0f, 0x01e1);
++	phy_write_register(dev, 0x1c, 0x0f, 0x8804);
++	phy_write_register(dev, 0x1c, 0x0f, 0xb4e3);
++	phy_write_register(dev, 0x1c, 0x0f, 0xb864);
 +#endif
 +
  	for (i = 0; i < NUM_RX_DESC; i++) {

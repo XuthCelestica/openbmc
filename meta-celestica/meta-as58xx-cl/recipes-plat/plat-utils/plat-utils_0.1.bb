@@ -30,6 +30,8 @@ SRC_URI = "file://ast-functions \
            file://bcm5387.sh \
            file://setup_sensors.sh \
            file://power_monitor.py \
+           file://power_monitor_fishbone.py \
+           file://power_monitor_phalanx.py \
            file://fru-util \
            file://come_power.sh \
            file://mount_emmc.sh \
@@ -61,6 +63,8 @@ do_install() {
   install -m 0755 wedge_power.sh ${D}${localbindir}/wedge_power.sh
   install -m 0755 board-utils.sh ${D}${localbindir}/board-utils.sh
   install -m 755 power_monitor.py ${D}${localbindir}/power_monitor.py
+  install -m 755 power_monitor_fishbone.py ${D}${localbindir}/power_monitor_fishbone.py
+  install -m 755 power_monitor_phalanx.py ${D}${localbindir}/power_monitor_phalanx.py
   
 
   install -m 755 setup_i2c.sh ${D}${sysconfdir}/init.d/setup_i2c.sh
