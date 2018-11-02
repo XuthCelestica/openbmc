@@ -46,6 +46,7 @@ IMAGE_INSTALL += " \
   crashdump \
   me-util \
   ethtool \
+  mdio-util \
   "
 
 IMAGE_FEATURES += " \

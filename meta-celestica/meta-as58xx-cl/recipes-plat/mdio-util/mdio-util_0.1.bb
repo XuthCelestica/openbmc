@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright 2018-present Celestica. All Rights Reserved.
 #
 # This program file is free software; you can redistribute it and/or modify it
@@ -11,13 +9,25 @@
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 # for more details.
 #
-. /usr/local/bin/openbmc-utils.sh
+#
 
-PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
+SUMMARY = "MDIO access tool utilities"
+DESCRIPTION = "Util for MDIO access"
+SECTION = "base"
+PR = "r1"
 
-sys_led green on #sysled light blue
+LICENSE = "GPLv2"
+LIC_FILES_CHKSUM = "file://LICENSE;beginline=1;endline=21;md5=0bc745d8dcd774dd0dbaaa8e7f312ec1"
 
-#Set BMC login timeout
-echo "TMOUT=300" >> /etc/profile
-echo "export TMOUT" >> /etc/profile
+SRC_URI = "file://mdio-util.c \
+		file://Makefile \
+		file://LICENSE \
+          "
+S = "${WORKDIR}"
 
+do_install() {
+	install -d ${D}${bindir}
+	install -m 0755 mdio-util ${D}${bindir}/mdio-util
+}
+
+FILES_${PN} = "${bindir}"

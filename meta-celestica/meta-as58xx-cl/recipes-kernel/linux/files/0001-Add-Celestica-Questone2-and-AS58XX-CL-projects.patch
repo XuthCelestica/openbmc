@@ -1,20 +1,20 @@
-From c7aa6bac3b2fb4970909e3967097ec586c9222e6 Mon Sep 17 00:00:00 2001
-From: Xuth <tianhui@celestica.com>
-Date: Wed, 31 Oct 2018 17:19:11 +0800
+From 78febda55016c214720e7e94754f7333732cb34f Mon Sep 17 00:00:00 2001
+From: zmzhan <mzhan@celestica.com>
+Date: Fri, 2 Nov 2018 10:18:45 +0800
 Subject: [PATCH] Add Celestica Questone2 and AS58XX-CL projects
 
 ---
- arch/arm/mach-aspeed/Kconfig             | 12 ++++
- arch/arm/plat-aspeed/Makefile            | 10 ++++
- arch/arm/plat-aspeed/dev-eth.c           |  5 +-
- arch/arm/plat-aspeed/dev-i2c-cel.c       | 49 ++++++++++++++++
- arch/arm/plat-aspeed/dev-sdhci.c         |  7 +++
- arch/arm/plat-aspeed/dev-spi-fb.c        | 56 +++++++++++++++++-
- arch/arm/plat-aspeed/dev-uart.c          | 22 ++++++-
- drivers/hwmon/pmbus/pmbus_core.c         |  2 +
- drivers/net/ethernet/faraday/ftgmac100.c | 99 +++++++++++++++++++++++++++++++-
- drivers/net/phy/broadcom.c               |  2 +-
- 10 files changed, 254 insertions(+), 10 deletions(-)
+ arch/arm/mach-aspeed/Kconfig             |  12 +++
+ arch/arm/plat-aspeed/Makefile            |  10 +++
+ arch/arm/plat-aspeed/dev-eth.c           |   5 +-
+ arch/arm/plat-aspeed/dev-i2c-cel.c       |  49 +++++++++++
+ arch/arm/plat-aspeed/dev-sdhci.c         |   7 ++
+ arch/arm/plat-aspeed/dev-spi-fb.c        |  56 ++++++++++++-
+ arch/arm/plat-aspeed/dev-uart.c          |  22 ++++-
+ drivers/hwmon/pmbus/pmbus_core.c         |   2 +
+ drivers/net/ethernet/faraday/ftgmac100.c | 137 ++++++++++++++++++++++++++++++-
+ drivers/net/phy/broadcom.c               |   2 +-
+ 10 files changed, 292 insertions(+), 10 deletions(-)
  create mode 100644 arch/arm/plat-aspeed/dev-i2c-cel.c
 
 diff --git a/arch/arm/mach-aspeed/Kconfig b/arch/arm/mach-aspeed/Kconfig
@@ -24,7 +24,7 @@ index f37d9da..ebba36c 100644
 @@ -276,6 +276,18 @@ config PWNEPTUNE
  	select EGFX_IRQ
      bool "Portwell Neptune"
-
+ 
 +config QUESTONE2
 +	select USB_ARCH_HAS_EHCI
 +	select AST_UART_SDMA
@@ -47,7 +47,7 @@ index 55d9a0d..afcc25e 100644
 @@ -92,6 +92,16 @@ ifeq ($(CONFIG_PWNEPTUNE), y)
    PLATFB = 1
  endif
-
+ 
 +ifeq ($(CONFIG_QUESTONE2), y)
 +  obj-y += dev-uart.o dev-i2c-setup-mux.o dev-i2c-cel.o
 +  PLATFB = 1
@@ -81,9 +81,9 @@ index 7e28d00..13f5f32 100644
      !defined(CONFIG_CMM) && !defined(CONFIG_MINIPACK) && \
 -    !defined(CONFIG_GALAXY100)
 +    !defined(CONFIG_GALAXY100) && !defined(CONFIG_AS58XX_CL)
-
+ 
  	ast_eth0_data.DF_support = !isRevA0;
-
+ 
 diff --git a/arch/arm/plat-aspeed/dev-i2c-cel.c b/arch/arm/plat-aspeed/dev-i2c-cel.c
 new file mode 100644
 index 0000000..6e9a705
@@ -148,9 +148,9 @@ index ba5b165..344307c 100644
  #include <plat/ast_sdhci.h>
  #include <plat/ast-scu.h>
 +#include <mach/hardware.h>
-
+ 
  extern void ast_sd_set_8bit_mode(u8 mode);
-
+ 
 @@ -109,6 +110,12 @@ void __init ast_add_device_sdhci(void)
  #if defined CONFIG_MINIPACK || defined CONFIG_YAMP
  	ast_scu_multi_func_sdhc_slot(2);
@@ -171,7 +171,7 @@ index dcbb366..593758a 100644
 @@ -234,6 +234,38 @@ static struct mtd_partition ast_legacy_partitions[] = {
  	},
  };
-
+ 
 +#if defined(CONFIG_QUESTONE2) || defined(CONFIG_AS58XX_CL)
 +static struct mtd_partition ast_legacy_rom_partitions[] = {
 +	{
@@ -210,7 +210,7 @@ index dcbb366..593758a 100644
 @@ -325,6 +357,14 @@ static struct flash_platform_data ast_legacy_platform_data = {
  	.parts      = ast_legacy_partitions,
  };
-
+ 
 +#if defined(CONFIG_QUESTONE2) || defined(CONFIG_AS58XX_CL)
 +static struct flash_platform_data ast_legacy_rom_platform_data = {
 +	.type       = "mx25l25635e",
@@ -237,11 +237,11 @@ index dcbb366..593758a 100644
 +	},
 +#endif
  };
-
+ 
  #ifdef CONFIG_MINIPACK
 @@ -394,10 +444,10 @@ static struct spi_eeprom m95m02 = {
  #endif
-
+ 
  #if defined(CONFIG_FBTP)  || defined(CONFIG_LIGHTNING) || defined (CONFIG_WEDGE100) || defined (CONFIG_PWNEPTUNE) || \
 -    defined(CONFIG_MINIPACK)
 +    defined(CONFIG_MINIPACK) || defined(CONFIG_QUESTONE2) || defined(CONFIG_AS58XX_CL)
@@ -292,7 +292,7 @@ index 78123f7..f9848e9 100644
 +#endif
  #endif
  	{},
-
+ 
 @@ -434,11 +446,17 @@ iounmap(reg_base);
  	ast_scu_multi_func_uart(2);
  	ast_scu_multi_func_uart(3);
@@ -331,9 +331,9 @@ index f8e7ce5..fef8a63 100644
 +#endif
  	return 0;
  }
-
+ 
 diff --git a/drivers/net/ethernet/faraday/ftgmac100.c b/drivers/net/ethernet/faraday/ftgmac100.c
-index a4421f3..d6e124f 100644
+index a4421f3..48e3733 100644
 --- a/drivers/net/ethernet/faraday/ftgmac100.c
 +++ b/drivers/net/ethernet/faraday/ftgmac100.c
 @@ -129,6 +129,10 @@ struct ftgmac100 {
@@ -345,12 +345,12 @@ index a4421f3..d6e124f 100644
 +	struct delayed_work led_dwq;
 +#endif
  };
-
+ 
  #ifdef CONFIG_FTGMAC100_NCSI
 @@ -3064,7 +3068,11 @@ static int ftgmac100_mii_probe(struct ftgmac100 *priv)
  	for (i = 0; i < PHY_MAX_ADDR; i++) {
  		struct phy_device *tmp = priv->mii_bus->phy_map[i];
-
+ 
 +#if defined(CONFIG_AS58XX_CL)
 +		if (tmp && (tmp->addr == 0x0d)) {
 +#else
@@ -359,10 +359,10 @@ index a4421f3..d6e124f 100644
  			phydev = tmp;
  			break;
  		}
-@@ -3163,6 +3171,77 @@ static int ftgmac100_mdiobus_write(struct mii_bus *bus, int phy_addr,
+@@ -3163,6 +3171,117 @@ static int ftgmac100_mdiobus_write(struct mii_bus *bus, int phy_addr,
  }
  #endif // #ifndef CONFIG_FTGMAC100_NCSI
-
+ 
 +#if defined(CONFIG_AS58XX_CL)
 +static void led_delay_worker(struct work_struct *work)
 +{
@@ -432,12 +432,52 @@ index a4421f3..d6e124f 100644
 +	queue_delayed_work(wq, work, HZ);
 +	return;
 +}
++
++static int mdio_val = 0;
++static ssize_t mdio_read(struct device *dev,
++        struct device_attribute *attr, char *buf)
++{
++	return sprintf(buf, "0x%x\n", mdio_val);
++
++}
++
++static int mdio_write(struct device *dev,
++        struct device_attribute *attr, const char *buf, size_t count)
++{
++	int phy_addr, reg, val = -1;
++	struct mii_bus *mii_bus = container_of(dev, struct mii_bus, dev);
++
++	if(sscanf(buf, "%i %i %i", &phy_addr, &reg, &val) <= 0) {
++		return -EINVAL;
++	}
++
++	if(val == -1) { //read
++		mdio_val = ftgmac100_mdiobus_read(mii_bus, phy_addr, reg);
++	} else {
++		ftgmac100_mdiobus_write(mii_bus, phy_addr, reg, val);
++		mdio_val = -1;
++	}
++	
++	return count;
++}
++
++
++static DEVICE_ATTR(mdio, S_IRUGO | S_IWUSR, mdio_read, mdio_write);
++
++static struct attribute *mdio_attrs[] = {
++	 &dev_attr_mdio.attr,
++	 NULL
++};
++static struct attribute_group mdio_attr_group = {
++     .attrs = mdio_attrs,
++};
++
 +#endif
 +
  /******************************************************************************
   * struct ethtool_ops functions
   *****************************************************************************/
-@@ -3334,9 +3413,9 @@ static int ftgmac100_open(struct net_device *netdev)
+@@ -3334,9 +3453,9 @@ static int ftgmac100_open(struct net_device *netdev)
  #if defined(CONFIG_WEDGE) || defined(CONFIG_WEDGE100) || \
      defined(CONFIG_CMM) || defined (CONFIG_PWNEPTUNE) || \
      defined(CONFIG_MINIPACK) || defined (CONFIG_GALAXY100) || \
@@ -449,15 +489,12 @@ index a4421f3..d6e124f 100644
  	ftgmac100_start_hw(priv, 100);
  #elif defined(CONFIG_YAMP)
  	ftgmac100_start_hw(priv, 100);
-@@ -3602,6 +3681,22 @@ static int ftgmac100_probe(struct platform_device *pdev)
+@@ -3602,6 +3721,20 @@ static int ftgmac100_probe(struct platform_device *pdev)
  		goto err_mii_probe;
  	}
-
+ 
 +#if defined(CONFIG_AS58XX_CL)
 +	ftgmac100_mdiobus_write(priv->mii_bus, 0x0e, 0x04, 0x01e1);
-+	//ftgmac100_mdiobus_write(priv->mii_bus, 0x0e, 0x1c, 0x8804);
-+	//ftgmac100_mdiobus_write(priv->mii_bus, 0x0e, 0x1c, 0xb4e3);
-+	//ftgmac100_mdiobus_write(priv->mii_bus, 0x0e, 0x1c, 0xb864);
 +	ftgmac100_mdiobus_write(priv->mii_bus, 0x0f, 0x04, 0x01e1);
 +
 +	priv->led_wq = create_workqueue("Led workqueue");
@@ -467,17 +504,18 @@ index a4421f3..d6e124f 100644
 +		INIT_DELAYED_WORK(&priv->led_dwq, led_delay_worker);
 +		queue_delayed_work(priv->led_wq, &priv->led_dwq, HZ);
 +	}
++	sysfs_create_group(&priv->mii_bus->dev.kobj, &mdio_attr_group);
 +#endif
 +
  #endif
-
+ 
  	/* register network device */
 diff --git a/drivers/net/phy/broadcom.c b/drivers/net/phy/broadcom.c
 index 6698743..ac189ff 100644
 --- a/drivers/net/phy/broadcom.c
 +++ b/drivers/net/phy/broadcom.c
 @@ -372,7 +372,7 @@ static int bcm54616s_config_aneg(struct phy_device *phydev)
-
+ 
  #if defined(CONFIG_WEDGE) || defined(CONFIG_WEDGE100) || defined(CONFIG_CMM) || \
  	defined(CONFIG_MINIPACK) || defined(CONFIG_YAMP) || \
 -	defined(CONFIG_GALAXY100)
@@ -485,5 +523,6 @@ index 6698743..ac189ff 100644
  	/* disable GTXCLK Clock Delay */
  	phy_write(phydev, 0x1C, 0x8C00);
  	/* Disable RGMII RXD to RXC skew */
---
+-- 
 2.7.4
+

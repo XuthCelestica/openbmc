@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright 2018-present Celestica. All Rights Reserved.
 #
 # This program file is free software; you can redistribute it and/or modify it
@@ -11,13 +9,19 @@
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 # for more details.
 #
-. /usr/local/bin/openbmc-utils.sh
+# You should have received a copy of the GNU General Public License
+# along with this program in a file named COPYING; if not, write to the
+# Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301 USA
 
-PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
+TARGET = mdio-util
+OBJECTS += mdio-util.c
 
-sys_led green on #sysled light blue
+$(TARGET): $(OBJECTS)
+	$(CC) $(CFLAGS)  -o $@ $^ $(LDFLAGS)
 
-#Set BMC login timeout
-echo "TMOUT=300" >> /etc/profile
-echo "export TMOUT" >> /etc/profile
+.PHONY: clean
 
+clean:
+	rm -rf *.o mdio-util
