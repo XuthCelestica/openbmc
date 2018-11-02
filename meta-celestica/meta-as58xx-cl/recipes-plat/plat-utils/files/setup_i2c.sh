@@ -20,9 +20,17 @@
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 . /usr/local/bin/openbmc-utils.sh
 
+board_type=$(board_type)
 #For Common I2C devices
 # Bus 0
+#For Fishbone I2C devices
+if [ "$board_type" = "Fishbone" ]; then
 i2c_device_add 0 0x0d syscpld  #CPLD
+elif [ "$board_type" = "Phalanx" ]; then
+i2c_device_add 0 0x0d syscpld_phalanx  #CPLD
+else
+i2c_device_add 0 0x0d syscpld  #CPLD
+fi
 
 # Bus 1
 i2c_device_add 1 0x50 24c32  #CPU EEPROM
@@ -71,7 +79,6 @@ i2c_device_add 39 0x56 24c64 #Fan Board EEPROM
 i2c_device_add 39 0x48 tmp75
 i2c_device_add 39 0x49 tmp75
 
-board_type=$(board_type)
 #For Fishbone I2C devices
 if [ "$board_type" = "Fishbone" ]; then
 	# Bus 4

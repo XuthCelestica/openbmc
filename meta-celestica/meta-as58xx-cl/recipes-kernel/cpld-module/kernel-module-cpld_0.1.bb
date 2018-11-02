@@ -26,6 +26,7 @@ PV = "0.1"
 
 SRC_URI = "file://Makefile \
            file://syscpld.c \
+           file://syscpld_phalanx.c \
            file://fancpld.c \
            file://COPYING \
           "
@@ -38,5 +39,6 @@ RDEPENDS_${PN} += "kernel-module-i2c-dev-sysfs"
 
 KERNEL_MODULE_AUTOLOAD += "                     \
  syscpld                                        \
+ syscpld_phalanx                                \
  fancpld                                        \
 "

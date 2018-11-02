@@ -146,7 +146,7 @@ sys_led() {
 }
 
 board_type() {
-	((val=$(cat $HARDWARE_VERSION 2> /dev/null | head -n 1)))
+	((val=$(i2cget -f -y 0 0x0d 0x02 2> /dev/null | head -n 1)))
 	if [ $val -eq '3' ]; then
 		echo 'Phalanx'
 	else

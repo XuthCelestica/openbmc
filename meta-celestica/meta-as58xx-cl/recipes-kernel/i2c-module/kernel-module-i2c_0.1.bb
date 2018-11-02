@@ -23,6 +23,7 @@ SRC_URI = "file://Makefile \
            file://ir358x.c \
            file://ir3595.c \
            file://dps1100.c \
+           file://isl68137.c \
            file://psu_fru.c \
            file://pmbus.h \
            file://COPYING \
@@ -34,4 +35,4 @@ DEPENDS += "kernel-module-i2c-dev-sysfs"
 
 RDEPENDS_${PN} += "kernel-module-i2c-dev-sysfs"
 
-KERNEL_MODULE_AUTOLOAD += "ir358x ir3595 dps1100 psu_fru"
+KERNEL_MODULE_AUTOLOAD += "ir358x ir3595 dps1100 psu_fru isl68137"

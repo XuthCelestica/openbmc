@@ -22,13 +22,13 @@
 #define CHECKSUM                                    0x9F
 #define CHECKSUM_LENGTH                             0x01
 
-#define MFR_ID                  0x2C
-#define MFR_ID_Length           12
-#define Product_Name            0x4D
-#define Product_Name_Length     17
-#define Serial_Number           0x38
+#define MFR_ID                  0x20
+#define MFR_ID_Length           15
+#define Product_Name            0x50
+#define Product_Name_Length     12
+#define Serial_Number           0x40
 #define Serial_Number_Length    14
-#define Product_Version         0x46
+#define Product_Version         0x5D
 #define Product_Version_Length    3
 
 typedef struct _eeprom_psu_data {

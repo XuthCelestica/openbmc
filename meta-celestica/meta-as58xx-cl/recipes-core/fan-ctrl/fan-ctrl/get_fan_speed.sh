@@ -39,7 +39,11 @@ show_pwm()
 {
     pwm="${FAN_DIR}/fan${1}_pwm"
     val=$(cat $pwm | head -n 1)
-    echo "$((val * 100 / 255))%"
+    if [ $((val * 100 % 255)) -ne 0 ]; then
+        echo "$((val * 100 / 255 + 1))%"
+    else
+        echo "$((val * 100 / 255))%"
+    fi
 }
 
 show_rpm()

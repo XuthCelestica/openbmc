@@ -10,7 +10,7 @@
 # for more details.
 #
 
-obj-m := ir358x.o ir3595.o dps1100.o psu_fru.o
+obj-m := ir358x.o ir3595.o dps1100.o psu_fru.o isl68137.o
 
 ccflags-y += -I$(KERNEL_EXTRA_HEADER_PATH)
 
