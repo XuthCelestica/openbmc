@@ -230,60 +230,49 @@ int pal_get_fruid_eeprom_path(uint8_t fru, char *path)
 			sprintf(path, "/sys/bus/i2c/devices/i2c-24/24-0050/eeprom");
 			break;
 		case FRU_FAN1:
-			if(board_id == FISHBONE)
-			{
+			if(board_id == FISHBONE) {
 				sprintf(path, "/sys/bus/i2c/devices/i2c-34/34-0050/eeprom");
 			}
-			else if(board_id == PHALANX)
-			{
+			else if(board_id == PHALANX) {
 				sprintf(path, "/sys/bus/i2c/devices/i2c-36/36-0050/eeprom");
 			}
 			break;
 		case FRU_FAN2:
-			if(board_id == FISHBONE)
-			{
+			if(board_id == FISHBONE) {
 				sprintf(path, "/sys/bus/i2c/devices/i2c-32/32-0050/eeprom");
 			}
-			else if(board_id == PHALANX)
-			{
+			else if(board_id == PHALANX) {
 				sprintf(path, "/sys/bus/i2c/devices/i2c-35/35-0050/eeprom");
 			}
 			break;
 		case FRU_FAN3:
-			if(board_id == FISHBONE)
-			{
+			if(board_id == FISHBONE) {
 				sprintf(path, "/sys/bus/i2c/devices/i2c-38/38-0050/eeprom");
 			}
-			else if(board_id == PHALANX)
-			{
+			else if(board_id == PHALANX) {
 				sprintf(path, "/sys/bus/i2c/devices/i2c-34/34-0050/eeprom");
 			}
 			break;
 		case FRU_FAN4:
-			if(board_id == FISHBONE)
-			{
+			if(board_id == FISHBONE) {
 				sprintf(path, "/sys/bus/i2c/devices/i2c-36/36-0050/eeprom");
 			}
-			else if(board_id == PHALANX)
-			{
+			else if(board_id == PHALANX) {
 				sprintf(path, "/sys/bus/i2c/devices/i2c-33/33-0050/eeprom");
 			}
 			break;
 		case FRU_FAN5:
-			if(board_id == PHALANX)
-			{
+			if(board_id == PHALANX) {
 				sprintf(path, "/sys/bus/i2c/devices/i2c-32/32-0050/eeprom");
 			}
 			break;
 		case FRU_LINE_CARD1:
-			if(board_id == PHALANX)
-			{
+			if(board_id == PHALANX) {
 				sprintf(path, "/sys/bus/i2c/devices/i2c-9/9-0052/eeprom");
 			}
 			break;
 		case FRU_LINE_CARD2:
-			if(board_id == PHALANX)
-			{
+			if(board_id == PHALANX) {
 				sprintf(path, "/sys/bus/i2c/devices/i2c-10/10-0052/eeprom");
 			}
 			break;
@@ -370,7 +359,13 @@ int pal_is_fru_prsnt(uint8_t fru, uint8_t *status)
 		case FRU_CPU:
 		case FRU_FB:
 		case FRU_LINE_CARD1:
+			if(board_id == FISHBONE) {
+				return -1;
+			}
 		case FRU_LINE_CARD2:
+			if(board_id == FISHBONE) {
+				return -1;
+			}
 		case FRU_SWITCH:
 			*status = 1;
 			break;
@@ -389,12 +384,10 @@ int pal_is_fru_prsnt(uint8_t fru, uint8_t *status)
 			*status = !value;
 			break;
 		case FRU_FAN1:
-			if(board_id == FISHBONE)
-			{
+			if(board_id == FISHBONE) {
 				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan4_present");
 			}
-			else if(board_id == PHALANX)
-			{
+			else if(board_id == PHALANX) {
 				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan1_present");
 			}
 			if (read_device(full_name, &value)) {
@@ -403,12 +396,10 @@ int pal_is_fru_prsnt(uint8_t fru, uint8_t *status)
 			*status = !value;
 			break;
 		case FRU_FAN2:
-			if(board_id == FISHBONE)
-			{
+			if(board_id == FISHBONE) {
 				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan3_present");
 			}
-			else if(board_id == PHALANX)
-			{
+			else if(board_id == PHALANX) {
 				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan2_present");
 			}
 			if (read_device(full_name, &value)) {
@@ -417,12 +408,10 @@ int pal_is_fru_prsnt(uint8_t fru, uint8_t *status)
 			*status = !value;
 			break;
 		case FRU_FAN3:
-			if(board_id == FISHBONE)
-			{
+			if(board_id == FISHBONE) {
 				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan2_present");
 			}
-			else if(board_id == PHALANX)
-			{
+			else if(board_id == PHALANX) {
 				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan3_present");
 			}
 			if (read_device(full_name, &value)) {
@@ -431,12 +420,10 @@ int pal_is_fru_prsnt(uint8_t fru, uint8_t *status)
 			*status = !value;
 			break;
 		case FRU_FAN4:
-			if(board_id == FISHBONE)
-			{
+			if(board_id == FISHBONE) {
 				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan1_present");
 			}
-			else if(board_id == PHALANX)
-			{
+			else if(board_id == PHALANX) {
 				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan4_present");
 			}
 			if (read_device(full_name, &value)) {
@@ -445,8 +432,7 @@ int pal_is_fru_prsnt(uint8_t fru, uint8_t *status)
 			*status = !value;
 			break;
 		case FRU_FAN5:
-			if(board_id == PHALANX)
-			{
+			if(board_id == PHALANX) {
 				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-8/8-000d/fan5_present");
 			}
 			if (read_device(full_name, &value)) {

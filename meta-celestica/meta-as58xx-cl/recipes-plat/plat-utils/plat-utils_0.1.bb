@@ -36,6 +36,8 @@ SRC_URI = "file://ast-functions \
            file://come_power.sh \
            file://mount_emmc.sh \
            file://setup_pca9506.sh \
+           file://us_monitor.sh \
+           file://start_us_monitor.sh \
            file://COPYING \
           "
 
@@ -75,6 +77,10 @@ do_install() {
   #mount EMMC
   install -m 755 mount_emmc.sh ${D}${sysconfdir}/init.d/mount_emmc.sh
   update-rc.d -r ${D} mount_emmc.sh start 80 S .
+
+  install -m 755 us_monitor.sh ${D}${localbindir}/us_monitor.sh
+  install -m 755 start_us_monitor.sh ${D}${sysconfdir}/init.d/start_us_monitor.sh
+  update-rc.d -r ${D} start_us_monitor.sh start 84 S .
 
   install -m 755 power-on.sh ${D}${sysconfdir}/init.d/power-on.sh
   update-rc.d -r ${D} power-on.sh start 85 S .

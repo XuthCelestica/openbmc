@@ -56,11 +56,19 @@ FBEEPROM_I2C_ADDR=56
 #FAN Module
 if [ "$board_type" = "Phalanx" ]; then
 FAN_EEPROM_MAX=5
-FAN5_EEPROM_I2C_BUS=36
+FAN1_EEPROM_I2C_BUS=36
+FAN1_EEPROM_I2C_ADDR=50
+FAN2_EEPROM_I2C_BUS=35
+FAN2_EEPROM_I2C_ADDR=50
+FAN3_EEPROM_I2C_BUS=34
+FAN3_EEPROM_I2C_ADDR=50
+FAN4_EEPROM_I2C_BUS=33
+FAN4_EEPROM_I2C_ADDR=50
+FAN5_EEPROM_I2C_BUS=32
 FAN5_EEPROM_I2C_ADDR=50
 else
+#For Fishbone
 FAN_EEPROM_MAX=4
-fi
 FAN1_EEPROM_I2C_BUS=36
 FAN1_EEPROM_I2C_ADDR=50
 FAN2_EEPROM_I2C_BUS=38
@@ -69,6 +77,7 @@ FAN3_EEPROM_I2C_BUS=32
 FAN3_EEPROM_I2C_ADDR=50
 FAN4_EEPROM_I2C_BUS=34
 FAN4_EEPROM_I2C_ADDR=50
+fi
 
 #For Phalanx
 if [ "$board_type" = "Phalanx" ]; then
@@ -79,16 +88,30 @@ LC2_EEPROM_I2C_BUS=10
 LC2_EEPROM_I2C_ADDR=52
 fi
 
+#For Phalanx PSU
+if [ "$board_type" = "Phalanx" ]; then
+PSU_EEPROM_MAX=4
+else
+#For Fishbone PSU
+PSU_EEPROM_MAX=2
+fi
+
 ############################################
 read_info() {
 	echo `cat /sys/bus/i2c/devices/i2c-${1}/${1}-00${2}/${3} | head -n 1`
 }
 
 psu_present() {
-	if [ $1 -ne 1  ]; then
-		((val=$(read_info 0 0d psu_l_present)))
+	if [ "$board_type" = "Phalanx" ]; then
+		if [ $1 -le $PSU_EEPROM_MAX ]; then
+			((val=$(read_info 0 0d psu_${1}_present)))
+		fi
 	else
-		((val=$(read_info 0 0d psu_r_present)))
+		if [ $1 -ne 1  ]; then
+			((val=$(read_info 0 0d psu_l_present)))
+		else
+			((val=$(read_info 0 0d psu_r_present)))
+		fi
 	fi
 	if [ $val -eq 0 ]; then
 		return 1
@@ -98,10 +121,16 @@ psu_present() {
 }
 
 psu_power() {
-	if [ $1 -ne 1  ]; then
-		((val=$(read_info 0 0d psu_l_status)))
+	if [ "$board_type" = "Phalanx" ]; then
+		if [ $1 -le $PSU_EEPROM_MAX ]; then
+			((val=$(read_info 0 0d psu_${1}_status)))
+		fi
 	else
-		((val=$(read_info 0 0d psu_r_status)))
+		if [ $1 -ne 1  ]; then
+			((val=$(read_info 0 0d psu_l_status)))
+		else
+			((val=$(read_info 0 0d psu_r_status)))
+		fi
 	fi
 	if [ $val -eq 0 ]; then
 		return 1
@@ -111,16 +140,22 @@ psu_power() {
 }
 
 psu_acok() {
-    if [ $1 -ne 1  ]; then
-        ((val=$(read_info 0 0d psu_l_ac_status)))
-    else
-        ((val=$(read_info 0 0d psu_r_ac_status)))
-    fi
-    if [ $val -eq 0 ]; then
-        return 1
-    else
-        return 0
-    fi
+	if [ "$board_type" = "Phalanx" ]; then
+		if [ $1 -le $PSU_EEPROM_MAX ]; then
+			((val=$(read_info 0 0d psu_${1}_ac_status)))
+		fi
+	else
+		if [ $1 -ne 1  ]; then
+			((val=$(read_info 0 0d psu_l_ac_status)))
+		else
+			((val=$(read_info 0 0d psu_r_ac_status)))
+		fi
+	fi
+	if [ $val -eq 0 ]; then
+		return 1
+	else
+		return 0
+	fi
 }
 
 psu_eeprom_path()
@@ -129,30 +164,51 @@ psu_eeprom_path()
 }
 
 psu_info() {
-	if [ "$1" == "1" ]; then
-		echo "PSU1 FRU:"
-		$(psu_present 1)
-		if [ $? -eq 0 ]; then
-			echo "Present: Absent"
-			return 1
+	if [ "$board_type" = "Phalanx" ]; then
+		if [ $1 -le $PSU_EEPROM_MAX ]; then
+			echo "PSU${1} FRU:"
+			$(psu_present $1)
+			if [ $? -eq 0 ]; then
+				echo "Present: Absent"
+				return 1
+			fi
+			echo -e "$(eeprom_data psu$1)"
+		else
+			echo "Invalid PSU number"
 		fi
-		echo -e "$(psu_fru $(psu_eeprom_path 24 50))"
-	elif [ "$1" == "2" ]; then
-		echo "PSU2 FRU:"
-		$(psu_present 2)
-		if [ $? -eq 0 ]; then
-			echo "Present: Absent"
-			return 1
-		fi
-		echo -e "$(psu_fru $(psu_eeprom_path 25 51))"
 	else
-		echo "Invalid PSU number"
+		if [ "$1" == "1" ]; then
+			echo "PSU1 FRU:"
+			$(psu_present 1)
+			if [ $? -eq 0 ]; then
+				echo "Present: Absent"
+				return 1
+			fi
+			echo -e "$(eeprom_data psu1)"
+		elif [ "$1" == "2" ]; then
+			echo "PSU2 FRU:"
+			$(psu_present 2)
+			if [ $? -eq 0 ]; then
+				echo "Present: Absent"
+				return 1
+			fi
+			echo -e "$(eeprom_data psu2)"
+		else
+			echo "Invalid PSU number"
+		fi
 	fi
 }
+
 psu_usage() {
 	echo "option:"
 	echo "-a    show all psu FRU"
-	echo "-p <1/2>    show specific psu FRU"
+	if [ "$board_type" = "Fishbone" ]; then
+		echo "-p <1/2>    show specific psu FRU"
+	elif [ "$board_type" = "Phalanx" ]; then
+		echo "-p <1/2/3/4>    show specific psu FRU"
+	else
+		echo "-p <1/2>    show specific psu FRU"
+	fi
 }
 
 fan_usage() {
@@ -168,9 +224,11 @@ psu_fru_() {
 	while getopts "ap:" opt; do
 		case $opt in
 		a)
-			psu_info 1
-			echo
-			psu_info 2
+			for index in $(seq 1 ${PSU_EEPROM_MAX})
+			do
+				psu_info $index
+				echo
+			done
 			;;
 		p)
 			psu_info $OPTARG
@@ -280,11 +338,12 @@ fru_status() {
 		all=1
 	fi
 	if [ "$1" = "psu" ] || [ $all -eq 1 ]; then
-		echo "PSU1:"
-		show_psu_status 1
-		echo -e "\nPSU2:"
-		show_psu_status 2
-		echo
+		for i in $( seq 1 $PSU_EEPROM_MAX )
+		do
+			echo "PSU${i}:"
+			show_psu_status $i
+			echo
+		done
 	fi
 
 	if [ "$1" = "fan" ] || [ $all -eq 1 ]; then
@@ -297,6 +356,7 @@ fru_status() {
 			else
 				echo "Absent"
 			fi
+			echo
 		done
 	fi
 }

@@ -261,7 +261,11 @@ sys_temp_usage(){
 }
 
 sys_temp_show() {
-	sensors syscpld-i2c-0-0d
+	if [ $(board_type) = 'Fishbone' ]; then
+		sensors syscpld-i2c-0-0d
+	else
+		sensors syscpld_phalanx-i2c-0-0d
+	fi
 }
 
 sys_temp() {
@@ -297,6 +301,7 @@ sys_temp() {
 		return 1
 	fi
 
-	echo $3 > $SYSCPLD_SYSFS_DIR/$file_prefix$file_suffix
+	((value=${3}*1000))
+	echo $value > $SYSCPLD_SYSFS_DIR/$file_prefix$file_suffix
 	return 0
 }

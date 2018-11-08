@@ -9,20 +9,23 @@
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 # for more details.
 #
+# You should have received a copy of the GNU General Public License
+# along with this program in a file named COPYING; if not, write to the
+# Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301 USA
 
-obj-m := ir358x.o ir3595.o dps1100.o psu_fru.o isl68137.o max31730.o
+TARGET   = eeprom_data
+OBJECTS := eeprom_data.o ezxml.o
 
-ccflags-y += -I$(KERNEL_EXTRA_HEADER_PATH)
+CFLAGS += -Wall -Werror
 
-SRC := $(shell pwd)
+.c.o:
+	$(CC) -c $(CFLAGS) $(INCPATH) -o $@ $<
+$(TARGET):$(OBJECTS)
+	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJECTS)
 
-all:
-	$(MAKE) -C $(KERNEL_SRC) M=$(SRC)
-
-modules_install:
-	$(MAKE) -C $(KERNEL_SRC) M=$(SRC) modules_install
+.PHONY: clean
 
 clean:
-	rm -f *.o *~ core .depend .*.cmd *.ko *.mod.c
-	rm -f Module.markers Module.symvers modules.order
-	rm -rf .tmp_versions Modules.symvers
+	rm -rf *.o $(TARGET)

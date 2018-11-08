@@ -35,6 +35,7 @@ IMAGE_INSTALL += " \
   plat-utils \
   tlv-eeprom \
   psu-fru \
+  eeprom-data \
   fan-ctrl \
   peci-util \
   e2fsprogs \

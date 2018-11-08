@@ -162,7 +162,7 @@ static ssize_t sys_alarm_store(struct device *dev,
 	if (rc != 0)	{
 		return count;
 	}
-	rc = temp_value_rw(name, SYSFS_WRITE, write_value * 1000);
+	rc = temp_value_rw(name, SYSFS_WRITE, write_value);
 	if(rc < 0)
 		return -1;
 
