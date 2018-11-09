@@ -19,7 +19,7 @@ import bmc_command
 
 def get_temp():
     result = []
-    proc = subprocess.Popen(['sensors syscpld-i2c-0-0d'],
+    proc = subprocess.Popen(['source /usr/local/bin/openbmc-utils.sh; sys_temp'],
                             shell=True,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
