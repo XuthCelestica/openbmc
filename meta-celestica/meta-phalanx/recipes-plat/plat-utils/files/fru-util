@@ -1,0 +1,322 @@
+#!/bin/bash
+#
+# Copyright 2018-present Celestica. All Rights Reserved.
+#
+# This program file is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program in a file named COPYING; if not, write to the
+# Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301 USA
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
+. /usr/local/bin/openbmc-utils.sh
+
+command=(
+"status fru_status"
+"psu psu_fru_"
+"sys sys_fru"
+"fan fan_fru"
+"bmc bmc_fru"
+"come come_fru"
+"fb fb_fru"
+"switch switch_fru"
+"lb lc_fru"
+)
+
+EEPROM_LINK_FILE="/tmp/eeprom"
+
+#System EEPROM
+SYSEEPROM_I2C_BUS=2
+SYSEEPROM_I2C_ADDR=57
+
+#BMC EEPROM
+BMCEEPROM_I2C_BUS=2
+BMCEEPROM_I2C_ADDR=53
+
+#COMe EEPROM
+COMEEEPROM_I2C_BUS=1
+COMEEEPROM_I2C_ADDR=50
+
+#FAN EEPROM
+#FAN Board EEPROM
+FBEEPROM_I2C_BUS=39
+FBEEPROM_I2C_ADDR=56
+
+#FAN Module
+FAN_EEPROM_MAX=5
+FAN1_EEPROM_I2C_BUS=36
+FAN1_EEPROM_I2C_ADDR=50
+FAN2_EEPROM_I2C_BUS=35
+FAN2_EEPROM_I2C_ADDR=50
+FAN3_EEPROM_I2C_BUS=34
+FAN3_EEPROM_I2C_ADDR=50
+FAN4_EEPROM_I2C_BUS=33
+FAN4_EEPROM_I2C_ADDR=50
+FAN5_EEPROM_I2C_BUS=32
+FAN5_EEPROM_I2C_ADDR=50
+
+#For Phalanx
+LC_EEPROM_MAX=2
+LC1_EEPROM_I2C_BUS=9
+LC1_EEPROM_I2C_ADDR=52
+LC2_EEPROM_I2C_BUS=10
+LC2_EEPROM_I2C_ADDR=52
+
+#For Phalanx PSU
+PSU_EEPROM_MAX=4
+
+############################################
+read_info() {
+	echo `cat /sys/bus/i2c/devices/i2c-${1}/${1}-00${2}/${3} | head -n 1`
+}
+
+psu_present() {
+	if [ $1 -le $PSU_EEPROM_MAX ]; then
+		((val=$(read_info 0 0d psu_${1}_present)))
+	fi
+
+	if [ $val -eq 0 ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+psu_power() {
+	if [ $1 -le $PSU_EEPROM_MAX ]; then
+		((val=$(read_info 0 0d psu_${1}_status)))
+	fi
+
+	if [ $val -eq 0 ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+psu_acok() {
+	if [ $1 -le $PSU_EEPROM_MAX ]; then
+		((val=$(read_info 0 0d psu_${1}_ac_status)))
+	fi
+
+	if [ $val -eq 0 ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+psu_eeprom_path()
+{
+	echo "/sys/bus/i2c/devices/${1}-00${2}/eeprom"
+}
+
+psu_info() {
+	if [ $1 -le $PSU_EEPROM_MAX ]; then
+		echo "PSU${1} FRU:"
+		$(psu_present $1)
+		if [ $? -eq 0 ]; then
+			echo "Present: Absent"
+			return 1
+		fi
+		echo -e "$(eeprom_data psu$1)"
+	else
+		echo "Invalid PSU number"
+	fi
+}
+
+psu_usage() {
+	echo "option:"
+	echo "-a    show all psu FRU"
+	echo "-p <1/2/3/4>    show specific psu FRU"
+}
+
+fan_usage() {
+	echo "option:"
+	echo "<fanID> [arg]    get/set FAN FRU"
+}
+
+psu_fru_() {
+	if [ $# -lt 1 ]; then
+		psu_usage
+		return 1		
+	fi
+	while getopts "ap:" opt; do
+		case $opt in
+		a)
+			for index in $(seq 1 ${PSU_EEPROM_MAX})
+			do
+				psu_info $index
+				echo
+			done
+			;;
+		p)
+			psu_info $OPTARG
+			;;
+		\?)
+			psu_usage
+		esac
+	done
+}
+
+sys_fru() {
+	fruid-util sys
+}
+
+bmc_fru() {
+	fruid-util bmc
+}
+
+come_fru() {
+	fruid-util cpu
+}
+
+fb_fru() {
+	fruid-util fb
+}
+
+switch_fru() {
+	fruid-util switch
+}
+
+fan_present() {
+	i=$1
+	real_index=$(($FAN_EEPROM_MAX-$i+1))
+	(( val=$(read_info 8 0d fan${real_index}_present )))
+	if [ $val -eq 0 ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+fan_fru() {
+	if [ $# -lt 1 ] || [ $1 -lt 0 ] || [ $1 -gt ${FAN_EEPROM_MAX} ]; then
+		fan_usage
+		return 1
+	fi
+	i=$1
+	$(fan_present $i)
+	if [ $? -eq 0 ] ; then
+		echo "FAN${i} Present: Absent"
+		return 1
+	fi
+	fruid-util fan${i}
+}
+
+lc_fru() {
+	if [ $# -lt 1 ] || [ $1 -lt 0 ] || [ $1 -gt ${LC_EEPROM_MAX} ]; then
+		fan_usage
+		return 1
+	fi
+
+	fruid-util lc${1}
+	# i=$1
+	# echo "LC${i} FRU:"
+	# i2c_bus=$((LC${i}_EEPROM_I2C_BUS))
+	# i2c_addr=$((LC${i}_EEPROM_I2C_ADDR))
+	# if [ -L ${EEPROM_LINK_FILE} ]; then
+	# 	rm -rf ${EEPROM_LINK_FILE}
+	# fi
+	# ln -s /sys/bus/i2c/devices/i2c-${i2c_bus}/${i2c_bus}-00${i2c_addr}/eeprom  ${EEPROM_LINK_FILE}
+	# shift
+	# syseeprom $@
+}
+
+show_psu_status() {
+	$(psu_present $1)
+	if [ $? -eq 1 ]; then
+        echo "Present: Present"
+    else
+        echo "Present: Absent"
+        echo "Power Status: Not OK"
+        echo "AC Status: Not OK"
+		return 1
+    fi
+
+	$(psu_power $1)
+    if [ $? -eq 0 ]; then
+        echo "Power Status: OK"
+    else
+        echo "Power Status: Not OK"
+    fi
+
+	$(psu_acok $1)
+    if [ $? -eq 0 ]; then
+        echo "AC Status: OK"
+    else
+        echo "AC Status: Not OK"
+    fi
+}
+
+fru_status() {
+	all=0
+	if [ $# -eq 0 ]; then
+		all=1
+	fi
+	if [ "$1" = "psu" ] || [ $all -eq 1 ]; then
+		for i in $( seq 1 $PSU_EEPROM_MAX )
+		do
+			echo "PSU${i}:"
+			show_psu_status $i
+			echo
+		done
+	fi
+
+	if [ "$1" = "fan" ] || [ $all -eq 1 ]; then
+		for i in $( seq 1 $FAN_EEPROM_MAX )
+		do
+			echo -n "Fan$i: "
+			$(fan_present $i)
+			if [ $? -eq 1 ]; then
+				echo "Present"
+			else
+				echo "Absent"
+			fi
+			echo
+		done
+	fi
+}
+
+##############################################
+if [ $# -lt 1 ]; then
+	echo "Error: parameter must >= 1"
+	echo "Support commands: "
+	for i in "${command[@]}"; do
+		s=($i)
+		echo $s
+	done
+	exit 1
+fi
+
+for i in "${command[@]}"; do
+	matched=0
+	s=($i)
+	for j in "${s[@]}"; do
+		#echo $j
+		if [ $matched -eq 1 ]; then
+			shift
+			$j $@
+			exit 0
+		fi
+		if [ "$1" == "$j" ]; then
+			matched=1
+			continue
+		else
+			matched=0
+			break;
+		fi
+	done
+done
+
+echo "Invalid parameter: $1"
+exit 1

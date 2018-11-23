@@ -1,9 +1,0 @@
-# The loopback interface
-auto lo
-iface lo inet loopback
-
-auto eth0
-iface eth0 inet manual
-    pre-up ifconfig $IFACE up
-    post-down ifconfig $IFACE down
-

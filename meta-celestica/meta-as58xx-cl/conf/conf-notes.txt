@@ -1,2 +1,0 @@
-Common targets are:
-    as58xx-cl-image
