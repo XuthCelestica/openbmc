@@ -30,4 +30,5 @@
 echo "Setup fan speed... "
 /usr/local/bin/set_fan_speed.sh 50
 cp /etc/pid_config.ini /mnt/data/
+cp /etc/pid_config_v2.ini /mnt/data/
 echo "done."

@@ -29,6 +29,7 @@ SRC_URI += "file://get_fan_speed.sh \
             file://watchdog.h \
             file://Makefile \
             file://pid_config.ini \
+            file://pid_config_v2.ini \
            "
 
 S = "${WORKDIR}"
