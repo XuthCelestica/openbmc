@@ -67,7 +67,7 @@ class commonApp_Handler:
     def helper_rest_api(self, request):
         result = {
             "Information": {
-                "Description": "Wedge RESTful API Entry",
+                "Description": "Fishbone RESTful API Entry",
                 "version": "v0.1",
             },
             "Actions": [],
@@ -83,7 +83,7 @@ class commonApp_Handler:
     def helper_rest_sys(self,request):
         result = {
             "Information": {
-                "Description": "Wedge System",
+                "Description": "Fishbone System",
             },
             "Actions": [],
             "Resources": get_endpoints('/api/sys')

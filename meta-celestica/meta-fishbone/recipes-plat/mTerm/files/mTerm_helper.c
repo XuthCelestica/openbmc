@@ -139,16 +139,15 @@ bufStore* createBuffer(const char *dev, int fsize) {
   }
 
   int ret;
-  ret = snprintf(buf->file, sizeof(buf->file), "%s/mTerm_%s.log", BACKUP_LOG_DIR_PREFIX, dev);
+  ret = snprintf(buf->file, sizeof(buf->file), "/var/log/mTerm_%s.log", dev);
   if ((ret < 0) || (ret >= sizeof(buf->file))) {
     perror("mTerm: Received dev name too long to create buffer file");
     free(buf);
     return NULL;
   }
 
-  buf->backupFileCount = -1;
   ret = snprintf(buf->backupfile, sizeof(buf->backupfile),
-    "%s/mTerm_%s_backup", BACKUP_LOG_DIR_PREFIX, dev);
+    "/var/log/mTerm_%s_backup.log", dev);
   if ((ret < 0) || (ret >= sizeof(buf->backupfile))) {
     perror("mTerm: Received dev name too long to create backup buffer file");
     free(buf);
@@ -188,12 +187,10 @@ void writeTimestampToBuffer(bufStore *buf) {
 }
 
 void writeToBuffer(bufStore *buf, char* data, int len) {
-   int i, ret;
    bool rotate = false;
    struct stat file_stat;
    int rc = stat(buf->file, &file_stat), nbytes = len, cur_len;
    char *cur = data, *prev = data;
-   char priorFile[PATH_SIZE], nextFile[PATH_SIZE];
 
    if (rc != 0) {
      if (errno == ENOENT) {
@@ -214,38 +211,7 @@ void writeToBuffer(bufStore *buf, char* data, int len) {
    // Rollover to a backup file when buffer hits filesize
    if (rotate) {
      close(buf->buf_fd);
-	 for(i = buf->backupFileCount; i >= 0; i--) {
-	   if(i >= (BACKUP_LOG_FILE_COUNT_MAX - 1)) {
-         continue; //recover the last log
-	   }
-	   memset(priorFile, 0, sizeof(priorFile));
-	   ret = snprintf(priorFile, sizeof(priorFile),
-         "%s_%d.log", buf->backupfile, i);
-       if ((ret < 0) || (ret >= sizeof(priorFile))) {
-         syslog(LOG_ERR, "mTerm: Received dev name too long to create backup buffer file");
-         return ;
-       }
-	   memset(nextFile, 0, sizeof(nextFile));
-       ret = snprintf(nextFile, sizeof(nextFile),
-         "%s_%d.log", buf->backupfile, i + 1);
-       if ((ret < 0) || (ret >= sizeof(nextFile))) {
-         syslog(LOG_ERR, "mTerm: Received dev name too long to create backup buffer file");
-         return ;
-       }
-	   rename(priorFile, nextFile);
-	 }
-	 memset(nextFile, 0, sizeof(nextFile));
-     ret = snprintf(nextFile, sizeof(nextFile),
-       "%s_0.log", buf->backupfile);
-     if ((ret < 0) || (ret >= sizeof(nextFile))) {
-       syslog(LOG_ERR, "mTerm: Received dev name too long to create backup buffer file");
-       return ;
-     }
-     rename(buf->file, nextFile);
-	 buf->backupFileCount++;
-	 if(buf->backupFileCount >= BACKUP_LOG_FILE_COUNT_MAX) {
-	   buf->backupFileCount = BACKUP_LOG_FILE_COUNT_MAX - 1;
-	 }
+     rename(buf->file, buf->backupfile);
      buf->buf_fd = open(buf->file, O_RDWR | O_APPEND | O_CREAT, 0666) ;
      if (buf->buf_fd < 0) {
        syslog(LOG_ERR, "Cannot open the mTerm buffer log file");

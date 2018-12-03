@@ -30,10 +30,8 @@
 #define BUF_SIZE 10
 #define PATH_SIZE 64
 #define SEND_SIZE 256
-#define FILE_SIZE_BYTES 300000
+#define FILE_SIZE_BYTES (20480000 + 1024000) //20M + 1M
 #define MAX_BYTE 255
-#define BACKUP_LOG_FILE_COUNT_MAX 10
-#define BACKUP_LOG_DIR_PREFIX "/mnt/emmc/sol_log" //"/var/log"
 
 typedef enum escMode {
   EOL,
@@ -45,7 +43,6 @@ typedef enum escMode {
 typedef struct bufStore {
   int  buf_fd;
   int  maxSizeBytes;
-  int  backupFileCount;
   char file[PATH_SIZE];
   char backupfile[PATH_SIZE];
   char needTimestamp;

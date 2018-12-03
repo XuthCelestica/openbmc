@@ -14,12 +14,14 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 SRC_URI += " \
     file://rest-api-1/rest.py \
+    file://rest-api-1/rest_bmc.py \
     file://rest-api-1/rest_fruid.py \
     file://rest-api-1/rest_led.py \
     file://rest-api-1/rest_sensors.py \
     file://rest-api-1/rest_eth.py \
     file://rest-api-1/rest_raw.py \
     file://rest-api-1/rest_temp.py \
+    file://rest-api-1/rest_syslog.py \
     file://board_endpoint.py \
     file://boardroutes.py \
     file://board_setup_routes.py \
@@ -30,12 +32,14 @@ SRC_URI += " \
 
 binfiles1 += " \
     rest.py \
+    rest_bmc.py \
     rest_fruid.py \
     rest_led.py \
     rest_sensors.py \
     rest_eth.py \
     rest_raw.py \
     rest_temp.py \
+    rest_syslog.py \
     "
 
 binfiles += " \
