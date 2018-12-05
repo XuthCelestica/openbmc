@@ -193,6 +193,15 @@ static const i2c_dev_attr_st syscpld_attr_table[] = {
 	  0x2, 0, 2,
 	},
 	{
+		"sw_brd_type",
+		"Indicate the board type\n"
+		"0x00: fishbone32\n"
+		"0x01: fishbone48",
+		I2C_DEV_ATTR_SHOW_DEFAULT,
+		NULL,
+		0x3, 0, 2,
+	},
+	{
 	  "sb_reset",
 	  "switch board reset control:\n"
 	  "0x0: reset\n"

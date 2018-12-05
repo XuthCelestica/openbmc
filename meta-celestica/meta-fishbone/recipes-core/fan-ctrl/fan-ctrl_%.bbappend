@@ -24,10 +24,13 @@ SRC_URI += "file://get_fan_speed.sh \
             file://set_fan_speed.sh \
             file://setup-fan.sh \
             file://fand.cpp \
+            file://fand_v2.cpp \
+            file://fand32_v2.cpp \
             file://watchdog.cpp \
             file://watchdog.h \
             file://Makefile \
             file://pid_config.ini \
+            file://pid_config_v2.ini \
            "
 
 S = "${WORKDIR}"
@@ -36,6 +39,8 @@ binfiles = "                                    \
     get_fan_speed.sh                            \
     set_fan_speed.sh                            \
     fand                                        \
+    fand_v2                                     \
+    fand32_v2                                   \
     "
 
 
@@ -48,6 +53,7 @@ do_install() {
   install -d ${D}${sysconfdir}/init.d
   install -d ${D}${sysconfdir}/rcS.d
   install -m 644 pid_config.ini ${D}${sysconfdir}/pid_config.ini
+  install -m 644 pid_config_v2.ini ${D}${sysconfdir}/pid_config_v2.ini
   install -m 755 setup-fan.sh ${D}${sysconfdir}/init.d/setup-fan.sh
   update-rc.d -r ${D} setup-fan.sh start 91 S .
 }
