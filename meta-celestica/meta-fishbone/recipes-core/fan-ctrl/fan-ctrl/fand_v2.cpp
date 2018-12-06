@@ -130,12 +130,12 @@ struct point {
 	int speed;
 };
 
-static int calculate_line_speed(int cur_temp, struct line_policy *line);
+static int calculate_line_speed(int cur_temp, int old_temp, struct line_policy *line);
 struct line_policy {
 	int temp_hyst;
 	struct point begin;
 	struct point end;
-	int (*get_speed)(int cur_temp, struct line_policy *line);
+	int (*get_speed)(int cur_temp, int old_temp, struct line_policy *line);
 };
 
 static int calculate_pid_speed(struct pid_policy *pid);
@@ -1327,7 +1327,7 @@ static inline int check_fan_speed(int speed, struct line_policy *line)
 
 static inline float get_line_k(struct point begin, struct point end)
 {
-	return (end.speed - begin.speed) / (end.temp - begin.temp);
+	return (float)(end.speed - begin.speed) / (end.temp - begin.temp);
 }
 
 static inline int check_fall_temp(int temp, struct line_policy *line)
@@ -1346,13 +1346,13 @@ static inline int get_fall_temp(int speed, struct line_policy *line)
 	return check_fall_temp(fall_temp, line);
 }
 
-static int calculate_line_speed(int cur_temp, struct line_policy *line)
+static int calculate_line_speed(int cur_temp, int old_temp, struct line_policy *line)
 {
 	float k = get_line_k(line->begin, line->end);
 	int fall_temp = get_fall_temp(policy->old_pwm, line);
 	int speed;
 
-	if(cur_temp >= fall_temp) {
+	if(cur_temp >= old_temp) {
 		speed = (int)(k * (cur_temp - line->begin.temp) + line->begin.speed);
 #ifdef DEBUG
 		syslog(LOG_DEBUG, "[xuth]%s: cur_temp=%d cal_last_temp=%d k=%f Raising line_pwm=%d", 
@@ -1916,6 +1916,12 @@ static int system_shutdown(const char *why)
 	return 0;
 }
 
+const char *fan_path[] = {
+	"/sys/bus/i2c/devices/34-0050/eeprom",
+	"/sys/bus/i2c/devices/32-0050/eeprom",
+	"/sys/bus/i2c/devices/38-0050/eeprom",
+	"/sys/bus/i2c/devices/36-0050/eeprom",
+};
 static int get_fan_direction(void)
 {
 // #ifdef FOR_F2B
@@ -1933,7 +1939,14 @@ static int get_fan_direction(void)
 	{
 		char command[128];
 		memset(command, 0, sizeof(command));
-		sprintf(command, "fruid-util fan%d | grep 'Product Part Number' 2>/dev/null", i+1);
+		if(i >= sizeof(fan_path)/sizeof(fan_path[0]))
+			continue;
+		// sprintf(command, "fruid-util fan%d | grep 'Product Part Number' 2>/dev/null", i+1);
+		/* Compare fan eeprom date
+		*  string "Product Part Number       : R1241-F9001-01"
+		*  string "001" of "F9001" indicates direction: FAN_DIR_F2B
+		*/
+		sprintf(command, "hexdump -C %s | grep R1241-F9001; echo $?", fan_path[i]);
 		fp = popen(command,"r");
 		if (fp == NULL) {
 			syslog(LOG_ERR, "failed to get fan%d direction", i+1);
@@ -1947,11 +1960,8 @@ static int get_fan_direction(void)
 		/* close */
 		pclose(fp);
 
-		/* Compare fan eeprom date
-		*  string "Product Part Number       : R1241-F9001-01"
-		*  string "001" of "F9001" indicates direction: FAN_DIR_F2B
-		*/
-		if(!strncmp(dir_str + 36, "001", 3)) {
+		// syslog(LOG_INFO, "get fan%d direction, [%s]", i+1, dir_str);
+		if(!strncmp(dir_str, "0", 1)) {
 			f2r_fan_cnt++;
 			syslog(LOG_INFO, "get fan%d direction, [Front to rear]",i+1);			
 		}
@@ -2181,7 +2191,7 @@ int main(int argc, char **argv) {
 #if 1
 		policy->old_pwm = fan_speed;
 		// fan_speed_temp = policy->calculate_pwm(critical_temp, old_temp);
-		fan_speed_temp = policy->line->get_speed(critical_temp, policy->line);
+		fan_speed_temp = policy->line->get_speed(critical_temp, old_temp, policy->line);
 #ifdef DEBUG
 		syslog(LOG_DEBUG, "[zmzhan]%s: line_speed=%d", __func__, fan_speed_temp);
 #endif
