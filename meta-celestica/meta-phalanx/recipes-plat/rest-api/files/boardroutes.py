@@ -32,4 +32,5 @@ board_routes = [
     '/api/sys/eth',
     '/api/sys/raw',
     '/api/sys/temp',
+    '/api/sys/syslog',
 ]

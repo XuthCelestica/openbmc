@@ -37,7 +37,8 @@ def get_fruid_status():
             if(len(tdata) < 2):
                 continue
             sresult[tdata[0].strip()] = tdata[1]
-        result.append(sresult)
+        if sresult != {}:
+            result.append(sresult)
 
     fresult = {
                 "Information": result,
@@ -68,7 +69,8 @@ def get_fruid_psu():
             if(len(tdata) < 2):
                 continue
             sresult[tdata[0].strip()] = tdata[1].strip()
-        result.append(sresult)
+        if sresult != {}:
+            result.append(sresult)
 
     fresult = {
                 "Information": result,

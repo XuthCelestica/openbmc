@@ -27,6 +27,7 @@ import rest_mTerm
 import rest_eth
 import rest_raw
 import rest_temp
+import rest_syslog
 from rest_utils import dumps_bytestr, get_endpoints
 
 class boardApp_Handler:
@@ -113,3 +114,8 @@ class boardApp_Handler:
     async def rest_temp_act_hdl(self, request):
         data = await request.json()
         return web.json_response(rest_temp.temp_action(data), dumps=dumps_bytestr)
+
+    # Handler for syslog resource endpoint
+    async def rest_syslog_act_hdl(self, request):
+        data = await request.json()
+        return web.json_response(rest_syslog.syslog_action(data), dumps=dumps_bytestr)
