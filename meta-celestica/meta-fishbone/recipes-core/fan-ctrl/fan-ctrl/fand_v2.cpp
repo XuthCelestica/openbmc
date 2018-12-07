@@ -1216,6 +1216,9 @@ static int calculate_pid_pwm(int fan_pwm)
 				pwm = critical->old_pwm + critical->p * (critical->temp - critical->t1) + 
 					  critical->i * (critical->temp - critical->setpoint) + 
 					  critical->d * (critical->temp + critical->t2 - 2 * critical->t1);
+				// if(critical->temp < critical->setpoint) {
+				// 	pwm = 0;
+				// }
 			}
 #ifdef DEBUG
 			syslog(LOG_DEBUG, "[zmzhan]%s: %s: pwm=%d, old_pwm=%d, p=%f, i=%f, d=%f, setpoint=%f \
@@ -1352,7 +1355,7 @@ static int calculate_line_speed(int cur_temp, int old_temp, struct line_policy *
 	int fall_temp = get_fall_temp(policy->old_pwm, line);
 	int speed;
 
-	if(cur_temp >= old_temp) {
+	if(cur_temp > old_temp) {
 		speed = (int)(k * (cur_temp - line->begin.temp) + line->begin.speed);
 #ifdef DEBUG
 		syslog(LOG_DEBUG, "[xuth]%s: cur_temp=%d cal_last_temp=%d k=%f Raising line_pwm=%d", 
@@ -1494,6 +1497,8 @@ static int fan_is_present_sysfs(int fan, struct fan_info_stu_sysfs *fan_info)
 	int ret;
 	char buf[PATH_CACHE_SIZE];
 	int rc = 0;
+	struct fantray_info_stu_sysfs *fantray;
+	fantray = &fantray_info[fan];
 
 	snprintf(buf, PATH_CACHE_SIZE, "%s/%s", fan_info->prefix, fan_info->fan_present_prefix);
 
@@ -1506,10 +1511,12 @@ static int fan_is_present_sysfs(int fan, struct fan_info_stu_sysfs *fan_info)
 	usleep(11000);
 
 	if (ret != 0) {
-		if(fan < TOTAL_FANS)
-			syslog(LOG_ERR, "%s: Fantray-%d not present", __func__, fan + 1);
-		else
-			syslog(LOG_ERR, "%s: PSU-%d not present", __func__, fan - TOTAL_FANS + 1);
+		if(fantray->present == 1) {
+			if(fan < TOTAL_FANS)
+				syslog(LOG_ERR, "%s: Fantray-%d not present", __func__, fan + 1);
+			else
+				syslog(LOG_ERR, "%s: PSU-%d not present", __func__, fan - TOTAL_FANS + 1);
+		}
 		return 0;
 	} else {
 		return 1;
@@ -2143,7 +2150,7 @@ int main(int argc, char **argv) {
 	syslog(LOG_DEBUG, "Starting up;  system should have %d fans.", TOTAL_FANS);
 
 	/* Start watchdog in manual mode */
-	//start_watchdog(0); //zmzhan remove temp
+	start_watchdog(0);
 
 	/* Set watchdog to persistent mode so timer expiry will happen independent
 	* of this process's liveliness. */
@@ -2377,7 +2384,7 @@ int main(int argc, char **argv) {
 		/* if everything is fine, restart the watchdog countdown. If this process
 		 * is terminated, the persistent watchdog setting will cause the system
 		 * to reboot after the watchdog timeout. */
-		//kick_watchdog(); //zmzhan remove temp
+		kick_watchdog();
 		usleep(11000);
 	}
 

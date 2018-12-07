@@ -352,3 +352,25 @@ come_rest_status() {
 
 	return $ret
 }
+
+get_cpu_temp() {
+    TJMAX=$(peci-util 0x30 0x05 0x05 0xa1 0x00 16 00 00 | awk -F " " '{printf "0x%s\n", $4}')
+    info=$(peci-util 0x30 0x1 0x2 0x01)
+    lsb=$(echo $info |awk -F " " '{printf "0x%s\n", $1}')
+    msb=$(echo $info |awk -F " " '{printf "0x%s\n", $2}')
+    ((sign=$msb&0x80))
+    if [ $sign -ne 128 ] ; then
+        return 1
+    fi
+    ((a=($lsb&0xc0)>>6))
+    ((b=($msb<<2)+$a))
+    ((t=((~$b)+1)&0xff))
+    ((c=$lsb&0x3f))
+    if [ $c -ge 40 ]; then
+        ((t=$t+1))
+    fi
+    ((temp=$TJMAX-$t))
+    echo $temp
+
+    return 0
+}
