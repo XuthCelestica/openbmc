@@ -16,6 +16,9 @@
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 
+FANS=4
+FAN_DIR=/sys/bus/i2c/devices/i2c-8/8-000d/
+
 PSU_NUM=2
 psu_status=(0 0)
 psu_path=(
@@ -90,9 +93,97 @@ psu_status_check() {
 	fi
 }
 
+get_fan_pwm() {
+    for i in $FANS ; do
+        pwm_node="${FAN_DIR}/fan${i}_pwm"
+        val=$(cat $pwm_node | head -n 1)
+        if [ $((val * 100 % 255)) -ne 0 ]; then
+            pwm=$((val * 100 / 255 + 1))
+        else
+            pwm=$((val * 100 / 255))
+        fi
+        if [ $pwm -gt 0 ]; then
+            return $pwm
+        fi
+    done
+
+    return 0
+}
+
+get_board_type() {
+    brd_type=$(cat /sys/bus/i2c/devices/0-000d/sw_brd_type | head -n 1)
+    if [ $brd_type == 0x1 ]; then
+        echo "fishbone48"
+    elif [ $brd_type == 0x0 ]; then
+        echo "fishbone32"
+    else
+        echo ""
+    fi
+}
+
+get_fan_dir() {
+    for i in $FANS ; do
+        val=$(/usr/local/bin/fruid-util fan$i |grep R1241-F9001)
+        if [ -n "$val" ]; then
+            echo "F2B"
+            return 1
+        fi
+    done
+    echo "B2F"
+}
+
+inlet_sensor_revise() {
+    get_fan_pwm
+    pwm=$?
+    direction=$(get_fan_dir)
+    if [ "$direction" = "F2B" ]; then
+        board=$(get_board_type)
+        if [ "$board" = "fishbone48" ]; then
+            if [ $pwm -le 45 ]; then
+                temp=7
+            elif [ $pwm -ge 70 ]; then
+                temp=3
+            else
+                temp=5
+            fi
+            if [ $temp -ne $1 ]; then
+                echo 70000 >/sys/bus/i2c/devices/i2c-7/7-004d/hwmon/hwmon3/temp1_max
+                echo 60000 >/sys/bus/i2c/devices/i2c-7/7-004d/hwmon/hwmon3/temp1_max_hyst
+                cmd="sed -i '/compute temp1/c compute temp1 @-($temp), @/($temp)' /etc/sensors.d/fishbone.conf"
+                eval $cmd
+            fi
+        elif [ "$board" = "fishbone32" ]; then
+            if [ $pwm -le 50 ]; then
+                temp=6
+            elif [ $pwm -ge 81 ]; then
+                temp=1
+            else
+                temp=3
+            fi
+            if [ $temp -ne $1 ]; then
+                echo 70000 >/sys/bus/i2c/devices/i2c-7/7-004d/hwmon/hwmon3/temp1_max
+                echo 60000 >/sys/bus/i2c/devices/i2c-7/7-004d/hwmon/hwmon3/temp1_max_hyst
+                cmd="sed -i '/compute temp1/c compute temp1 @-($temp), @/($temp)' /etc/sensors.d/fishbone.conf"
+                eval $cmd
+            fi
+        fi
+    fi
+    return $temp
+}
+
+cpu_temp_update() {
+    temp=$(get_cpu_temp)
+    val=$(($temp*1000))
+    echo $val >/sys/bus/i2c/devices/i2c-0/0-000d/temp2_input
+}
+
 psu_status_init
 come_rest_status 1
 come_rst_st=$?
+revise_temp=0
+cpu_update=0
+echo 70000 >/sys/bus/i2c/devices/i2c-7/7-004d/hwmon/hwmon3/temp1_max
+echo 60000 >/sys/bus/i2c/devices/i2c-7/7-004d/hwmon/hwmon3/temp1_max_hyst
 while true; do
 	for((i = 0; i < $PSU_NUM; i++))
 	do
@@ -104,6 +195,14 @@ while true; do
 		come_rest_status 2
 		come_rst_st=$?
 	fi
+    inlet_sensor_revise $revise_temp
+    revise_temp=$?
+
+    cpu_update=$((cpu_update+1))
+    if [ $cpu_update -ge 6 ]; then
+        cpu_temp_update
+        cpu_update=0
+    fi
 
     usleep 500000
 done

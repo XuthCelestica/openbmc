@@ -129,7 +129,7 @@ set_value 19 50 in0_label "Line1_0V8_VDD_A Voltage"
 set_value 19 50 in0_max 840
 set_value 19 50 in0_min 760
 set_value 19 50 curr1_label "Line1_0V8_VDD_A Current"
-set_value 19 50 curr1_max 15000
+set_value 19 50 curr1_max 100000
 set_value 19 50 curr1_min 0
 set_value 19 70 in0_label "Line1_0V8_A Voltage"
 set_value 19 70 in0_max 840
@@ -141,7 +141,7 @@ set_value 20 50 in0_label "Line1_0V8_VDD_B Voltage"
 set_value 20 50 in0_max 840
 set_value 20 50 in0_min 760
 set_value 20 50 curr1_label "Line1_0V8_VDD_B Current"
-set_value 20 50 curr1_max 15000
+set_value 20 50 curr1_max 100000
 set_value 20 50 curr1_min 0
 set_value 20 70 in0_label "Line1_0V8_B Voltage"
 set_value 20 70 in0_max 840
@@ -165,7 +165,7 @@ set_value 21 50 in0_label "Line2_0V8_VDD_A Voltage"
 set_value 21 50 in0_max 840
 set_value 21 50 in0_min 760
 set_value 21 50 curr1_label "Line2_0V8_VDD_A Current"
-set_value 21 50 curr1_max 15000
+set_value 21 50 curr1_max 100000
 set_value 21 50 curr1_min 0
 set_value 21 70 in0_label "Line2_0V8_A Voltage"
 set_value 21 70 in0_max 840
@@ -177,7 +177,7 @@ set_value 22 50 in0_label "Line2_0V8_VDD_B Voltage"
 set_value 22 50 in0_max 840
 set_value 22 50 in0_min 760
 set_value 22 50 curr1_label "Line2_0V8_VDD_B Current"
-set_value 22 50 curr1_max 15000
+set_value 22 50 curr1_max 100000
 set_value 22 50 curr1_min 0
 set_value 22 70 in0_label "Line2_0V8_B Voltage"
 set_value 22 70 in0_max 840
