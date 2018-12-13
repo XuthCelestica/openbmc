@@ -577,7 +577,7 @@ static struct board_info_stu_sysfs board_info[] = {
 	},
 #ifdef CONFIG_FSC_CONTROL_PID
 	{
-		.name = "BCM56870_inlet",
+		.name = "BCM56873_inlet",
 		.slot_id = FAN_DIR_B2F,
 		.correction = 15,
 		.lwarn = 108,
@@ -614,7 +614,7 @@ static struct board_info_stu_sysfs board_info[] = {
 	},
 #ifdef CONFIG_FSC_CONTROL_PID
 	{
-		.name = "BCM56870_inlet",
+		.name = "BCM56873_inlet",
 		.slot_id = FAN_DIR_F2B,
 		.correction = 15,
 		.lwarn = 108,
