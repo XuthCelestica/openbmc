@@ -69,7 +69,8 @@ def get_fruid_psu():
             if(len(tdata) < 2):
                 continue
             sresult[tdata[0].strip()] = tdata[1].strip()
-        result.append(sresult)
+        if sresult != {}:
+            result.append(sresult)
 
     fresult = {
                 "Information": result,
@@ -82,7 +83,7 @@ def get_fruid_psu():
 def get_fruid_fan():
     fresult = []
     result = []
-    fan_num = 0
+    fan_num = 4
     cmd = 'source /usr/local/bin/openbmc-utils.sh; board_type'
     proc = subprocess.Popen([cmd],
                             shell=True,
@@ -98,9 +99,9 @@ def get_fruid_fan():
         fan_num = 4
     elif not data.find('Phalanx'):
         fan_num = 5
-
+    
     for i in range(fan_num):
-        cmd = '/usr/local/bin/fru-util fan ' + str(i + 1) 
+        cmd = '/usr/local/bin/fruid-util fan' + str(i + 1) 
         proc = subprocess.Popen([cmd],
                             shell=True,
                             stdout=subprocess.PIPE,

@@ -113,19 +113,19 @@ set_value 4 16 curr1_label "XP1R05V Current"
 set_value 8 0d fan1_min 1000
 set_value 8 0d fan1_max 26000
 set_value 8 0d fan2_min 1000
-set_value 8 0d fan2_max 23000
+set_value 8 0d fan2_max 30000
 set_value 8 0d fan3_min 1000
 set_value 8 0d fan3_max 26000
 set_value 8 0d fan4_min 1000
-set_value 8 0d fan4_max 23000
+set_value 8 0d fan4_max 30000
 set_value 8 0d fan5_min 1000
 set_value 8 0d fan5_max 26000
 set_value 8 0d fan6_min 1000
-set_value 8 0d fan6_max 23000
+set_value 8 0d fan6_max 30000
 set_value 8 0d fan7_min 1000
 set_value 8 0d fan7_max 26000
 set_value 8 0d fan8_min 1000
-set_value 8 0d fan8_max 23000
+set_value 8 0d fan8_max 30000
 
 #PSU1
 #add it to sensors.config
