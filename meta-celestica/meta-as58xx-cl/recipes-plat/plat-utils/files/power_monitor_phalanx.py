@@ -13,7 +13,7 @@ TEMP_NUM = 11
 MONITOR_POLL_TIME = (60 * 10) #10 mins
 MonitorItem = [
 ######sensors#######
-	['PSU', 'dps1100-i2c-25-58', 'dps1100-i2c-26-58', 'dps1100-i2c-28-58', 'dps1100-i2c-29-58'], #PSU
+	['PSU', 'dps1100-i2c-24-58', 'dps1100-i2c-25-58', 'dps1100-i2c-26-58', 'dps1100-i2c-27-58'], #PSU
 	['IR358x', 'ir3584-i2c-4-15', 'ir3584-i2c-4-16', 'ir38062-i2c-4-42', 
 	'ir3584-i2c-16-70', 'ir38062-i2c-16-49', 
 	'ir38060-i2c-17-45', 'ir38062-i2c-17-49', 

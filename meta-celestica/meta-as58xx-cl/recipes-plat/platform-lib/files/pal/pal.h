@@ -70,6 +70,8 @@ enum {
   FRU_SWITCH,
   FRU_PSU1,
   FRU_PSU2,
+  FRU_PSU3,
+  FRU_PSU4,
   FRU_FAN1,
   FRU_FAN2,
   FRU_FAN3,

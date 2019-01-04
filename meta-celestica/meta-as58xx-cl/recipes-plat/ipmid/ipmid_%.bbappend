@@ -44,7 +44,7 @@ do_install() {
   install -d ${D}${sysconfdir}/ipmid
   install -m 755 setup-ipmid.sh ${D}${sysconfdir}/init.d/setup-ipmid.sh
   install -m 755 run-ipmid.sh ${D}${sysconfdir}/sv/ipmid/run
-  update-rc.d -r ${D} setup-ipmid.sh start 64 5 .
+  update-rc.d -r ${D} setup-ipmid.sh start 20 S .
 }
 
 FBPACKAGEDIR = "${prefix}/local/fbpackages"

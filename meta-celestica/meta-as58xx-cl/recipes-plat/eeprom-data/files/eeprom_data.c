@@ -8,7 +8,7 @@
 
 static void usage(void)
 {
-    printf("eeprom_data <");
+    printf("eeprom_data -d <");
     ezxml_t f1 = ezxml_parse_file(CONFIGURATION_PATH), device;
     int i = 0;
     for (device = ezxml_child(f1, "Device"); device; device = device->next) {
@@ -16,7 +16,7 @@ static void usage(void)
         i++;
         printf("%s", ezxml_attr(device, "Name"));
     }
-    printf(">\n");
+    printf("> -c <config file path>\n");
 }
 
 static int free_eeprom_data(eeprom_data *eeprom)
@@ -42,9 +42,9 @@ static int free_eeprom_data(eeprom_data *eeprom)
     return 0;
 }
 
-static int get_eeprom_data_format(eeprom_data *eeprom, const char *dev_name)
+static int get_eeprom_data_format(eeprom_data *eeprom, const char *dev_name, const char *config_path)
 {
-    ezxml_t f1 = ezxml_parse_file(CONFIGURATION_PATH), device, dataitem;
+    ezxml_t f1 = ezxml_parse_file(config_path), device, dataitem;
     eeprom_data *p_eeprom;
 
     p_eeprom = eeprom;
@@ -143,12 +143,33 @@ static int get_eeprom_data(eeprom_data *eeprom)
     return 0;
 }
 
-int main(int argc, const char *argv[])
+int main(int argc, char *argv[])
 {
-    if(argc < 2)
+    if(argc < 3)
     {
         usage();
-        return 0;
+        exit(0);
+    }
+
+    char *config_path;
+    char *dev;
+    int i;
+    config_path = NULL;
+    dev = NULL;
+    for(i = 1; i < argc; i++) {
+        if(!strcasecmp(argv[i], "-c")) {
+            config_path = argv[++i];
+        } else if(!strcasecmp(argv[i], "-d")) {
+            dev = argv[++i];
+        }
+    }
+
+    if(!dev) {
+        usage();
+        exit(1);
+    }
+    if(!config_path) {
+        config_path = CONFIGURATION_PATH;
     }
 
     eeprom_data *eeprom = malloc(sizeof(eeprom_data));
@@ -156,11 +177,11 @@ int main(int argc, const char *argv[])
     eeprom->path = NULL;
     // eeprom->next = NULL;
     
-    if(!get_eeprom_data_format(eeprom, argv[1]))
+    if(!get_eeprom_data_format(eeprom, dev, config_path))
     {
         get_eeprom_data(eeprom);
     }
     free_eeprom_data(eeprom);
 
-    return 0;
+    exit(0);
 }

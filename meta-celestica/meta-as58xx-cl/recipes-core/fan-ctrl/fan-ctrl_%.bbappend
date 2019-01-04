@@ -60,7 +60,7 @@ do_install() {
   install -m 644 pid_config_v2.ini ${D}${sysconfdir}/pid_config_v2.ini
   install -m 644 pid_config_v2_phalanx.ini ${D}${sysconfdir}/pid_config_v2_phalanx.ini
   install -m 755 setup-fan.sh ${D}${sysconfdir}/init.d/setup-fan.sh
-  update-rc.d -r ${D} setup-fan.sh start 91 S .
+  update-rc.d -r ${D} setup-fan.sh start 125 2 3 4 5 .
 }
 
 FILES_${PN} += "${sysconfdir}"

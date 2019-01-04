@@ -82,6 +82,9 @@
 #define REPORT_TEMP 720  /* Report temp every so many cycles */
 #define FAN_FAILURE_OFFSET 30
 #define FAN_FAILURE_THRESHOLD 3 /* How many times can a fan fail */
+#define SYS_FAN_LED_PATH "/sys/bus/i2c/devices/i2c-0/0-000d/fan_led_ctrl_en"
+#define SYS_FAN_LED_GREEN 0
+#define SYS_FAN_LED_RED 1
 #define FAN_LED_GREEN 1
 #define FAN_LED_RED 2
 #define PSU_LED_GREEN 0
@@ -97,9 +100,19 @@
 #define FAN_REAR_SPEED_MAX 28950
 #define PSU_SPEED_MAX 26496
 
+#define THERMAL_DIRECTION_PATH "/sys/bus/i2c/devices/2-0057/eeprom"
+#define FAN_DIR_INIT -1
 #define FAN_DIR_FAULT 0
 #define FAN_DIR_B2F 1
 #define FAN_DIR_F2B 2
+#define THERMAL_DIR_F2B_STR "R1241-F0001"
+#define THERMAL_DIR_B2F_STR "R1241-F0002"
+#define FAN_DIR_F2B_STR "R1241-F9001"
+#define FAN_DIR_B2F_STR "R1241-F9002"
+#define DELTA_PSU_DIR_F2B_STR "DPS-1100FBE"
+#define DELTA_PSU_DIR_B2F_STR "DSP-1100AB-15B"
+#define ACBEL_PSU_DIR_F2B_STR "FSJ026-A20G"
+#define ACBEL_PSU_DIR_B2F_STR "FSJ038-A20G"
 
 #define PWM_UNIT_MAX 255
 
@@ -545,7 +558,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
     .present = 1,
     .status = 1,
     .failed = 0,
-    .direction = FAN_DIR_FAULT,
+    .direction = FAN_DIR_INIT,
     .fan1 = fan1_info,
   },
   {
@@ -553,7 +566,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
     .present = 1,
     .status = 1,
     .failed = 0,
-    .direction = FAN_DIR_FAULT,
+    .direction = FAN_DIR_INIT,
     .fan1 = fan2_info,
   },
   {
@@ -561,7 +574,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
     .present = 1,
     .status = 1,
     .failed = 0,
-    .direction = FAN_DIR_FAULT,
+    .direction = FAN_DIR_INIT,
     .fan1 = fan3_info,
   },
   {
@@ -569,7 +582,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
     .present = 1,
     .status = 1,
     .failed = 0,
-    .direction = FAN_DIR_FAULT,
+    .direction = FAN_DIR_INIT,
     .fan1 = fan4_info,
   },
   {
@@ -577,7 +590,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
 	.present = 1,
 	.status = 1,
 	.failed = 0,
-	.direction = FAN_DIR_FAULT,
+	.direction = FAN_DIR_INIT,
 	.fan1 = psu1_fan_info,
   },
   {
@@ -585,7 +598,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
 	.present = 1,
 	.status = 1,
 	.failed = 0,
-	.direction = FAN_DIR_FAULT,
+	.direction = FAN_DIR_INIT,
 	.fan1 = psu2_fan_info,
   },
   NULL,
@@ -686,7 +699,8 @@ static struct thermal_policy b2f_one_fail_policy = {
 
 static struct thermal_policy *policy = NULL;
 static int pid_using = 0;
-static int direction = FAN_DIR_FAULT;
+static int direction = FAN_DIR_INIT;
+static int sys_fan_led_color = 0;
 static int psu_led_color = 0;
 static int fan_speed_temp = FAN_MEDIUM;
 
@@ -1558,15 +1572,19 @@ static int set_fan_sysfs(int fan, int value)
 	ret = fan_is_present_sysfs(fan, fan_info);
 	if(ret == 0) {
 		fantray->present = 0; //not present
+		sys_fan_led_color |= (0x1 << fan);
 		return -1;
 	} else if(ret == 1) {
 		fantray->present = 1;
 	} else {
+		sys_fan_led_color |= (0x1 << fan);
 		return -1;
 	}
 
-	if(fantray->direction != direction)
+	if(fantray->direction != direction) {
 		value = 26;
+		sys_fan_led_color |= (0x1 << fan);
+	}
 	snprintf(fullpath, PATH_CACHE_SIZE, "%s/%s", fan_info->prefix, fan_info->pwm_prefix);
 	adjust_sysnode_path(fan_info->prefix, fan_info->pwm_prefix, fullpath, sizeof(fullpath));
 	ret = write_sysfs_int(fullpath, value);
@@ -1624,6 +1642,21 @@ static int write_fan_speed(const int fan, const int value)
 static int write_fan_led(const int fan, const int color)
 {
 	return write_fan_led_sysfs(fan, color);
+}
+
+static int write_sys_fan_led(const int color)
+{
+	int ret;
+	char fullpath[PATH_CACHE_SIZE];
+	snprintf(fullpath, PATH_CACHE_SIZE, SYS_FAN_LED_PATH);
+	ret = write_sysfs_int(fullpath, color);
+	if(ret < 0) {
+		syslog(LOG_ERR, "failed to set fan %s, value %#x", SYS_FAN_LED_PATH, color);
+		return -1;
+	}
+	usleep(11000);
+
+	return 0;
 }
 
 static int get_psu_pwm(void)
@@ -1987,6 +2020,23 @@ static int system_shutdown(const char *why)
 	return 0;
 }
 
+char* find_sub_string(char *src,const char *sub, int src_len)
+{
+	for(int i = 0;i < src_len;i++) {
+		if(*(src+i) == *sub) {
+			int flag = 1;
+			for(int index=1;index < strlen(sub);index++) {
+				if(*(src+index+i) != *(sub+index)) {
+					flag = 0;
+					break;
+				}
+			}
+			if(flag) return (src + i);
+		}
+	}
+	return NULL;
+}
+
 const char *fan_path[] = {
 	"/sys/bus/i2c/devices/34-0050/eeprom",
 	"/sys/bus/i2c/devices/32-0050/eeprom",
@@ -2003,54 +2053,84 @@ static int get_fan_direction(void)
 // 	return FAN_DIR_B2F;
 // #endif
 	struct fantray_info_stu_sysfs *fantray;
-	char dir_str[64];
+	char buffer[128];
+	char command[128];
 	int f2r_fan_cnt = 0;
 	int r2f_fan_cnt = 0;
 	FILE *fp;
 	int i = 0;
-	// return FAN_DIR_B2F;
 	for(; i < TOTAL_FANS + TOTAL_PSUS; i++)
 	{
-		char command[128];
-		memset(command, 0, sizeof(command));
 		if(i >= sizeof(fan_path)/sizeof(fan_path[0]))
 			continue;
 		fantray = &fantray_info[i];
-		// sprintf(command, "fruid-util fan%d | grep 'Product Part Number' 2>/dev/null", i+1);
-		/* Compare fan eeprom date
-		*  string "Product Part Number       : R1241-F9001-01"
-		*  string "001" of "F9001" indicates direction: FAN_DIR_F2B
-		*/
-		if(i < TOTAL_FANS)
-			sprintf(command, "hexdump -C %s | grep R1241-F9001; echo $?", fan_path[i]);
-		else
-			sprintf(command, "hexdump -C %s | grep DPS-1100FB; echo $?", fan_path[i]);
-		fp = popen(command,"r");
-		if (fp == NULL) {
-			syslog(LOG_ERR, "failed to get fan%d direction", i+1);
-			continue;
+		if(i < TOTAL_FANS) {
+			// memset(command, 0, sizeof(command));
+			// sprintf(command, "fruid-util fan%d | grep 'Product Part Number' 2>/dev/null", i+1);
+			fp = fopen(fan_path[i], "rb");
+		} else {
+			// memset(command, 0, sizeof(command));
+			// sprintf(command, "fru-util psu%d | grep 'Product Name' 2>/dev/null", i+1-TOTAL_FANS);
+			fp = fopen(fan_path[i], "rb");
 		}
-
-		memset(dir_str, 0, sizeof(dir_str));
-		/* Read the output a line at a time - output it. */
-		while (fgets(dir_str, sizeof(dir_str), fp) != NULL) ;
-
-		/* close */
-		pclose(fp);
-
-		// syslog(LOG_INFO, "get fan%d direction, [%s]", i+1, dir_str);
-		if(!strncmp(dir_str, "0", 1)) {
-			f2r_fan_cnt++;
-			if(fantray->direction != FAN_DIR_F2B) {
-				fantray->direction = FAN_DIR_F2B;
-				syslog(LOG_WARNING, "%s direction changed to [Front to rear]", fantray->name);
+		if (!fp) {
+			if(fantray->direction != FAN_DIR_FAULT) {
+				syslog(LOG_ERR, "failed to get %s direction", fantray->name);
+				syslog(LOG_WARNING, "%s direction changed to [Fault]", fantray->name);
+				fantray->direction = FAN_DIR_FAULT;
+				continue;
 			}
 		}
-		else {
-			r2f_fan_cnt++;
-			if(fantray->direction != FAN_DIR_B2F) {
-				fantray->direction = FAN_DIR_B2F;
-				syslog(LOG_WARNING, "%s direction changed to [Rear to front]", fantray->name);
+		char temp;
+		int len;
+		memset(buffer, 0, sizeof(buffer));
+		fread(buffer, sizeof(char), sizeof(buffer), fp);
+		fclose(fp);
+		if(i < TOTAL_FANS) {
+			if(find_sub_string(buffer, FAN_DIR_F2B_STR, sizeof(buffer))) {
+				f2r_fan_cnt++;
+				if(fantray->direction != FAN_DIR_F2B) {
+					fantray->direction = FAN_DIR_F2B;
+					syslog(LOG_WARNING, "%s direction changed to [Front to rear]", fantray->name);
+				}
+			} else if(find_sub_string(buffer, FAN_DIR_B2F_STR, sizeof(buffer))) {
+				r2f_fan_cnt++;
+				if(fantray->direction != FAN_DIR_B2F) {
+					fantray->direction = FAN_DIR_B2F;
+					syslog(LOG_WARNING, "%s direction changed to [Rear to front]", fantray->name);
+				}
+			} else {
+				if(fantray->direction != FAN_DIR_FAULT) {
+					fantray->direction = FAN_DIR_FAULT;
+					syslog(LOG_WARNING, "%s module unrecognized, set to [Fault]", fantray->name);
+				}
+			}
+		} else {
+			if(find_sub_string(buffer, DELTA_PSU_DIR_F2B_STR, sizeof(buffer))) {
+				if(fantray->direction != FAN_DIR_F2B) {
+					fantray->direction = FAN_DIR_F2B;
+					syslog(LOG_WARNING, "%s direction changed to [Front to rear]", fantray->name);
+				}
+			} else if(find_sub_string(buffer, DELTA_PSU_DIR_B2F_STR, sizeof(buffer))) {
+				if(fantray->direction != FAN_DIR_B2F) {
+					fantray->direction = FAN_DIR_B2F;
+					syslog(LOG_WARNING, "%s direction changed to [Rear to front]", fantray->name);
+				}
+			} else if(find_sub_string(buffer, ACBEL_PSU_DIR_F2B_STR, sizeof(buffer))) {
+				if(fantray->direction != FAN_DIR_F2B) {
+					fantray->direction = FAN_DIR_F2B;
+					syslog(LOG_WARNING, "%s direction changed to [Front to rear]", fantray->name);
+				}
+			} else if(find_sub_string(buffer, ACBEL_PSU_DIR_B2F_STR, sizeof(buffer))) {
+				if(fantray->direction != FAN_DIR_B2F) {
+					fantray->direction = FAN_DIR_B2F;
+					syslog(LOG_WARNING, "%s direction changed to [Rear to front]", fantray->name);
+				}
+			} else {
+				if(fantray->direction != FAN_DIR_FAULT) {
+					fantray->direction = FAN_DIR_FAULT;
+					syslog(LOG_WARNING, "%s module unrecognized, set to [Fault]", fantray->name);
+				}
 			}
 		}
 	}
@@ -2067,10 +2147,41 @@ static int get_fan_direction(void)
 	}
 }
 
+int get_thermal_direction(void)
+{
+	char buffer[128];
+	FILE *fp;
+	char command[128];
+	memset(command, 0, sizeof(command));
+	sprintf(command, "/usr/local/bin/fruid-util sys | grep 'Product Part Number' 2>/dev/null");
+	fp = popen(command, "r");
+	int thermal_dir = get_fan_direction();
+	if (!fp) {
+		syslog(LOG_ERR, "failed to get thermal direction");
+		syslog(LOG_WARNING, "thermal direction judged by fan direction");
+	} else {
+		char temp;
+		int len = 0;
+		memset(buffer, 0, sizeof(buffer));
+		fread(buffer, sizeof(char), sizeof(buffer), fp);
+		pclose(fp);
+		if(find_sub_string(buffer, THERMAL_DIR_F2B_STR, sizeof(buffer))) {
+			syslog(LOG_WARNING, "thermal direction changed to [Front to rear]");
+			return FAN_DIR_F2B;
+		} else if(find_sub_string(buffer, THERMAL_DIR_B2F_STR, sizeof(buffer))) {
+			syslog(LOG_WARNING, "thermal direction changed to [Rear to front]");
+			return FAN_DIR_B2F;
+		}
+	}
+	syslog(LOG_WARNING, "thermal module direction unrecognized");
+	syslog(LOG_WARNING, "thermal direction judged by fan direction");
+	return thermal_dir;
+}
+
 static void update_thermal_direction()
 {
 	struct fantray_info_stu_sysfs *fantray;
-	int dir = get_fan_direction();
+	int dir = get_thermal_direction();
 	if(direction != dir) {
 		direction = dir;
 		if(direction == FAN_DIR_F2B) {
@@ -2188,7 +2299,7 @@ static int load_pid_config(void)
 static int policy_init(void)
 {
 	int slope;
-
+	syslog(LOG_NOTICE, "Initializing FSC policy");
 	update_thermal_direction();
 
 	load_pid_config();
@@ -2479,6 +2590,11 @@ int main(int argc, char **argv) {
 		}
 		/* Suppress multiple warnings for similar number of fan failures. */
 		prev_fans_bad = fan_failure;
+		if(sys_fan_led_color)
+			write_sys_fan_led(SYS_FAN_LED_RED);
+		else
+			write_sys_fan_led(SYS_FAN_LED_GREEN);
+		sys_fan_led_color = 0;
 		if(psu_led_color)
 			write_psu_fan_led(TOTAL_FANS, PSU_LED_RED);
 		else

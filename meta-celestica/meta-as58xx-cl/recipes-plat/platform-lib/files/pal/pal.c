@@ -38,7 +38,7 @@
 
 
 #include "pal.h"
-const char pal_fru_list[] = "all, sys, bmc, cpu, fb, switch, psu1, psu2, fan1, fan2, fan3, fan4, fan5, lc1, lc2";
+const char pal_fru_list[] = "all, sys, bmc, cpu, fb, switch, psu1, psu2, psu3, psu4, fan1, fan2, fan3, fan4, fan5, lc1, lc2";
 static int read_device(const char *device, int *value)
 {
 	FILE *fp;
@@ -122,6 +122,14 @@ int pal_get_fru_id(char *str, uint8_t *fru)
 		*fru = FRU_PSU1;
 	} else if (!strcmp(str, "psu2")) {
 		*fru = FRU_PSU2;
+	} else if (!strcmp(str, "psu3")) {
+		if(pal_get_iom_board_id() == 0)
+			return -1;
+		*fru = FRU_PSU3;
+	} else if (!strcmp(str, "psu4")) {
+		if(pal_get_iom_board_id() == 0)
+			return -1;
+		*fru = FRU_PSU4;
 	} else if (!strcmp(str, "fan1")) {
 		*fru = FRU_FAN1;
 	} else if (!strcmp(str, "fan2")) {
@@ -179,6 +187,16 @@ int pal_get_fruid_path(uint8_t fru, char *path)
 		case FRU_PSU2:
 			sprintf(fname, "psu2");
 			break;
+		case FRU_PSU3:
+			if(pal_get_iom_board_id() == 0)
+				return -1;
+			sprintf(fname, "psu3");
+			break;
+		case FRU_PSU4:
+			if(pal_get_iom_board_id() == 0)
+				return -1;
+			sprintf(fname, "psu4");
+			break;
 		case FRU_FAN1:
 			sprintf(fname, "fan1");
 			break;
@@ -233,10 +251,28 @@ int pal_get_fruid_eeprom_path(uint8_t fru, char *path)
 			sprintf(path, "/sys/bus/i2c/devices/i2c-2/2-0051/eeprom");
 			break;
 		case FRU_PSU1:
-			sprintf(path, "/sys/bus/i2c/devices/i2c-25/25-0051/eeprom");
+			if(pal_get_iom_board_id() == 0)
+				sprintf(path, "/sys/bus/i2c/devices/i2c-25/25-0051/eeprom");
+			else
+				sprintf(path, "/sys/bus/i2c/devices/i2c-24/24-0050/eeprom");
 			break;
 		case FRU_PSU2:
-			sprintf(path, "/sys/bus/i2c/devices/i2c-24/24-0050/eeprom");
+			if(pal_get_iom_board_id() == 0)
+				sprintf(path, "/sys/bus/i2c/devices/i2c-24/24-0050/eeprom");
+			else
+				sprintf(path, "/sys/bus/i2c/devices/i2c-25/25-0050/eeprom");
+			break;
+		case FRU_PSU3:
+			if(pal_get_iom_board_id() == 0)
+				return -1;
+			else
+				sprintf(path, "/sys/bus/i2c/devices/i2c-26/26-0050/eeprom");
+			break;
+		case FRU_PSU4:
+			if(pal_get_iom_board_id() == 0)
+				return -1;
+			else
+				sprintf(path, "/sys/bus/i2c/devices/i2c-27/27-0050/eeprom");
 			break;
 		case FRU_FAN1:
 			if(pal_get_iom_board_id() == 0)
@@ -308,6 +344,16 @@ int pal_get_fruid_name(uint8_t fru, char *name)
 		case FRU_PSU2:
 			sprintf(name, "PSU2");
 			break;
+		case FRU_PSU3:
+			if(pal_get_iom_board_id() == 0)
+				return -1;
+			sprintf(name, "PSU3");
+			break;
+		case FRU_PSU4:
+			if(pal_get_iom_board_id() == 0)
+				return -1;
+			sprintf(name, "PSU4");
+			break;
 		case FRU_FAN1:
 			sprintf(name, "Fantray1");
 			break;
@@ -373,14 +419,40 @@ int pal_is_fru_prsnt(uint8_t fru, uint8_t *status)
 			*status = 1;
 			break;
 		case FRU_PSU1:
-			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-0/0-000d/psu_r_present");
+			if(pal_get_iom_board_id() == 0)
+				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-0/0-000d/psu_r_present");
+			else
+				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-0/0-000d/psu_1_present");
 			if (read_device(full_name, &value)) {
 				return -1;
 			}
 			*status = !value;
 			break;
 		case FRU_PSU2:
-			snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-0/0-000d/psu_l_present");
+			if(pal_get_iom_board_id() == 0)
+				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-0/0-000d/psu_l_present");
+			else
+				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-0/0-000d/psu_2_present");
+			if (read_device(full_name, &value)) {
+				return -1;
+			}
+			*status = !value;
+			break;
+		case FRU_PSU3:
+			if(pal_get_iom_board_id() == 0)
+				return -1;
+			else
+				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-0/0-000d/psu_3_present");
+			if (read_device(full_name, &value)) {
+				return -1;
+			}
+			*status = !value;
+			break;
+		case FRU_PSU4:
+			if(pal_get_iom_board_id() == 0)
+				return -1;
+			else
+				snprintf(full_name, LARGEST_DEVICE_NAME, "%s", "/sys/bus/i2c/devices/i2c-0/0-000d/psu_4_present");
 			if (read_device(full_name, &value)) {
 				return -1;
 			}
