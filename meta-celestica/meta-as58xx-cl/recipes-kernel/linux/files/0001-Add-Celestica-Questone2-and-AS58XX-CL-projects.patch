@@ -1,6 +1,6 @@
-From 03e27c88d8b09579a29bde421af127b918412038 Mon Sep 17 00:00:00 2001
+From d7398260fc42ef66bd62397edf846253563a7693 Mon Sep 17 00:00:00 2001
 From: zmzhan <mzhan@celestica.com>
-Date: Wed, 26 Dec 2018 14:33:34 +0800
+Date: Mon, 7 Jan 2019 16:45:00 +0800
 Subject: [PATCH] Add Celestica Questone2 and AS58XX-CL projects
 
 ---
@@ -12,9 +12,9 @@ Subject: [PATCH] Add Celestica Questone2 and AS58XX-CL projects
  arch/arm/plat-aspeed/dev-spi-fb.c        |  56 ++++++++-
  arch/arm/plat-aspeed/dev-uart.c          |  22 +++-
  drivers/hwmon/pmbus/pmbus_core.c         |   2 +
- drivers/net/ethernet/faraday/ftgmac100.c | 189 ++++++++++++++++++++++++++++++-
+ drivers/net/ethernet/faraday/ftgmac100.c | 191 ++++++++++++++++++++++++++++++-
  drivers/net/phy/broadcom.c               |   2 +-
- 10 files changed, 343 insertions(+), 11 deletions(-)
+ 10 files changed, 345 insertions(+), 11 deletions(-)
  create mode 100644 arch/arm/plat-aspeed/dev-i2c-cel.c
 
 diff --git a/arch/arm/mach-aspeed/Kconfig b/arch/arm/mach-aspeed/Kconfig
@@ -333,10 +333,10 @@ index f8e7ce5..fef8a63 100644
  }
  
 diff --git a/drivers/net/ethernet/faraday/ftgmac100.c b/drivers/net/ethernet/faraday/ftgmac100.c
-index b92b214..de3dd84 100644
+index b92b214..702ce86 100644
 --- a/drivers/net/ethernet/faraday/ftgmac100.c
 +++ b/drivers/net/ethernet/faraday/ftgmac100.c
-@@ -2517,19 +2517,27 @@ static bool ftgmac100_rx_packet_error(struct ftgmac100 *priv,
+@@ -2517,18 +2517,26 @@ static bool ftgmac100_rx_packet_error(struct ftgmac100 *priv,
  	bool error = false;
  
  	if (unlikely(ftgmac100_rxdes_rx_error(rxdes))) {
@@ -345,10 +345,10 @@ index b92b214..de3dd84 100644
  			netdev_info(netdev, "rx err\n");
  
  		netdev->stats.rx_errors++;
- 		error = true;
 +#else
 +		netdev->stats.rx_errors++;
 +#endif
+ 		error = true;
  	}
  
  	if (unlikely(ftgmac100_rxdes_crc_error(rxdes))) {
@@ -357,14 +357,13 @@ index b92b214..de3dd84 100644
  			netdev_info(netdev, "rx crc err\n");
  
  		netdev->stats.rx_crc_errors++;
- 		error = true;
 +#else
 +		netdev->stats.rx_crc_errors++;
 +#endif
+ 		error = true;
  	} else if (unlikely(ftgmac100_rxdes_ipcs_err(rxdes))) {
  		if (net_ratelimit())
- 			;//netdev_info(netdev, "rx IP checksum err\n");
-@@ -2538,23 +2546,33 @@ static bool ftgmac100_rx_packet_error(struct ftgmac100 *priv,
+@@ -2538,22 +2546,32 @@ static bool ftgmac100_rx_packet_error(struct ftgmac100 *priv,
  	}
  
  	if (unlikely(ftgmac100_rxdes_frame_too_long(rxdes))) {
@@ -373,10 +372,10 @@ index b92b214..de3dd84 100644
  			netdev_info(netdev, "rx frame too long\n");
  
  		netdev->stats.rx_length_errors++;
- 		error = true;
 +#else
 +		netdev->stats.rx_length_errors++;
 +#endif
+ 		error = true;
 +#if !defined(CONFIG_AS58XX_CL)
  	} else if (unlikely(ftgmac100_rxdes_runt(rxdes))) {
  		if (net_ratelimit())
@@ -391,13 +390,12 @@ index b92b214..de3dd84 100644
  			netdev_info(netdev, "rx odd nibble\n");
  
  		netdev->stats.rx_length_errors++;
- 		error = true;
 +#else
 +		netdev->stats.rx_length_errors++;
 +#endif
+ 		error = true;
  	}
  
- 	return error;
 @@ -3011,7 +3029,11 @@ static int ftgmac100_mii_probe(struct ftgmac100 *priv)
  	for (i = 0; i < PHY_MAX_ADDR; i++) {
  		struct phy_device *tmp = priv->mii_bus->phy_map[i];
@@ -596,7 +594,7 @@ index b92b214..de3dd84 100644
  	ftgmac100_start_hw(priv, 100);
  #elif defined(CONFIG_YAMP)
  	ftgmac100_start_hw(priv, 100);
-@@ -3549,6 +3724,14 @@ static int ftgmac100_probe(struct platform_device *pdev)
+@@ -3549,6 +3724,16 @@ static int ftgmac100_probe(struct platform_device *pdev)
  		goto err_mii_probe;
  	}
  
@@ -606,6 +604,8 @@ index b92b214..de3dd84 100644
 +
 +	mii_bus_p = priv->mii_bus;
 +	sysfs_create_group(&priv->mii_bus->dev.kobj, &mdio_attr_group);
++    netdev->hw_features &= ~(NETIF_F_HW_CSUM | NETIF_F_RXCSUM);
++    netdev->features |= netdev->hw_features;
 +#endif
 +
  #endif
