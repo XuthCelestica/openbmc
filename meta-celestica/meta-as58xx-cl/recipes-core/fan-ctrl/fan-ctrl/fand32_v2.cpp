@@ -79,7 +79,7 @@
 
 #define ALARM_TEMP_THRESHOLD 1
 #define ALARM_START_REPORT 3
-#define WARN_RECOVERY_COUNT 36 //remain 5mins to recovery nomal speed
+#define WARN_RECOVERY_COUNT 50 //remain 5mins to recovery nomal speed
 
 #define CRITICAL_TEMP_HYST 2
 
@@ -96,7 +96,7 @@
 #define SHUTDOWN_DELAY_TIME 72 /*if trigger shutdown event, delay 6mins to shutdown */
 
 #define BAD_TEMP (-60)
-#define ERROR_TEMP_MAX 5
+#define ERROR_TEMP_MAX 3
 
 #define FAN_FAIL_COUNT 4
 #define FAN_FAIL_RPM 1000
@@ -1987,14 +1987,14 @@ static int fancpld_watchdog_enable(void)
 		return -1;
 	}
 	usleep(11000);
-	snprintf(fullpath, PATH_CACHE_SIZE, "%s", FAN_WDT_TIME_SYSFS);
-	ret = write_sysfs_int(fullpath, FAN_WDT_TIME);
-	if(ret < 0) {
-		syslog(LOG_ERR, "failed to set fan %s, value 1",
-		FAN_WDT_TIME_SYSFS);
-		return -1;
-	}
-	usleep(11000);
+	// snprintf(fullpath, PATH_CACHE_SIZE, "%s", FAN_WDT_TIME_SYSFS);
+	// ret = write_sysfs_int(fullpath, FAN_WDT_TIME);
+	// if(ret < 0) {
+		// syslog(LOG_ERR, "failed to set fan %s, value 1",
+		// FAN_WDT_TIME_SYSFS);
+		// return -1;
+	// }
+	// usleep(11000);
 
 	return 0;
 }
