@@ -44,6 +44,7 @@ SRC_URI = "file://ast-functions \
            file://us_monitor.sh \
            file://start_us_monitor.sh \
            file://version_dump \
+           file://led_locatioin.sh \
            file://COPYING \
           "
 
@@ -105,6 +106,7 @@ do_install() {
   install -m 0755 fru-util ${D}${localbindir}/fru-util
   install -m 755 come_power.sh ${D}${localbindir}/come_power.sh
   install -m 755 version_dump ${D}${localbindir}/version_dump
+  install -m 755 led_locatioin.sh ${D}${localbindir}/led_locatioin.sh
 }
 
 FILES_${PN} += "/usr/local ${sysconfdir}"
