@@ -109,8 +109,8 @@
 #define THERMAL_DIR_B2F_STR "R1241-F0002"
 #define FAN_DIR_F2B_STR "R1241-F9001"
 #define FAN_DIR_B2F_STR "R1241-F9002"
-#define DELTA_PSU_DIR_F2B_STR "DPS-1100FBE"
-#define DELTA_PSU_DIR_B2F_STR "DSP-1100AB-15B"
+#define DELTA_PSU_DIR_F2B_STR "DPS-1100FB"
+#define DELTA_PSU_DIR_B2F_STR "DPS-1100AB"
 #define ACBEL_PSU_DIR_F2B_STR "FSJ026-A20G"
 #define ACBEL_PSU_DIR_B2F_STR "FSJ038-A20G"
 
@@ -2377,7 +2377,7 @@ int main(int argc, char **argv) {
 	sleep(5);  /* Give the fans time to come up to speed */
 	
 	while (1) {
-		syslog(LOG_DEBUG, "Test time internal");
+		// syslog(LOG_DEBUG, "Test time internal");
 		fan_speed_temp = 0;
 		/* Read sensors */
 		critical_temp = read_critical_max_temp();

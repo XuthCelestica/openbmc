@@ -76,7 +76,7 @@
 
 #define ALARM_TEMP_THRESHOLD 1
 #define ALARM_START_REPORT 3
-#define WARN_RECOVERY_COUNT 43 //remain 5mins to recovery nomal speed
+#define WARN_RECOVERY_COUNT 40 //remain 5mins to recovery nomal speed
 
 #define CRITICAL_TEMP_HYST 2
 
@@ -110,8 +110,8 @@
 #define THERMAL_DIR_B2F_STR "R1241-F0002"
 #define FAN_DIR_F2B_STR "R1241-F9001"
 #define FAN_DIR_B2F_STR "R1241-F9002"
-#define DELTA_PSU_DIR_F2B_STR "DPS-1100FBE"
-#define DELTA_PSU_DIR_B2F_STR "DSP-1100AB-15B"
+#define DELTA_PSU_DIR_F2B_STR "DPS-1100FB"
+#define DELTA_PSU_DIR_B2F_STR "DPS-1100AB"
 #define ACBEL_PSU_DIR_F2B_STR "FSJ026-A20G"
 #define ACBEL_PSU_DIR_B2F_STR "FSJ038-A20G"
 
@@ -511,8 +511,8 @@ static struct fan_info_stu_sysfs psu4_fan_info = {
   .rear_fan_prefix = "/sys/bus/i2c/devices/i2c-24/24-0058",
   .pwm_prefix = "fan1_pct",
   .fan_led_prefix = "psu_led_ctrl_en",
-  .fan_present_prefix = "psu_4_present",
-  .fan_status_prefix = "psu_4_status",
+  .fan_present_prefix = "psu_1_present",
+  .fan_status_prefix = "psu_1_status",
   //.present = 1,
   .front_failed = 0,
   .rear_failed = 0,
@@ -524,8 +524,8 @@ static struct fan_info_stu_sysfs psu3_fan_info = {
   .rear_fan_prefix = "/sys/bus/i2c/devices/i2c-25/25-0058",
   .pwm_prefix = "fan1_pct",
   .fan_led_prefix = "psu_led_ctrl_en",
-  .fan_present_prefix = "psu_3_present",
-  .fan_status_prefix = "psu_3_status",
+  .fan_present_prefix = "psu_2_present",
+  .fan_status_prefix = "psu_2_status",
   //.present = 1,
   .front_failed = 0,
   .rear_failed = 0,
@@ -537,8 +537,8 @@ static struct fan_info_stu_sysfs psu2_fan_info = {
   .rear_fan_prefix = "/sys/bus/i2c/devices/i2c-26/26-0058",
   .pwm_prefix = "fan1_pct",
   .fan_led_prefix = "psu_led_ctrl_en",
-  .fan_present_prefix = "psu_2_present",
-  .fan_status_prefix = "psu_2_status",
+  .fan_present_prefix = "psu_3_present",
+  .fan_status_prefix = "psu_3_status",
   //.present = 1,
   .front_failed = 0,
   .rear_failed = 0,
@@ -550,8 +550,8 @@ static struct fan_info_stu_sysfs psu1_fan_info = {
   .rear_fan_prefix = "/sys/bus/i2c/devices/i2c-27/27-0058",
   .pwm_prefix = "fan1_pct",
   .fan_led_prefix = "psu_led_ctrl_en",
-  .fan_present_prefix = "psu_1_present",
-  .fan_status_prefix = "psu_1_status",
+  .fan_present_prefix = "psu_4_present",
+  .fan_status_prefix = "psu_4_status",
   //.present = 1,
   .front_failed = 0,
   .rear_failed = 0,
@@ -685,7 +685,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
     .fan1 = fan1_info,
   },
   {
-	.name = "PSU 1",
+	.name = "PSU 1-1",
 	.present = 1,
 	.status = 1,
 	.failed = 0,
@@ -693,7 +693,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
 	.fan1 = psu1_fan_info,
   },
   {
-	.name = "PSU 2",
+	.name = "PSU 1-2",
 	.present = 1,
 	.status = 1,
 	.failed = 0,
@@ -701,7 +701,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
 	.fan1 = psu2_fan_info,
   },
   {
-	.name = "PSU 3",
+	.name = "PSU 2-1",
 	.present = 1,
     .status = 1,
 	.failed = 0,
@@ -709,7 +709,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
 	.fan1 = psu3_fan_info,
   },
   {
-	.name = "PSU 4",
+	.name = "PSU 2-2",
 	.present = 1,
     .status = 1,
 	.failed = 0,
@@ -1660,7 +1660,7 @@ static int fan_is_present_sysfs(int fan, struct fan_info_stu_sysfs *fan_info)
 		snprintf(buf, PATH_CACHE_SIZE, "%s/%s", fan_info->prefix, fan_info->fan_status_prefix);
 		rc = read_sysfs_int(buf, &ret);
 		if(rc < 0) {
-			syslog(LOG_ERR, "failed to read PSU %d status %s node", fan - TOTAL_FANS + 1, fan_info->fan_present_prefix);
+			syslog(LOG_ERR, "failed to read %s status %s node", fantray->name, fan_info->fan_present_prefix);
 			return -1;
 		}
 
@@ -2154,22 +2154,22 @@ static int system_shutdown(const char *why)
 
 	ret = write_sysfs_int(PSU1_SHUTDOWN_SYSFS, 1);
 	if(ret < 0) {
-		syslog(LOG_ERR, "failed to set PSU1 shutdown");
+		syslog(LOG_ERR, "failed to set PSU 1-1 shutdown");
 		return -1;
 	}
 	ret = write_sysfs_int(PSU2_SHUTDOWN_SYSFS, 1);
 	if(ret < 0) {
-		syslog(LOG_ERR, "failed to set PSU2 shutdown");
+		syslog(LOG_ERR, "failed to set PSU 1-2 shutdown");
 		return -1;
 	}
 	ret = write_sysfs_int(PSU3_SHUTDOWN_SYSFS, 1);
 	if(ret < 0) {
-		syslog(LOG_ERR, "failed to set PSU2 shutdown");
+		syslog(LOG_ERR, "failed to set PSU 2-1 shutdown");
 		return -1;
 	}
 	ret = write_sysfs_int(PSU4_SHUTDOWN_SYSFS, 1);
 	if(ret < 0) {
-		syslog(LOG_ERR, "failed to set PSU2 shutdown");
+		syslog(LOG_ERR, "failed to set PSU 2-2 shutdown");
 		return -1;
 	}
 
@@ -2308,8 +2308,8 @@ static int get_fan_direction(void)
 		}
 	}
 
-	if((f2r_fan_cnt == 0) && (r2f_fan_cnt == 0))
-		syslog(LOG_ERR, "failed to get all fan direction, use default direction : Front to rear");
+	// if((f2r_fan_cnt == 0) && (r2f_fan_cnt == 0))
+	// 	syslog(LOG_ERR, "failed to get all fan direction, use default direction : Front to rear");
 	return FAN_DIR_F2B;
 	if(f2r_fan_cnt >= r2f_fan_cnt) {
 		// syslog(LOG_INFO, "direction: [Front to rear]");
@@ -2500,6 +2500,12 @@ static int policy_init(void)
 	return 0;
 }
 
+const char *psu_name[TOTAL_PSUS] = {
+	"PSU 1-1",
+	"PSU 1-2",
+	"PSU 2-1",
+	"PSU 2-2",
+};
 int main(int argc, char **argv) {
 	int critical_temp;
 	int old_temp = -1;
@@ -2552,7 +2558,7 @@ int main(int argc, char **argv) {
 	sleep(5);  /* Give the fans time to come up to speed */
 
 	while (1) {
-		syslog(LOG_DEBUG, "Test time internal");
+		// syslog(LOG_DEBUG, "Test time internal");
 		fan_speed_temp = 0;
 		/* Read sensors */
 		critical_temp = read_critical_max_temp();
@@ -2684,7 +2690,7 @@ int main(int argc, char **argv) {
 			if (psu_speed_okay(fan, fan_speed, FAN_FAILURE_OFFSET)) {
 				if (fan_bad[fan] >= FAN_FAILURE_THRESHOLD) {
 					//write_fan_led(fan, FAN_LED_GREEN);
-					syslog(LOG_CRIT, "PSU %d has recovered", fan - TOTAL_FANS + 1);
+					syslog(LOG_CRIT, "%s has recovered", psu_name[fan - TOTAL_FANS + 1]);
 				}
 				fan_bad[fan] = 0;
 			} else {

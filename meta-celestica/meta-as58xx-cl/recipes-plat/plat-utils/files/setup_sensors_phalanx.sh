@@ -211,7 +211,7 @@ if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 17 60 $val curr1_min 0
 	set_hwmon_value 17 60 $val curr1_max 31000
 	set_hwmon_value 17 60 $val curr2_min 0
-	set_hwmon_value 17 60 $val curr2_max 4100000
+	set_hwmon_value 17 60 $val curr2_max 410000
 fi
 
 #PSU4
