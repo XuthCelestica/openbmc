@@ -171,6 +171,9 @@ inlet_sensor_revise() {
 }
 
 cpu_temp_update() {
+    if /usr/local/bin/wedge_power.sh status |grep "off"; then
+        return 0
+    fi
     temp=$(get_cpu_temp)
     if [ -z "$temp" ]; then
         return 0
