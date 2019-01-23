@@ -49,6 +49,7 @@ IMAGE_INSTALL += " \
   mdio-util \
   usb-console \
   tcpdump \
+  python3-pexpect \
   "
 
 IMAGE_FEATURES += " \

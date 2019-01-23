@@ -44,3 +44,9 @@ else
     echo " Done"
 fi
 
+if [ ! -f /mnt/data/etc/rc.local ]; then
+    cp /mnt/rc.local /mnt/data/etc/rc.local
+fi
+if [ -f /mnt/rc.local ]; then
+    rm /mnt/rc.local
+fi

@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/bin/sh
 #
-# Copyright 2014-present Facebook. All Rights Reserved.
+# Copyright 2019-present Celestica. All Rights Reserved.
 #
 # This program file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -13,26 +13,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program in a file named COPYING; if not, write to the
-# Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor,
-# Boston, MA 02110-130
+# Free Software Foundation, Inc.
+#
 
+#
+# This script will be executed *after* all the other init scripts.
 
-board_routes = [
-    '/api/sys/bmc',
-    '/api/sys/sensors',
-    '/api/sys/led',
-    '/api/sys/server',
-    '/api/sys/mTerm',
-    '/api/sys/fruid',
-    '/api/sys/fruid/status',
-    '/api/sys/fruid/psu',
-    '/api/sys/fruid/fan',
-    '/api/sys/fruid/sys',
-    '/api/sys/eth',
-    '/api/sys/raw',
-    '/api/sys/temp',
-    '/api/sys/syslog',
-    '/api/sys/watchdog',
-    '/api/sys/userpassword'
-]
+if [ -f /mnt/data/etc/passwd ]; then
+    cp /mnt/data/etc/passwd /etc/passwd
+fi
+
+if [ -f /mnt/data/etc/shadow ]; then
+    cp /mnt/data/etc/shadow /etc/shadow
+fi

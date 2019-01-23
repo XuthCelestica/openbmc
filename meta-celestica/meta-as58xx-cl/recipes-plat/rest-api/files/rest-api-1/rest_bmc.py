@@ -21,7 +21,12 @@
 
 from subprocess import Popen, PIPE
 import re
-
+import os
+import pexpect
+import bmc_command
+import json
+import subprocess
+import sys
 
 # Read all contents of file path specified.
 def read_file_contents(path):
@@ -144,3 +149,110 @@ def get_bmc():
              }
 
     return result
+
+def bmc_action(data):
+    ret = 0
+    length = len(data)
+    reboot = 0
+    file_path = ''
+    flash = ''
+    password = ''
+    rb = ''
+
+    if length == 1:
+        rb = data['reboot']
+        if rb == 'yes' or rb == 'Yes':
+            os.popen("reboot")
+            return {"result": "reboot BMC"}
+    elif length >= 3:
+        file_path = data['path']
+        flash = data['flash']
+        password = data['password']
+        if length > 3:
+            rb = data['reboot']
+            if rb == 'yes' or rb == 'Yes':
+                reboot = 1
+    else:
+        return {"result": "Error: parameters invalid"}
+
+    if file_path == '' or flash == '':
+        return {"result": "Error: path or flash is NULL"}
+
+    if password == '':
+        return {"result": "Error: passowrd is NULL"}
+
+    cmd = 'scp ' + file_path + ' /tmp/'
+    scp = pexpect.spawn(cmd)
+    ret = scp.expect([pexpect.TIMEOUT, 'yes', '(password)', 'known_hosts', pexpect.EOF], timeout=60)
+    if ret == 0 or ret == 4:
+        return {"result": "Error: connect timeout or EOF"}
+
+    if ret == 1:
+        scp.sendline("yes")
+        ret = scp.expect([pexpect.TIMEOUT, '(password)', pexpect.EOF], timeout=60)
+        if ret == 1:
+            scp.sendline(password)
+        else:
+            return {"result": "Error: passowrd confirm fail"}
+        ret = scp.expect([pexpect.TIMEOUT, '100%', pexpect.EOF], timeout=60)
+        if ret != 1:
+            return {"result": "Error: transfer file fail"}
+    elif ret == 2:
+        scp.sendline(password)
+        ret = scp.expect([pexpect.TIMEOUT, '100%', pexpect.EOF], timeout=60)
+        if ret != 1:
+            return {"result": "Error: transfer file fail"}
+    elif ret == 3:
+        os.popen("rm /home/root/.ssh/known_hosts")
+        scp = pexpect.spawn(cmd)
+        ret = scp.expect([pexpect.TIMEOUT, 'yes', '(password)', pexpect.EOF], timeout=60)
+        if ret == 1:
+            scp.sendline("yes")
+            ret = scp.expect([pexpect.TIMEOUT, '(password)', pexpect.EOF], timeout=60)
+            if ret == 1:
+                scp.sendline(password)
+            else:
+                return {"result": "Error: passowrd confirm fail"}
+            ret = scp.expect([pexpect.TIMEOUT, '100%', pexpect.EOF], timeout=60)
+            if ret != 1:
+                return {"result": "Error: transfer file fail"}
+        elif ret == 2:
+            scp.sendline(password)
+            ret = scp.expect([pexpect.TIMEOUT, '100%', pexpect.EOF], timeout=60)
+            if ret != 1:
+                return {"result": "Error: transfer file fail"}
+        else:
+            return {"result": "Error: connect timeout or EOF"}
+    else:
+        return {"result": "Error: authentication fail"}
+
+    file_name = file_path.split("/")[-1]
+    if file_name == '':
+        return {"result": "Error: file name error"}
+
+    if flash == 'master':
+        cmd = 'flashcp /tmp/' + file_name + ' /dev/mtd5'
+    else:
+        cmd = 'flashcp /tmp/' + file_name + ' /dev/mtd11'
+
+    proc = subprocess.Popen([cmd], shell=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        data, err = bmc_command.timed_communicate(proc, 480)
+        data = data.decode()
+    except bmc_command.TimeoutError as ex:
+        data = ex.output
+        err = ex.error
+
+    if data != '' and data != '\n':
+        return {"result": data}
+    else:
+        if reboot == 1:
+            os.popen("reboot")
+            return {"result": "success, and reboot BMC"}
+        else:
+            if flash == 'master':
+                return {"result": "success! Do you need to reboot BMC?"}
+            else:
+                return {"result": "success"}
+

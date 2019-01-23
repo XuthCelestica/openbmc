@@ -177,18 +177,28 @@ boot_from() {
 		return 1
 	fi
 
+	boot_source=0x00000013
+	wdt2=$(devmem 0x1e785030)
+	((boot_code_source = (wdt2 & 0x2) >> 1))
 	if [ "$1" = "master" ]; then
-		devmem 0x1e785024 32 0x00989680
-		devmem 0x1e785028 32 0x4755
-		devmem 0x1e78502c 32 0x00000013
+		if [ $boot_code_source = 0 ]; then
+			echo "Current boot source is master, no need to switch."
+			return 0
+		fi
+		boot_source=0x00000093
 	elif [ "$1" = "slave" ]; then
-		devmem 0x1e785024 32 0x00989680
-		devmem 0x1e785028 32 0x4755
-		devmem 0x1e78502c 32 0x00000093
+		if [ $boot_code_source = 1 ]; then
+			echo "Current boot source is slave, no need to switch."
+			return 0
+		fi
+		boot_source=0x00000093
 	else
 		echo "Error parameter!"
 		return 1
 	fi
+	devmem 0x1e785024 32 0x00989680
+	devmem 0x1e785028 32 0x4755
+	devmem 0x1e78502c 32 $boot_source
 }
 
 bios_upgrade() {

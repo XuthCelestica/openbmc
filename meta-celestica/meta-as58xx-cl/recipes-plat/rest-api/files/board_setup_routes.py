@@ -26,6 +26,7 @@ from boardroutes import *
 def setup_board_routes(app):
     bhandler = boardApp_Handler()
     app.router.add_get(board_routes[0], bhandler.rest_bmc_hdl)
+    app.router.add_post(board_routes[0], bhandler.rest_bmc_act_hdl)
     app.router.add_get(board_routes[1], bhandler.rest_sensors_hdl)
     app.router.add_get(board_routes[2], bhandler.rest_led_hdl)
     app.router.add_post(board_routes[2], bhandler.rest_led_act_hdl)
@@ -44,3 +45,4 @@ def setup_board_routes(app):
     app.router.add_post(board_routes[12], bhandler.rest_temp_act_hdl)
     app.router.add_post(board_routes[13], bhandler.rest_syslog_act_hdl)
     app.router.add_post(board_routes[14], bhandler.rest_wdt_act_hdl)
+    app.router.add_post(board_routes[15], bhandler.rest_userpassword_act_hdl)

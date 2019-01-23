@@ -106,10 +106,10 @@
 #define FAN_DIR_FAULT 0
 #define FAN_DIR_B2F 1
 #define FAN_DIR_F2B 2
-#define THERMAL_DIR_F2B_STR "R1241-F0001"
-#define THERMAL_DIR_B2F_STR "R1241-F0002"
-#define FAN_DIR_F2B_STR "R1241-F9001"
-#define FAN_DIR_B2F_STR "R1241-F9002"
+#define THERMAL_DIR_F2B_STR "R1240-F0001"
+#define THERMAL_DIR_B2F_STR "R1240-F0002"
+#define FAN_DIR_F2B_STR "R1240-G0009"
+#define FAN_DIR_B2F_STR "R1240-G0009"
 #define DELTA_PSU_DIR_F2B_STR "DPS-1100FB"
 #define DELTA_PSU_DIR_B2F_STR "DPS-1100AB"
 #define ACBEL_PSU_DIR_F2B_STR "FSJ026-A20G"
@@ -294,6 +294,23 @@ static struct sensor_info_sysfs switchboard_onboard_u148 = {
   .t2 = 0,
   .old_pwm = 0,
   .setpoint = 86,
+  .p = 3,
+  .i = 0.3,
+  .d = 0.3,
+  .min_output = FAN_MIN,
+  .max_output = FAN_MAX,
+  .read_sysfs = &read_temp_directly_sysfs,
+};
+
+static struct sensor_info_sysfs switchboard_inlet_sensor = {
+  .prefix = "/sys/bus/i2c/devices/i2c-0/0-000d",
+  .suffix = "temp1_input",
+  .error_cnt = 0,
+  .temp = 0,
+  .t1 = 0,
+  .t2 = 0,
+  .old_pwm = 0,
+  .setpoint = 89,
   .p = 3,
   .i = 0.3,
   .d = 0.3,
@@ -585,8 +602,8 @@ static struct board_info_stu_sysfs board_info[] = {
 		.warn_count = 0,
 		.recovery_count = 0,
 		.flag = PID_CTRL_BIT,
-		.critical = &switchboard_onboard_u148,
-		.alarm = &switchboard_onboard_u148,
+		.critical = &switchboard_inlet_sensor,
+		.alarm = &switchboard_inlet_sensor,
 	},
 	{
 		.name = "cpu_inlet",
@@ -624,8 +641,8 @@ static struct board_info_stu_sysfs board_info[] = {
 		.warn_count = 0,
 		.recovery_count = 0,
 		.flag = PID_CTRL_BIT,
-		.critical = &switchboard_onboard_u148,
-		.alarm = &switchboard_onboard_u148,
+		.critical = &switchboard_inlet_sensor,
+		.alarm = &switchboard_inlet_sensor,
 	},
 	{
 		.name = "cpu_inlet",
@@ -1716,8 +1733,10 @@ static int set_fan_sysfs(int fan, int value)
 		return -1;
 	}
 
-	// if(fantray->direction != direction)
-	// 	value = 0;
+	if(fantray->direction != direction && fantray->direction != FAN_DIR_FAULT) {
+		value = 26;
+		sys_fan_led_color |= (0x1 << fan);
+	}
 	snprintf(fullpath, PATH_CACHE_SIZE, "%s/%s", fan_info->prefix, fan_info->pwm_prefix);
 	adjust_sysnode_path(fan_info->prefix, fan_info->pwm_prefix, fullpath, sizeof(fullpath));
 	ret = write_sysfs_int(fullpath, value);
@@ -1949,7 +1968,8 @@ int fan_speed_okay(const int fan, int speed, const int slop)
 	} else if(ret == 1) {
 		fantray->present = 1;
 	}
-
+	if(fantray->direction != direction)
+		return 0;
 	snprintf(buf, PATH_CACHE_SIZE, "%s/%s", fan_info->prefix, fan_info->front_fan_prefix);
 
 	rc = read_sysfs_int(buf, &ret);
@@ -2258,24 +2278,16 @@ static int get_fan_direction(void)
 					fantray->direction = FAN_DIR_F2B;
 					syslog(LOG_WARNING, "%s direction changed to [Front to rear]", fantray->name);
 				}
-			} else if(find_sub_string(buffer, FAN_DIR_B2F_STR, sizeof(buffer))) {
-				// r2f_fan_cnt++;
-				// if(fantray->direction != FAN_DIR_B2F) {
-					// fantray->direction = FAN_DIR_B2F;
-					// syslog(LOG_WARNING, "%s direction changed to [Rear to front]", fantray->name);
-				// }
-				if(fantray->direction != FAN_DIR_F2B) {
-					fantray->direction = FAN_DIR_F2B;
-					syslog(LOG_WARNING, "%s direction changed to [Front to rear]", fantray->name);
+			}/* else if(find_sub_string(buffer, FAN_DIR_B2F_STR, sizeof(buffer))) {
+				r2f_fan_cnt++;
+				if(fantray->direction != FAN_DIR_B2F) {
+					fantray->direction = FAN_DIR_B2F;
+					syslog(LOG_WARNING, "%s direction changed to [Rear to front]", fantray->name);
 				}
-			} else {
-				// if(fantray->direction != FAN_DIR_FAULT) {
-					// fantray->direction = FAN_DIR_FAULT;
-					// syslog(LOG_WARNING, "%s module unrecognized, set to [Fault]", fantray->name);
-				// }
-				if(fantray->direction != FAN_DIR_F2B) {
-					fantray->direction = FAN_DIR_F2B;
-					syslog(LOG_WARNING, "%s direction changed to [Front to rear]", fantray->name);
+			} */else {
+				if(fantray->direction != FAN_DIR_FAULT) {
+					fantray->direction = FAN_DIR_FAULT;
+					syslog(LOG_WARNING, "%s module unrecognized, set to [Fault]", fantray->name);
 				}
 			}
 		} else {
@@ -2341,12 +2353,12 @@ int get_thermal_direction(void)
 		if(find_sub_string(buffer, THERMAL_DIR_F2B_STR, sizeof(buffer))) {
 			syslog(LOG_WARNING, "thermal direction changed to [Front to rear]");
 			return FAN_DIR_F2B;
-		} else if(find_sub_string(buffer, THERMAL_DIR_B2F_STR, sizeof(buffer))) {
+		}/* else if(find_sub_string(buffer, THERMAL_DIR_B2F_STR, sizeof(buffer))) {
 			syslog(LOG_WARNING, "thermal direction changed to [Front to rear]");
 			return FAN_DIR_F2B;
 			// syslog(LOG_WARNING, "thermal direction changed to [Rear to front]");
 			// return FAN_DIR_B2F;
-		}
+		}*/
 	}
 	syslog(LOG_WARNING, "thermal module direction unrecognized");
 	syslog(LOG_WARNING, "thermal direction judged by fan direction");

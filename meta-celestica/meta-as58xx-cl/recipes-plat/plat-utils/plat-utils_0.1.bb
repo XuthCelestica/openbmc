@@ -45,6 +45,7 @@ SRC_URI = "file://ast-functions \
            file://start_us_monitor.sh \
            file://version_dump \
            file://led_location.sh \
+           file://rc.local \
            file://COPYING \
           "
 
@@ -67,6 +68,7 @@ do_install() {
   # init
   install -d ${D}${sysconfdir}/init.d
   install -d ${D}${sysconfdir}/rcS.d
+  install -d ${D}/mnt
 
   install -m 0755 bcm5387.sh ${D}${localbindir}/bcm5387.sh
   install -m 0755 wedge_power.sh ${D}${localbindir}/wedge_power.sh
@@ -75,6 +77,8 @@ do_install() {
   install -m 755 setup_isl68137.sh ${D}${localbindir}/setup_isl68137.sh
   install -m 755 power_monitor_fishbone.py ${D}${localbindir}/power_monitor_fishbone.py
   install -m 755 power_monitor_phalanx.py ${D}${localbindir}/power_monitor_phalanx.py
+
+  install -m 0755 rc.local ${D}/mnt/rc.local
   
   install -m 755 setup_i2c_fishbone.sh ${D}${sysconfdir}/init.d/setup_i2c_fishbone.sh
   install -m 755 setup_i2c_phalanx.sh ${D}${sysconfdir}/init.d/setup_i2c_phalanx.sh
@@ -109,6 +113,6 @@ do_install() {
   install -m 755 led_location.sh ${D}${localbindir}/led_location.sh
 }
 
-FILES_${PN} += "/usr/local ${sysconfdir}"
+FILES_${PN} += "/usr/local ${sysconfdir} /mnt"
 
 RDEPENDS_${PN} = "bash"

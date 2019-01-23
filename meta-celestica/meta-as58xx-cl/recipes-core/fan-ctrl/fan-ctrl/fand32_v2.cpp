@@ -1585,7 +1585,7 @@ static int set_fan_sysfs(int fan, int value)
 		return -1;
 	}
 
-	if(fantray->direction != direction) {
+	if(fantray->direction != direction && fantray->direction != FAN_DIR_FAULT) {
 		value = 26;
 		sys_fan_led_color |= (0x1 << fan);
 	}
