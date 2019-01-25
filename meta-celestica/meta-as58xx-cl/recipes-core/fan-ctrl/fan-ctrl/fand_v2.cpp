@@ -2337,7 +2337,7 @@ int main(int argc, char **argv) {
 	int old_speed = FAN_MEDIUM;
 	int fan_bad[TOTAL_FANS + TOTAL_PSUS] = {0};
 	int fan;
-	unsigned log_count = 0; // How many times have we logged our temps?
+	unsigned int log_count = 0; // How many times have we logged our temps?
 	int prev_fans_bad = 0;
 	int shutdown_delay = 0;
 	int psu_pwm;

@@ -91,9 +91,11 @@ fi
 #For Phalanx PSU
 if [ "$board_type" = "Phalanx" ]; then
 PSU_EEPROM_MAX=4
+PSU_ADDR_I2C_BUS=( '27 0x58' '26 0x58' '25 0x58' '24 0x58' )
 else
 #For Fishbone PSU
 PSU_EEPROM_MAX=2
+PSU_ADDR_I2C_BUS=( '25 0x59' '24 0x58' )
 fi
 
 ############################################
@@ -118,6 +120,22 @@ psu_present() {
 		return 1
 	else
 		return 0
+	fi
+}
+
+psu_power_type() {
+	if [ $1 -le $PSU_EEPROM_MAX ]; then
+		power_type=$(i2cget -f -y ${PSU_ADDR_I2C_BUS[$(($1-1))]} 0xd8 2>/dev/null)
+	fi
+	
+	if [ -z $power_type ]; then
+		echo "Unknown"
+	elif [ $power_type = "0x00" ]; then
+		echo "AC"
+	elif [ $power_type = "0x01" ]; then
+		echo "DC"
+	else
+		echo "Unknown"
 	fi
 }
 
@@ -325,10 +343,13 @@ show_psu_status() {
         echo "Present: Present"
     else
         echo "Present: Absent"
+        echo "Power Type: Unknown"
         echo "Power Status: Not OK"
         echo "AC Status: Not OK"
 		return 1
     fi
+
+	echo "Power Type:" $(psu_power_type $1)
 
 	$(psu_power $1)
     if [ $? -eq 0 ]; then

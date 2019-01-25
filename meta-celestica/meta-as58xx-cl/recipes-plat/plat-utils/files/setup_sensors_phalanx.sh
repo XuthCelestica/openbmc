@@ -49,20 +49,20 @@ set_value 4 15 in0_min 1600
 set_value 4 15 in0_max 1950
 set_value 4 15 curr1_min 0
 set_value 4 15 curr1_max 43000
-set_value 4 15 in0_label "XP1R82V Voltage"
-set_value 4 15 curr1_label "XP1R82V Current"
+set_value 4 15 in0_label "CPU_Core VCCIN_1.82V Voltage"
+set_value 4 15 curr1_label "CPU_Core VCCIN_1.82V Current"
 
 set_value 4 16 in0_min 1000
 set_value 4 16 in0_max 1100
 set_value 4 16 curr1_min 0
 set_value 4 16 curr1_max 14000
-set_value 4 16 in0_label "XP1R05V Voltage"
-set_value 4 16 curr1_label "XP1R05V Current"
+set_value 4 16 in0_label "CPU_VCC/VCCIO_1.05V Voltage"
+set_value 4 16 curr1_label "CPU_VCC/VCCIO_1.05V Current"
 
-set_value 4 42 in0_label "XP3R3V Voltage"
+set_value 4 42 in0_label "Baseboard_Standby_3.3V Voltage"
 set_value 4 42 in0_max 3465
 set_value 4 42 in0_min 3135
-set_value 4 42 curr1_label "XP3R3V Current"
+set_value 4 42 curr1_label "Baseboard_Standby_3.3V Current"
 set_value 4 42 curr1_max 6000
 set_value 4 42 curr1_min 0
 
@@ -95,106 +95,106 @@ set_value 8 0d fan9_max 18000
 set_value 8 0d fan10_min 1000
 set_value 8 0d fan10_max 18000
 
-set_value 16 70 in0_label "Switch_0V8 Voltage"
+set_value 16 70 in0_label "Switch_PVDD_0.8V Voltage"
 set_value 16 70 in0_max 840
 set_value 16 70 in0_min 760
-set_value 16 70 curr1_label "Switch_0V8 Current"
+set_value 16 70 curr1_label "Switch_PVDD_0.8V Current"
 set_value 16 70 curr1_max 75000
 set_value 16 70 curr1_min 0
-set_value 16 49 in0_label "Switch_1V2 Voltage"
+set_value 16 49 in0_label "Switch_TVDD_1.2V Voltage"
 set_value 16 49 in0_max 1260
 set_value 16 49 in0_min 1140
-set_value 16 49 curr1_label "Switch_1V2 Current"
+set_value 16 49 curr1_label "Switch_TVDD_1.2V Current"
 set_value 16 49 curr1_max 6000
 set_value 16 49 curr1_min 0
-set_value 17 45 in0_label "Switch_1V0_FPGA Voltage"
+set_value 17 45 in0_label "Switch_FPGA_1.0V Voltage"
 set_value 17 45 in0_max 1050
 set_value 17 45 in0_min 950
-set_value 17 45 curr1_label "Switch_1V0_FPGA Current"
+set_value 17 45 curr1_label "Switch_FPGA_1.0V Current"
 set_value 17 45 curr1_max 1500
 set_value 17 45 curr1_min 0
-set_value 17 49 in0_label "Switch_0V8 Voltage"
+set_value 17 49 in0_label "Switch_TRVDD_0.8V Voltage"
 set_value 17 49 in0_max 860
 set_value 17 49 in0_min 760
-set_value 17 49 curr1_label "Switch_0V8 Current"
+set_value 17 49 curr1_label "Switch_TRVDD_0.8V Current"
 set_value 17 49 curr1_max 15000
 set_value 17 49 curr1_min 0
-set_value 19 30 in0_label "Line1_3V3 Voltage"
+set_value 19 30 in0_label "TOP_LC_port&CPLD_Supply_3.3V Voltage"
 set_value 19 30 in0_max 1732
 set_value 19 30 in0_min 1568
-set_value 19 30 curr1_label "Line1_3V3 Current"
+set_value 19 30 curr1_label "TOP_LC_port&CPLD_Supply_3.3V Current"
 set_value 19 30 curr1_max 75000
 set_value 19 30 curr1_min 0
-set_value 19 50 in0_label "Line1_0V8_VDD_A Voltage"
+set_value 19 50 in0_label "TOP_LC_VDD_A_0.8V Voltage"
 set_value 19 50 in0_max 840
 set_value 19 50 in0_min 760
-set_value 19 50 curr1_label "Line1_0V8_VDD_A Current"
+set_value 19 50 curr1_label "TOP_LC_VDD_A_0.8V Current"
 set_value 19 50 curr1_max 100000
 set_value 19 50 curr1_min 0
-set_value 19 70 in0_label "Line1_0V8_A Voltage"
+set_value 19 70 in0_label "TOP_LC_DVDDM_A_0.8V Voltage"
 set_value 19 70 in0_max 840
 set_value 19 70 in0_min 760
-set_value 19 70 curr1_label "Line1_0V8_A Current"
+set_value 19 70 curr1_label "TOP_LC_DVDDM_A_0.8V Current"
 set_value 19 70 curr1_max 75000
 set_value 19 70 curr1_min 0
-set_value 20 50 in0_label "Line1_0V8_VDD_B Voltage"
+set_value 20 50 in0_label "TOP_LC_VDD_B_0.8V Voltage"
 set_value 20 50 in0_max 840
 set_value 20 50 in0_min 760
-set_value 20 50 curr1_label "Line1_0V8_VDD_B Current"
+set_value 20 50 curr1_label "TOP_LC_VDD_B_0.8V Current"
 set_value 20 50 curr1_max 100000
 set_value 20 50 curr1_min 0
-set_value 20 70 in0_label "Line1_0V8_B Voltage"
+set_value 20 70 in0_label "TOP_LC_DVDDM_B_0.8V Voltage"
 set_value 20 70 in0_max 840
 set_value 20 70 in0_min 760
-set_value 20 70 curr1_label "Line1_0V8_B Current"
+set_value 20 70 curr1_label "TOP_LC_DVDDM_B_0.8V Current"
 set_value 20 70 curr1_max 75000
 set_value 20 70 curr1_min 0
-set_value 20 45 in0_label "Line1_1V8 Voltage"
+set_value 20 45 in0_label "TOP_LC_VDDIO_1.8V Voltage"
 set_value 20 45 in0_max 1890
 set_value 20 45 in0_min 1710
-set_value 20 45 curr1_label "Line1_1V8 Current"
+set_value 20 45 curr1_label "TOP_LC_VDDIO_1.8V Current"
 set_value 20 45 curr1_max 2000
 set_value 20 45 curr1_min 0
-set_value 21 30 in0_label "Line2_3V3 Voltage"
+set_value 21 30 in0_label "BOTTOM_LC_port&CPLD_Supply_3.3V Voltage"
 set_value 21 30 in0_max 1732
 set_value 21 30 in0_min 1568
-set_value 21 30 curr1_label "Line2_3V3 Current"
+set_value 21 30 curr1_label "BOTTOM_LC_port&CPLD_Supply_3.3V Current"
 set_value 21 30 curr1_max 75000
 set_value 21 30 curr1_min 0
-set_value 21 50 in0_label "Line2_0V8_VDD_A Voltage"
+set_value 21 50 in0_label "BOTTOM_LC_VDD_A_0.8V Voltage"
 set_value 21 50 in0_max 840
 set_value 21 50 in0_min 760
-set_value 21 50 curr1_label "Line2_0V8_VDD_A Current"
+set_value 21 50 curr1_label "BOTTOM_LC_VDD_A_0.8V Current"
 set_value 21 50 curr1_max 100000
 set_value 21 50 curr1_min 0
-set_value 21 70 in0_label "Line2_0V8_A Voltage"
+set_value 21 70 in0_label "BOTTOM_LC_DVDDM_A_0.8V Voltage"
 set_value 21 70 in0_max 840
 set_value 21 70 in0_min 760
-set_value 21 70 curr1_label "Line2_0V8_A Current"
+set_value 21 70 curr1_label "BOTTOM_LC_DVDDM_A_0.8V Current"
 set_value 21 70 curr1_max 75000
 set_value 21 70 curr1_min 0
-set_value 22 50 in0_label "Line2_0V8_VDD_B Voltage"
+set_value 22 50 in0_label "BOTTOM_LC_VDD_B_0.8V Voltage"
 set_value 22 50 in0_max 840
 set_value 22 50 in0_min 760
-set_value 22 50 curr1_label "Line2_0V8_VDD_B Current"
+set_value 22 50 curr1_label "BOTTOM_LC_VDD_B_0.8V Current"
 set_value 22 50 curr1_max 100000
 set_value 22 50 curr1_min 0
-set_value 22 70 in0_label "Line2_0V8_B Voltage"
+set_value 22 70 in0_label "BOTTOM_LC_DVDDM_B_0.8V Voltage"
 set_value 22 70 in0_max 840
 set_value 22 70 in0_min 760
-set_value 22 70 curr1_label "Line2_0V8_B Current"
+set_value 22 70 curr1_label "BOTTOM_LC_DVDDM_B_0.8V Current"
 set_value 22 70 curr1_max 75000
 set_value 22 70 curr1_min 0
-set_value 22 45 in0_label "Line2_1V8 Voltage"
+set_value 22 45 in0_label "BOTTOM_LC_VDDIO_1.8V Voltage"
 set_value 22 45 in0_max 1890
 set_value 22 45 in0_min 1710
-set_value 22 45 curr1_label "Line2_1V8 Current"
+set_value 22 45 curr1_label "BOTTOM_LC_VDDIO_1.8V Current"
 set_value 22 45 curr1_max 2000
 set_value 22 45 curr1_min 0
-set_value 23 45 in0_label "Switch_3V3_Early Voltage"
+set_value 23 45 in0_label "Switch_Standby_3.3V Voltage"
 set_value 23 45 in0_max 3465
 set_value 23 45 in0_min 3135
-set_value 23 45 curr1_label "Switch_3V3_Early Current"
+set_value 23 45 curr1_label "Switch_Standby_3.3V Current"
 set_value 23 45 curr1_max 6000
 set_value 23 45 curr1_min 0
 

@@ -1862,7 +1862,6 @@ static int write_psu_fan_speed(const int fan, int value)
 	char fullpath[PATH_CACHE_SIZE];
 	struct fantray_info_stu_sysfs *fantray;
 	struct fan_info_stu_sysfs *fan_info;
-	return 0;
 
 	value = value * 100 /FAN_MAX; //convert it to pct
 	for(i = TOTAL_FANS; i < TOTAL_FANS + TOTAL_PSUS; i++) {
@@ -2530,7 +2529,7 @@ int main(int argc, char **argv) {
 	int old_speed = FAN_MEDIUM;
 	int fan_bad[TOTAL_FANS + TOTAL_PSUS] = {0};
 	int fan;
-	unsigned log_count = 0; // How many times have we logged our temps?
+	unsigned int log_count = 0; // How many times have we logged our temps?
 	int prev_fans_bad = 0;
 	int shutdown_delay = 0;
 	int psu_pwm;
@@ -2699,10 +2698,10 @@ int main(int argc, char **argv) {
 			}
 		}
 		for(fan = TOTAL_FANS; fan < TOTAL_FANS + TOTAL_PSUS; fan++) {
-			if (psu_speed_okay(fan, fan_speed, FAN_FAILURE_OFFSET)) {
+			if (psu_speed_okay(fan, psu_pwm, FAN_FAILURE_OFFSET)) {
 				if (fan_bad[fan] >= FAN_FAILURE_THRESHOLD) {
 					//write_fan_led(fan, FAN_LED_GREEN);
-					syslog(LOG_CRIT, "%s has recovered", psu_name[fan - TOTAL_FANS + 1]);
+					syslog(LOG_CRIT, "%s has recovered", psu_name[fan - TOTAL_FANS]);
 				}
 				fan_bad[fan] = 0;
 			} else {
