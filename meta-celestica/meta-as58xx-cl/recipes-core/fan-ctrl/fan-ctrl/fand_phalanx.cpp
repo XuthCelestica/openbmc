@@ -596,7 +596,7 @@ static struct board_info_stu_sysfs board_info[] = {
 	{
 		.name = "Switch_inlet",
 		.slot_id = FAN_DIR_B2F,
-		.correction = 0,
+		.correction = 4,
 		.lwarn = 105,
 		.hwarn = 110,
 		.warn_count = 0,
@@ -635,7 +635,7 @@ static struct board_info_stu_sysfs board_info[] = {
 	{
 		.name = "Switch_inlet",
 		.slot_id = FAN_DIR_F2B,
-		.correction = 0,
+		.correction = 4,
 		.lwarn = 105,
 		.hwarn = 110,
 		.warn_count = 0,
