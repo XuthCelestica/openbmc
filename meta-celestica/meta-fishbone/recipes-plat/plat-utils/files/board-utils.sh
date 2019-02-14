@@ -374,3 +374,7 @@ get_cpu_temp() {
 
     return 0
 }
+
+jenkins_test() {
+    echo "Jenkins test!!!"
+}
