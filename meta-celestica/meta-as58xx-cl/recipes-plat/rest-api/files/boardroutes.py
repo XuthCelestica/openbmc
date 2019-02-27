@@ -34,5 +34,6 @@ board_routes = [
     '/api/sys/temp',
     '/api/sys/syslog',
     '/api/sys/watchdog',
-    '/api/sys/userpassword'
+    '/api/sys/userpassword',
+    '/api/sys/upgrade'
 ]

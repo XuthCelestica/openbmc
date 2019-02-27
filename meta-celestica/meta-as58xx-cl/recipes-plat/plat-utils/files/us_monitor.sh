@@ -172,6 +172,7 @@ inlet_sensor_revise() {
 
 cpu_temp_update() {
     if /usr/local/bin/wedge_power.sh status |grep "off"; then
+        echo -60 >/sys/bus/i2c/devices/i2c-0/0-000d/temp2_input
         return 0
     fi
     temp=$(get_cpu_temp)

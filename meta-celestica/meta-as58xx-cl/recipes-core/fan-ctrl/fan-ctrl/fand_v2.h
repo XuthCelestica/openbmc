@@ -85,6 +85,7 @@ struct board_info_stu_sysfs {
 struct fantray_info_stu_sysfs {
   const char *name;
   int present;
+  int read_eeprom;
   int status;
   int failed; //for fantray fail
   int direction;

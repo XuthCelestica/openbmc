@@ -16,7 +16,7 @@
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 
 DEV="/dev/mmcblk0"
-MOUNT_POINT="/mnt/emmc"
+MOUNT_POINT="/var/log"
 info=`blkid $DEV`
 
 if [ ! "$info" ]; then
@@ -29,7 +29,6 @@ if [ ! "$info" ]; then
 		mkdir $MOUNT_POINT
 	fi
 	mount $DEV $MOUNT_POINT
-	mkdir $MOUNT_POINT/sol_log
 	echo " Done"
 else
 	echo -n "Mouting EMMC ......"
@@ -38,9 +37,6 @@ else
 	fi
 	e2fsck -a $DEV
 	mount $DEV $MOUNT_POINT
-	if [ ! -d "$MOUNT_POINT/sol_log" ]; then
-		mkdir $MOUNT_POINT/sol_log
-	fi
     echo " Done"
 fi
 

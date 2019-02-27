@@ -264,6 +264,61 @@ come_boot_info() {
         fi
 }
 
+cpld_upgrade() {
+	if [ $# -lt 2 ]; then
+		echo "cpld_upgrade [loop1/loop2/loop3] [image_path]"
+		return 1
+	fi
+	source /usr/local/bin/openbmc-utils.sh
+	boardtype=$(board_type)
+	if [ $boardtype = "Fishbone32" ] || [ $boardtype = "Fishbone48" ]; then
+		if [ $1 != "loop1" ]; then
+			echo "cpld_upgrade [loop1] [image_path]"
+			return 1
+		fi
+		if [ -e $2 ]; then
+			gpio_set L2 1
+			ispvm –f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+			gpio_set L2 0
+		fi
+	elif [ $boardtype = "Phalanx" ]; then
+		if [ $1 = "loop1" ]; then
+			if [ -e $2 ]; then
+				gpio_set L2 1
+				gpio_set P0 0
+				ispvm –f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+				gpio_set L2 0
+				gpio_set P0 0
+				gpio_set O0 0
+			fi
+		elif [ $1 = "loop2" ]; then
+			if [ -e $2 ]; then
+				gpio_set L2 1
+				gpio_set P0 1
+				gpio_set O0 0
+				ispvm –f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+				gpio_set L2 0
+				gpio_set P0 0
+				gpio_set O0 0
+			fi
+		elif [ $1 = "loop3" ]; then
+			if [ -e $2 ]; then
+				gpio_set L2 1
+				gpio_set P0 1
+				gpio_set O0 1
+				ispvm –f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+				gpio_set L2 0
+				gpio_set P0 0
+				gpio_set O0 0
+			fi
+		else
+			echo "cpld_upgrade [loop1/loop2/loop3] [image_path]"
+		fi
+	else 
+		echo "Board not support"
+	fi
+}
+
 BCM5387_reset() {
 	echo 0 > $SYSLED_BCM5387_RST_SYSFS
 	sleep 1

@@ -315,26 +315,30 @@ fan_fru() {
 	fruid-util fan${i}
 }
 
+lc_usage() {
+	echo "fru-util lb 1/2"
+}
+
 lc_fru() {
 	if [ "$board_type" != "Phalanx" ]; then
 		echo "Warning: Board $board_type does not support the function!"
 		exit 0
 	fi
-	if [ $# -lt 1 ] || [ $1 -lt 0 ] || [ $1 -gt ${LC_EEPROM_MAX} ]; then
-		fan_usage
+	if [ $# -lt 1 ] || [ $1 -le 0 ] || [ $1 -gt ${LC_EEPROM_MAX} ]; then
+		lc_usage
 		return 1
 	fi
 	i=$1
 	echo "LC${i} FRU:"
-	i2c_bus=$((LC${i}_EEPROM_I2C_BUS))
-	i2c_addr=$((LC${i}_EEPROM_I2C_ADDR))
-	if [ -L ${EEPROM_LINK_FILE} ]; then
-		rm -rf ${EEPROM_LINK_FILE}
-	fi
-	ln -s /sys/bus/i2c/devices/i2c-${i2c_bus}/${i2c_bus}-00${i2c_addr}/eeprom  ${EEPROM_LINK_FILE}
-	shift
-	syseeprom $@
-
+	fruid-util lc${i}
+	# i2c_bus=$((LC${i}_EEPROM_I2C_BUS))
+	# i2c_addr=$((LC${i}_EEPROM_I2C_ADDR))
+	# if [ -L ${EEPROM_LINK_FILE} ]; then
+	# 	rm -rf ${EEPROM_LINK_FILE}
+	# fi
+	# ln -s /sys/bus/i2c/devices/i2c-${i2c_bus}/${i2c_bus}-00${i2c_addr}/eeprom  ${EEPROM_LINK_FILE}
+	# shift
+	# syseeprom $@
 }
 
 show_psu_status() {

@@ -254,25 +254,25 @@ int pal_get_fruid_eeprom_path(uint8_t fru, char *path)
 			if(pal_get_iom_board_id() == 0)
 				sprintf(path, "/sys/bus/i2c/devices/i2c-25/25-0051/eeprom");
 			else
-				sprintf(path, "/sys/bus/i2c/devices/i2c-24/24-0050/eeprom");
+				sprintf(path, "/sys/bus/i2c/devices/i2c-27/27-0050/eeprom");
 			break;
 		case FRU_PSU2:
 			if(pal_get_iom_board_id() == 0)
 				sprintf(path, "/sys/bus/i2c/devices/i2c-24/24-0050/eeprom");
 			else
-				sprintf(path, "/sys/bus/i2c/devices/i2c-25/25-0050/eeprom");
+				sprintf(path, "/sys/bus/i2c/devices/i2c-26/26-0050/eeprom");
 			break;
 		case FRU_PSU3:
 			if(pal_get_iom_board_id() == 0)
 				return -1;
 			else
-				sprintf(path, "/sys/bus/i2c/devices/i2c-26/26-0050/eeprom");
+				sprintf(path, "/sys/bus/i2c/devices/i2c-25/25-0050/eeprom");
 			break;
 		case FRU_PSU4:
 			if(pal_get_iom_board_id() == 0)
 				return -1;
 			else
-				sprintf(path, "/sys/bus/i2c/devices/i2c-27/27-0050/eeprom");
+				sprintf(path, "/sys/bus/i2c/devices/i2c-24/24-0050/eeprom");
 			break;
 		case FRU_FAN1:
 			if(pal_get_iom_board_id() == 0)

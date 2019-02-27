@@ -46,3 +46,5 @@ def setup_board_routes(app):
     app.router.add_post(board_routes[13], bhandler.rest_syslog_act_hdl)
     app.router.add_post(board_routes[14], bhandler.rest_wdt_act_hdl)
     app.router.add_post(board_routes[15], bhandler.rest_userpassword_act_hdl)
+    app.router.add_get(board_routes[16], bhandler.rest_upgrade_hdl)
+    app.router.add_post(board_routes[16], bhandler.rest_upgrade_act_hdl)

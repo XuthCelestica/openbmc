@@ -219,7 +219,7 @@ fi
 val=$(get_hwmon_id 24 58 in1_min)
 if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 24 58 $val in1_min 90000
-	set_hwmon_value 24 58 $val in1_max 264000
+	set_hwmon_value 24 58 $val in1_max 310000
 	set_hwmon_value 24 58 $val in2_min 11640
 	set_hwmon_value 24 58 $val in2_max 12360
 	set_hwmon_value 24 58 $val fan1_min 1000
@@ -241,7 +241,7 @@ fi
 val=$(get_hwmon_id 25 58 in1_min)
 if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 25 58 $val in1_min 90000
-	set_hwmon_value 25 58 $val in1_max 264000
+	set_hwmon_value 25 58 $val in1_max 310000
 	set_hwmon_value 25 58 $val in2_min 11640
 	set_hwmon_value 25 58 $val in2_max 12360
 	set_hwmon_value 25 58 $val fan1_min 1000
@@ -262,7 +262,7 @@ fi
 val=$(get_hwmon_id 26 58 in1_min)
 if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 26 58 $val in1_min 90000
-	set_hwmon_value 26 58 $val in1_max 264000
+	set_hwmon_value 26 58 $val in1_max 310000
 	set_hwmon_value 26 58 $val in2_min 11640
 	set_hwmon_value 26 58 $val in2_max 12360
 	set_hwmon_value 26 58 $val fan1_min 1000
@@ -283,7 +283,7 @@ fi
 val=$(get_hwmon_id 27 58 in1_min)
 if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 27 58 $val in1_min 90000
-	set_hwmon_value 27 58 $val in1_max 264000
+	set_hwmon_value 27 58 $val in1_max 310000
 	set_hwmon_value 27 58 $val in2_min 11640
 	set_hwmon_value 27 58 $val in2_max 12360
 	set_hwmon_value 27 58 $val fan1_min 1000

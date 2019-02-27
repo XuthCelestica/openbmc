@@ -30,6 +30,7 @@ import rest_temp
 import rest_syslog
 import rest_watchdog
 import rest_userpassword
+import rest_upgrade
 from rest_utils import dumps_bytestr, get_endpoints
 
 class boardApp_Handler:
@@ -136,3 +137,12 @@ class boardApp_Handler:
     async def rest_userpassword_act_hdl(self, request):
         data = await request.json()
         return web.json_response(rest_userpassword.userpassword_action(data), dumps=dumps_bytestr)
+
+    # Handler for getting upgrade firmware log resource endpoint
+    async def rest_upgrade_hdl(self, request):
+        return web.json_response(rest_upgrade.get_upgrade_log(), dumps=dumps_bytestr)
+
+    # Handler for upgrading firmware resource endpoint
+    async def rest_upgrade_act_hdl(self, request):
+        data = await request.json()
+        return web.json_response(rest_upgrade.upgrade_action(data), dumps=dumps_bytestr)

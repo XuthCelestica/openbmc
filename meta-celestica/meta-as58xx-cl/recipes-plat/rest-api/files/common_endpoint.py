@@ -83,7 +83,7 @@ class commonApp_Handler:
     def helper_rest_sys(self,request):
         result = {
             "Information": {
-                "Description": "Fishbone System",
+                "Description": "AS58XX-CL System",
             },
             "Actions": [],
             "Resources": get_endpoints('/api/sys')

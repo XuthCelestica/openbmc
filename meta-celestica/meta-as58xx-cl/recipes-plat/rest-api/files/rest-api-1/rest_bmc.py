@@ -123,9 +123,20 @@ def get_bmc():
     else:
         fancpld_version = 'null'
 
+    board_type = 'AS58XX-CL'
+    (data, _) = Popen('source /usr/local/bin/openbmc-utils.sh; board_type',
+                       shell=True, stdout=PIPE).communicate()
+    data = data.decode()
+    if not data.find('Fishbone48'):
+        board_type = 'Fishbone48'
+    elif not data.find('Fishbone32'):
+        board_type = 'Fishbone32'
+    elif not data.find('Phalanx'):
+        board_type = 'Phalanx'
+
     result = {
                 "Information": {
-                    "Description": "Fishbone BMC",
+                    "Description": "{} BMC".format(board_type),
                     "Reset Reason": reset_reason,
                     # Upper case Uptime is for legacy
                     # API support
