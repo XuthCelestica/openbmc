@@ -52,35 +52,14 @@ i2c_device_add 7 0x4d tmp75
 # Bus 8
 i2c_device_add 8 0x0d fancpld #Fan CPLD
 
-
-
-###################################################
-
-# Bus 24 for i2c-6 PCA9548
-#bus 24 channel 0
-#bus 25 channel 1
-#bus 26 channel 2
-#bus 27 channel 3
-#bus 28 channel 4
-#bus 29 channel 5
-#bus 30 channel 6
-#bus 31 channel 7
-
-
 #bus 39 channel 7
 i2c_device_add 39 0x56 24c64 #Fan Board EEPROM
 i2c_device_add 39 0x48 tmp75
-i2c_device_add 39 0x49 tmp75
 
 #For Fishbone I2C devices
 # Bus 4
 i2c_device_add 4 0x43 ir38060  #IR38060
 i2c_device_add 4 0x49 ir38062  #IR38062
-
-# Bus 7
-i2c_device_add 7 0x4a tmp75 #temp
-i2c_device_add 7 0x4b tmp75
-i2c_device_add 7 0x4c tmp75 #temp
 
 # Bus 16 for i2c-4 PCA9548
 #bus 16 channel 0

@@ -80,7 +80,7 @@ def get_bmc():
     cpu_usage = adata[1]
 
     # Get disk usage information
-    (data, _) = Popen('df | grep emmc',
+    (data, _) = Popen('df | grep mmc',
                        shell=True, stdout=PIPE).communicate()
     data = data.decode()
     adata = data.split()
@@ -94,7 +94,7 @@ def get_bmc():
     ver = re.search(r'v([\w\d._-]*)\s', data)
     if ver:
         version = ver.group(1)
-    
+
     # Get U-Boot version
     uboot_version = ""
     (data, _) = Popen('strings /dev/mtd0 | grep U-Boot | grep 2016',
@@ -113,7 +113,7 @@ def get_bmc():
         syscpld_version = '{:0>2}'.format(data[2:].strip('\n'))
     else:
         syscpld_version = 'null'
-    
+
     fancpld_version = ""
     (data, _) = Popen('cat /sys/bus/i2c/devices/8-000d/version | head -n 1',
                        shell=True, stdout=PIPE).communicate()

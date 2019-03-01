@@ -327,7 +327,12 @@ come_mca_err_monitor() {
         return 2
     fi
 
-    return 0
+    if [ $val -eq 1 -a $1 -ne 0 ]; then
+        logger "CATERR# recovers asserted"
+        return 0
+    fi
+
+    return $1
 }
 
 come_wdt_monitor() {

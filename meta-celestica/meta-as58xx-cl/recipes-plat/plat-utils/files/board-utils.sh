@@ -237,11 +237,11 @@ come_reset() {
         if [ "$1" == "master" ]; then
                 echo 0x0 > $BIOS_CTRL
                 echo 0x1 > $BIOS_CHIPSELECTION
-                wedge_power.sh cycle
+                /usr/local/bin/wedge_power.sh cycle
         elif [ "$1" == "slave" ]; then
                 echo 0x0 > $BIOS_CTRL
                 echo 0x3 > $BIOS_CHIPSELECTION
-                wedge_power.sh cycle
+                /usr/local/bin/wedge_power.sh cycle
         else
                 echo "come_reset [master/slave]"
         fi

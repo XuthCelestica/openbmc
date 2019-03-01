@@ -176,12 +176,6 @@ if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 39 48 $val temp1_max 70000
 	set_hwmon_value 39 48 $val temp1_max_hyst 60000
 fi
-val=$(get_hwmon_id 39 49 temp1_max)
-if [ "$val" -gt "0" ] ; then
-	set_hwmon_value 39 49 $val temp1_max 70000
-	set_hwmon_value 39 49 $val temp1_max_hyst 60000
-fi
-
 
 # run sensors.config set command
 mv /etc/sensors.d/fishbone.conf /etc/sensors.d/as58xx-cl.conf

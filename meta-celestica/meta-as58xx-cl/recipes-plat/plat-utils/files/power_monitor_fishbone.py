@@ -15,7 +15,7 @@ MonitorItem = [
 ######sensors#######
 ['PSU', 'dps1100-i2c-24-58', 'dps1100-i2c-25-59'], #PSU
 ['IR358x', 'ir38060-i2c-4-43', 'ir38062-i2c-4-49', 'ir3595-i2c-16-12', 'ir38060-i2c-17-47', 'ir3584-i2c-18-70', 'ir3584-i2c-18-71', 'ir3584-i2c-4-15', 'ir3584-i2c-4-16'], #IR358x
-['Temp', 'tmp75-i2c-7-4a', 'tmp75-i2c-7-4b', 'tmp75-i2c-7-4c', 'tmp75-i2c-7-4d', 'tmp75-i2c-39-48', 'tmp75-i2c-39-49'], #Temp
+['Temp', 'tmp75-i2c-7-4d', 'tmp75-i2c-39-48'], #Temp
 ]
 
 psu_obj = [0]*PSU_NUM
