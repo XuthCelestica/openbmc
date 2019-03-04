@@ -9,7 +9,7 @@ import syslog
 
 PSU_NUM = 2
 IR358X_NUM = 8
-TEMP_NUM = 6
+TEMP_NUM = 2
 MONITOR_POLL_TIME = (60 * 10) #10 mins
 MonitorItem = [
 ######sensors#######
