@@ -25,7 +25,6 @@ IMAGE_INSTALL += " \
   mterm \
   memtester  \
   openbmc-utils \
-  kcsd \
   spatula \
   stress  \
   watchdog-ctrl \

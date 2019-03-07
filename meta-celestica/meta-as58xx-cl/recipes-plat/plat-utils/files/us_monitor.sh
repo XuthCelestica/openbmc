@@ -248,7 +248,7 @@ bios_boot_monitor() {
             fi
             return 1
         else
-            if [ $1 -ne 2 -a $1 -ge 30 ]; then
+            if [ $1 -ne 2 -a $1 -ge 5 ]; then
                 logger "COMe boots from BIOS Slave flash: Fail"
                 sys_led yellow slow
                 return 2
@@ -349,7 +349,7 @@ come_wdt_monitor() {
                 logger "Enable COMe watchdog"
             fi
             come_wdt_enable=1
-            come_wdt_count=$(($val/4+1))
+            come_wdt_count=$(($val/7+1))
             rm /tmp/watchdog
         fi
     fi
@@ -423,5 +423,5 @@ while true; do
     #COMe hang watchdog monitor
     come_wdt_monitor
 
-    usleep 500000
+    usleep 3000000
 done
