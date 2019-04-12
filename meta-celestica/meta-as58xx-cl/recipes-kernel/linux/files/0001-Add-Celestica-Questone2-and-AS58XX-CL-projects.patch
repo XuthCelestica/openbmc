@@ -1,28 +1,28 @@
-From 0fde4e50621c95ae92096cb6b1285db53d87e659 Mon Sep 17 00:00:00 2001
+From c84500eb32222c123f67bee393c384f610c659ad Mon Sep 17 00:00:00 2001
 From: zmzhan <mzhan@celestica.com>
-Date: Wed, 3 Apr 2019 17:58:32 +0800
+Date: Fri, 12 Apr 2019 14:25:51 +0800
 Subject: [PATCH] Add Celestica Questone2 and AS58XX-CL projects
 
 ---
  arch/arm/mach-aspeed/Kconfig             |  12 ++
  arch/arm/plat-aspeed/Makefile            |  10 ++
- arch/arm/plat-aspeed/dev-eth.c           |   5 +-
+ arch/arm/plat-aspeed/dev-eth.c           |   6 +-
  arch/arm/plat-aspeed/dev-i2c-cel.c       |  49 ++++++++
  arch/arm/plat-aspeed/dev-sdhci.c         |   7 ++
  arch/arm/plat-aspeed/dev-spi-fb.c        |  56 ++++++++-
- arch/arm/plat-aspeed/dev-uart.c          |  22 +++-
+ arch/arm/plat-aspeed/dev-uart.c          |  27 +++--
  drivers/hwmon/pmbus/pmbus_core.c         |   2 +
  drivers/i2c/busses/i2c-ast.c             |  17 ++-
- drivers/net/ethernet/faraday/ftgmac100.c | 191 ++++++++++++++++++++++++++++++-
+ drivers/net/ethernet/faraday/ftgmac100.c | 195 ++++++++++++++++++++++++++++++-
  drivers/net/phy/broadcom.c               |   2 +-
- 11 files changed, 358 insertions(+), 15 deletions(-)
+ 11 files changed, 361 insertions(+), 22 deletions(-)
  create mode 100644 arch/arm/plat-aspeed/dev-i2c-cel.c
 
 diff --git a/arch/arm/mach-aspeed/Kconfig b/arch/arm/mach-aspeed/Kconfig
-index f37d9da..ebba36c 100644
+index e7c1e00..5412f0f 100644
 --- a/arch/arm/mach-aspeed/Kconfig
 +++ b/arch/arm/mach-aspeed/Kconfig
-@@ -276,6 +276,18 @@ config PWNEPTUNE
+@@ -279,6 +279,18 @@ config PWNEPTUNE
  	select EGFX_IRQ
      bool "Portwell Neptune"
  
@@ -42,10 +42,10 @@ index f37d9da..ebba36c 100644
      hex "Console UART base address"
      default 0x1e783000 if CMM
 diff --git a/arch/arm/plat-aspeed/Makefile b/arch/arm/plat-aspeed/Makefile
-index 55d9a0d..afcc25e 100644
+index 908a7f5..1f8ec39 100644
 --- a/arch/arm/plat-aspeed/Makefile
 +++ b/arch/arm/plat-aspeed/Makefile
-@@ -92,6 +92,16 @@ ifeq ($(CONFIG_PWNEPTUNE), y)
+@@ -97,6 +97,16 @@ ifeq ($(CONFIG_PWNEPTUNE), y)
    PLATFB = 1
  endif
  
@@ -63,25 +63,26 @@ index 55d9a0d..afcc25e 100644
    obj-y += dev-spi-fb.o dev-i2c-common.o
  else
 diff --git a/arch/arm/plat-aspeed/dev-eth.c b/arch/arm/plat-aspeed/dev-eth.c
-index 7e28d00..13f5f32 100644
+index b36e5cb..bf90f53 100644
 --- a/arch/arm/plat-aspeed/dev-eth.c
 +++ b/arch/arm/plat-aspeed/dev-eth.c
 @@ -45,7 +45,8 @@
  	defined(CONFIG_FBTTN) || defined(CONFIG_FBY2) || \
  	defined(CONFIG_YOSEMITE) || defined(CONFIG_MINIPACK) || \
  	defined(CONFIG_MINILAKETB) || defined(CONFIG_YAMP) || \
--	defined(CONFIG_GALAXY100)
-+	defined(CONFIG_GALAXY100) || defined(CONFIG_QUESTONE2) || \
+-	defined(CONFIG_GALAXY100) || defined(CONFIG_WEDGE400)
++	defined(CONFIG_GALAXY100) || defined(CONFIG_WEDGE400) || defined(CONFIG_QUESTONE2) || \
 +	defined(CONFIG_AS58XX_CL)
  #define DRVNAME "ftgmac100"
  #else
  #define DRVNAME "ast_gmac"
-@@ -158,7 +159,7 @@ void __init ast_add_device_gmac(void)
+@@ -158,7 +159,8 @@ void __init ast_add_device_gmac(void)
  	// MAC specs.
  #if !defined(CONFIG_WEDGE) && !defined(CONFIG_WEDGE100) && \
      !defined(CONFIG_CMM) && !defined(CONFIG_MINIPACK) && \
--    !defined(CONFIG_GALAXY100)
-+    !defined(CONFIG_GALAXY100) && !defined(CONFIG_AS58XX_CL)
+-    !defined(CONFIG_GALAXY100) && !defined(CONFIG_WEDGE400)
++    !defined(CONFIG_GALAXY100) && !defined(CONFIG_WEDGE400) && \
++	!defined(CONFIG_AS58XX_CL)
  
  	ast_eth0_data.DF_support = !isRevA0;
  
@@ -141,7 +142,7 @@ index 0000000..6e9a705
 +  dev_i2c_add_pca954x(dev_i2c_pca954x_info, size_dev_i2c_pca954x_info);
 +}
 diff --git a/arch/arm/plat-aspeed/dev-sdhci.c b/arch/arm/plat-aspeed/dev-sdhci.c
-index ba5b165..344307c 100644
+index 6a33da1..38e6d15 100644
 --- a/arch/arm/plat-aspeed/dev-sdhci.c
 +++ b/arch/arm/plat-aspeed/dev-sdhci.c
 @@ -30,6 +30,7 @@
@@ -153,7 +154,7 @@ index ba5b165..344307c 100644
  extern void ast_sd_set_8bit_mode(u8 mode);
  
 @@ -109,6 +110,12 @@ void __init ast_add_device_sdhci(void)
- #if defined CONFIG_MINIPACK || defined CONFIG_YAMP
+ #if defined CONFIG_MINIPACK || defined CONFIG_YAMP || defined CONFIG_WEDGE400
  	ast_scu_multi_func_sdhc_slot(2);
  #else
 +#if defined(CONFIG_QUESTONE2) || defined(CONFIG_AS58XX_CL)
@@ -166,7 +167,7 @@ index ba5b165..344307c 100644
  #endif
  }
 diff --git a/arch/arm/plat-aspeed/dev-spi-fb.c b/arch/arm/plat-aspeed/dev-spi-fb.c
-index acde30e..da136d3 100644
+index 1a68a0a..c88d0b6 100644
 --- a/arch/arm/plat-aspeed/dev-spi-fb.c
 +++ b/arch/arm/plat-aspeed/dev-spi-fb.c
 @@ -284,6 +284,38 @@ static struct mtd_partition ast_primary_partitions[] = {
@@ -239,17 +240,17 @@ index acde30e..da136d3 100644
 +#endif
  };
  
- #ifdef CONFIG_MINIPACK
+ #ifdef CONFIG_MINIPACK || CONFIG_WEDGE400
 @@ -474,10 +524,10 @@ static struct spi_eeprom m95m02 = {
  #endif
  
  #if defined(CONFIG_FBTP)  || defined (CONFIG_WEDGE100) || defined (CONFIG_PWNEPTUNE) || \
--    defined(CONFIG_MINIPACK)
-+    defined(CONFIG_MINIPACK) || defined(CONFIG_QUESTONE2) || defined(CONFIG_AS58XX_CL)
+-    defined(CONFIG_MINIPACK) || defined (CONFIG_WEDGE400)
++    defined(CONFIG_MINIPACK) || defined (CONFIG_WEDGE400) || defined(CONFIG_QUESTONE2) || defined(CONFIG_AS58XX_CL)
  static struct spi_board_info ast_spi0_devices[] = {
      {
--#if defined(CONFIG_WEDGE100) || defined(CONFIG_MINIPACK)
-+#if defined(CONFIG_WEDGE100) || defined(CONFIG_MINIPACK) || defined(CONFIG_QUESTONE2) || defined(CONFIG_AS58XX_CL)
+-#if defined(CONFIG_WEDGE100) || defined(CONFIG_MINIPACK) || defined(CONFIG_WEDGE400)
++#if defined(CONFIG_WEDGE100) || defined(CONFIG_MINIPACK) || defined(CONFIG_WEDGE400) || defined(CONFIG_QUESTONE2) || defined(CONFIG_AS58XX_CL)
          .modalias           = "spidev",
          .chip_select        = 0,
          .max_speed_hz       = 33 * 1000 * 1000,
@@ -261,17 +262,17 @@ index acde30e..da136d3 100644
 +#if defined(CONFIG_FBTP) || defined(CONFIG_WEDGE100) || defined(CONFIG_PWNEPTUNE) || defined(CONFIG_QUESTONE2) || defined(CONFIG_AS58XX_CL)
  	platform_device_register(&ast_spi0_device);
  	spi_register_board_info(ast_spi0_devices, ARRAY_SIZE(ast_spi0_devices));
- #elif defined(CONFIG_MINIPACK)
+ #elif defined(CONFIG_MINIPACK) || defined(CONFIG_WEDGE400)
 diff --git a/arch/arm/plat-aspeed/dev-uart.c b/arch/arm/plat-aspeed/dev-uart.c
-index 78123f7..f9848e9 100644
+index 15eca23..98c3e69 100644
 --- a/arch/arm/plat-aspeed/dev-uart.c
 +++ b/arch/arm/plat-aspeed/dev-uart.c
 @@ -195,7 +195,7 @@ static struct plat_serial8250_port ast_uart_data[] = {
  /* Without this, tty offset might change for others */
  #if defined(CONFIG_YOSEMITE) || defined(CONFIG_FBTP) ||  defined(CONFIG_FBY2) || defined(CONFIG_PWNEPTUNE) || \
      defined(CONFIG_MINIPACK) || defined(CONFIG_MINILAKETB) || \
--    defined(CONFIG_YAMP)
-+    defined(CONFIG_YAMP) || defined(CONFIG_QUESTONE2) || defined(CONFIG_AS58XX_CL)
+-    defined(CONFIG_YAMP) || defined(CONFIG_WEDGE400)
++    defined(CONFIG_YAMP) || defined(CONFIG_WEDGE400) || defined(CONFIG_QUESTONE2) || defined(CONFIG_AS58XX_CL)
  	{
  		.mapbase	= AST_UART2_BASE,
  		.irq		= IRQ_UART2,
@@ -294,7 +295,7 @@ index 78123f7..f9848e9 100644
  #endif
  	{},
  
-@@ -434,11 +446,17 @@ iounmap(reg_base);
+@@ -434,16 +446,17 @@ iounmap(reg_base);
  	ast_scu_multi_func_uart(2);
  	ast_scu_multi_func_uart(3);
  	ast_scu_multi_func_uart(4);
@@ -304,11 +305,16 @@ index 78123f7..f9848e9 100644
 +	ast_scu_multi_func_uart(2);
 +	ast_scu_multi_func_uart(3);
 +	ast_scu_multi_func_uart(4);
-+#elif defined(CONFIG_QUESTONE2)
++#elif defined(CONFIG_QUESTONE2) || defined(CONFIG_WEDGE400)
  	ast_scu_multi_func_uart(1);
  	ast_scu_multi_func_uart(2);
  	ast_scu_multi_func_uart(3);
  	ast_scu_multi_func_uart(4);
+-#elif defined CONFIG_WEDGE400
+-    ast_scu_multi_func_uart(1);
+-    ast_scu_multi_func_uart(2);
+-    ast_scu_multi_func_uart(3);
+-    ast_scu_multi_func_uart(4);
 +	ast_scu_multi_func_uart(6);
  #else
  	ast_scu_multi_func_uart(1);
@@ -380,7 +386,7 @@ index ecaa88f..fed6229 100644
  
  	/*
 diff --git a/drivers/net/ethernet/faraday/ftgmac100.c b/drivers/net/ethernet/faraday/ftgmac100.c
-index bc87879..0d7cc24 100644
+index 303bc65..cba45fc 100644
 --- a/drivers/net/ethernet/faraday/ftgmac100.c
 +++ b/drivers/net/ethernet/faraday/ftgmac100.c
 @@ -2580,18 +2580,26 @@ static bool ftgmac100_rx_packet_error(struct ftgmac100 *priv,
@@ -629,12 +635,16 @@ index bc87879..0d7cc24 100644
  		if (status & FTGMAC100_INT_NO_RXBUF) {
  			/* RX buffer unavailable */
  			netdev->stats.rx_over_errors++;
-@@ -3344,9 +3519,9 @@ static int ftgmac100_open(struct net_device *netdev)
+@@ -3342,11 +3517,11 @@ static int ftgmac100_open(struct net_device *netdev)
+ 	ftgmac100_init_hw(priv);
+ 
  #if defined(CONFIG_WEDGE) || defined(CONFIG_WEDGE100) || \
-     defined(CONFIG_CMM) || defined (CONFIG_PWNEPTUNE) || \
-     defined(CONFIG_MINIPACK) || defined (CONFIG_GALAXY100) || \
--    defined(CONFIG_MINILAKETB)
-+    defined(CONFIG_MINILAKETB) ||  defined (CONFIG_AS58XX_CL)
+-    defined(CONFIG_CMM) || defined(CONFIG_PWNEPTUNE) || \
+-    defined(CONFIG_MINIPACK) || defined(CONFIG_GALAXY100) || \
+-    defined(CONFIG_MINILAKETB) || defined(CONFIG_WEDGE400)
++    defined(CONFIG_CMM) || defined (CONFIG_PWNEPTUNE) || \
++    defined(CONFIG_MINIPACK) || defined (CONFIG_GALAXY100) || \
++    defined(CONFIG_MINILAKETB) || defined(CONFIG_WEDGE400) ||  defined (CONFIG_AS58XX_CL)
  	ftgmac100_start_hw(priv, 1000);
 -#elif defined(CONFIG_FBTP)
 +#elif defined(CONFIG_FBTP) || defined(CONFIG_QUESTONE2)
@@ -659,13 +669,13 @@ index bc87879..0d7cc24 100644
  
  	/* register network device */
 diff --git a/drivers/net/phy/broadcom.c b/drivers/net/phy/broadcom.c
-index 6698743..ac189ff 100644
+index 361e373..6bec5cab 100644
 --- a/drivers/net/phy/broadcom.c
 +++ b/drivers/net/phy/broadcom.c
 @@ -372,7 +372,7 @@ static int bcm54616s_config_aneg(struct phy_device *phydev)
  
  #if defined(CONFIG_WEDGE) || defined(CONFIG_WEDGE100) || defined(CONFIG_CMM) || \
- 	defined(CONFIG_MINIPACK) || defined(CONFIG_YAMP) || \
+ 	defined(CONFIG_MINIPACK) || defined(CONFIG_YAMP) || defined(CONFIG_WEDGE400) || \
 -	defined(CONFIG_GALAXY100)
 +	defined(CONFIG_GALAXY100) || defined(CONFIG_AS58XX_CL)
  	/* disable GTXCLK Clock Delay */
