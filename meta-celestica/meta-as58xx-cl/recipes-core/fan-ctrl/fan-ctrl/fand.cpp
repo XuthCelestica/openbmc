@@ -2129,7 +2129,7 @@ int main(int argc, char **argv) {
 
 	/* Set watchdog to persistent mode so timer expiry will happen independent
 	* of this process's liveliness. */
-	set_persistent_watchdog(WATCHDOG_SET_PERSISTENT);
+	//set_persistent_watchdog(WATCHDOG_SET_PERSISTENT);
 
 	fancpld_watchdog_enable();
 

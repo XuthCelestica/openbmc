@@ -30,5 +30,16 @@ slot=1
 vconfig add $IFACE $vlan
 ip addr add 240.1.1.1/30 dev $intf
 ifconfig $intf up
-
+sleep 1
+count=0
+while [ $count -lt 3 ]
+do
+    /etc/init.d/syslog.rsyslog restart
+    if [ $? -eq 0 ]; then
+        break;
+    fi
+    count=$(($count + 1))
+    sleep 1
+done
+/etc/init.d/ntpd restart
 exit 0

@@ -1,4 +1,6 @@
-# Copyright 2018-present Celestica. All Rights Reserved.
+#!/bin/bash
+#
+# Copyright 2015-present Facebook. All Rights Reserved.
 #
 # This program file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -14,20 +16,7 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
-
-obj-m := fancpld_fishbone.o fancpld_phalanx.o syscpld.o
-
-ccflags-y += -I$(KERNEL_EXTRA_HEADER_PATH)
-
-SRC := $(shell pwd)
-
-all:
-	$(MAKE) -C $(KERNEL_SRC) M=$(SRC)
-
-modules_install:
-	$(MAKE) -C $(KERNEL_SRC) M=$(SRC) modules_install
-
-clean:
-	rm -f *.o *~ core .depend .*.cmd *.ko *.mod.c
-	rm -f Module.markers Module.symvers modules.order
-	rm -rf .tmp_versions Modules.symvers
+#
+#echo -n "Setup dhclient for IPv6... "
+#runsv /etc/sv/dhc6 > /dev/null 2>&1 &
+#echo "done."

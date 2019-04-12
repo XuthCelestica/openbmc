@@ -20,18 +20,15 @@ import bmc_command
 
 def syslog_action(data):
     result = []
-    addr = data["addr"]
+    length = len(data)
+    addr = data['addr']
+    port = '514'
 
-    (data, _) = Popen('wc -l /etc/rsyslog.conf',
-                       shell=True, stdout=PIPE).communicate()
-    conf_line = data.decode().split()
-    conf_line = int(conf_line[0], 10) - 1
-    if conf_line < 0:
-        conf_line = 0
-    proc = subprocess.Popen("head /etc/rsyslog.conf -n {} > /etc/rsyslog.conf_;"
-                            "echo '*.*' @{}:1514 >> /etc/rsyslog.conf_;"
-                            "mv /etc/rsyslog.conf_ /etc/rsyslog.conf;"
-                            "/etc/init.d/syslog.rsyslog restart".format(conf_line, addr),
+    if length >= 2:
+        port = data['port']
+
+    cmd = 'source /usr/local/bin/openbmc-utils.sh; upgrade_syslog_server ' + addr + ' ' + port
+    proc = subprocess.Popen([cmd],
                             shell=True, stdout=PIPE, stderr=PIPE)
     try:
         data, err = bmc_command.timed_communicate(proc)

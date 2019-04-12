@@ -98,7 +98,7 @@ class Alarm_Data():
 		else:
 			self.alarm_max = INVALID_VALUE
 
-		syslog.syslog(self.alarm_name + ': (min: ' + str(self.alarm_min) + ', max: ' + str(self.alarm_max) + ')')
+		syslog.syslog(syslog.LOG_INFO, self.alarm_name + ': (min: ' + str(self.alarm_min) + ', max: ' + str(self.alarm_max) + ')')
 
 	def get_temp_threshold(self, strline):
 		self.alarm_min = VARIABLE_DISABLE
@@ -119,7 +119,7 @@ class Alarm_Data():
 			self.alarm_max_hyst = recv.strip()
 		else:
 			self.alarm_max_hyst = INVALID_VALUE
-		syslog.syslog(self.alarm_name + ': (max: ' + str(self.alarm_max) + ', hyst: ' + str(self.alarm_max_hyst) + ')')
+		syslog.syslog(syslog.LOG_INFO, self.alarm_name + ': (max: ' + str(self.alarm_max) + ', hyst: ' + str(self.alarm_max_hyst) + ')')
 
 	def get_power_threshold(self, strline):
 		self.alarm_min = VARIABLE_DISABLE
@@ -137,7 +137,7 @@ class Alarm_Data():
 				self.alarm_max = recv.strip()
 		else:
 			self.alarm_max = INVALID_VALUE
-		syslog.syslog(self.alarm_name + ': (max: ' + str(self.alarm_max) + ')')
+		syslog.syslog(syslog.LOG_INFO, self.alarm_name + ': (max: ' + str(self.alarm_max) + ')')
 
 
 	def check_valid(self):
@@ -173,12 +173,12 @@ def get_mached_line(data, s):
 def report_error(obj, alarm, ret):		
 	if ret == INVALID_VALUE:
 		alarm.fail = 1
-		syslog.syslog('Error: ('+ obj.name + ' ' + alarm.alarm_name + ')  min: ' \
+		syslog.syslog(syslog.LOG_ERR, 'Error: ('+ obj.name + ' ' + alarm.alarm_name + ')  min: ' \
 				+ str(alarm.alarm_min) + ', max: ' + str(alarm.alarm_max) + '),' \
 				+ 'but read value: ' + str(alarm.value))
 	elif ret == VALID_VALUE and alarm.fail == 1:
 		alarm.fail = 0
-		syslog.syslog('Recovery: ('+ obj.name + ' ' + alarm.alarm_name + ')  min: ' \
+		syslog.syslog(syslog.LOG_WARNING, 'Recovery: ('+ obj.name + ' ' + alarm.alarm_name + ')  min: ' \
 				+ str(alarm.alarm_min) + ', max: ' + str(alarm.alarm_max) + '),' \
 				+ ' read value: ' + str(alarm.value))
 	

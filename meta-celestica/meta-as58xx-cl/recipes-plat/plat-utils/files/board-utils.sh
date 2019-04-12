@@ -448,3 +448,23 @@ get_cpu_temp() {
 
     return 0
 }
+
+upgrade_syslog_server() {
+    port=514
+    if [ $# -ge 2 ]; then
+        port=$2
+    fi
+    str="*.* action(type=\"omfwd\" target=\"$1\" port=\"$port\" template=\"ForwardFormatInContainer\" protocol=\"udp\""
+    num=$(sed -n -e '/target=/=' /etc/rsyslog.conf)
+    if [ ! -n $num ]; then
+        echo "fail"
+    fi
+    cmd="${num}c $str"
+    sed -i -e "$cmd" /etc/rsyslog.conf
+    if [ $? -eq 0 ]; then
+        /etc/init.d/syslog.rsyslog restart
+        echo "success"
+    else
+        echo "fail"
+    fi
+}
