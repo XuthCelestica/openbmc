@@ -25,25 +25,6 @@ set_value() {
 	echo ${4} > /sys/bus/i2c/devices/i2c-${1}/${1}-00${2}/${3} 2> /dev/null
 }
 
-set_hwmon_value() {
-	echo ${5} > /sys/bus/i2c/devices/i2c-${1}/${1}-00${2}/hwmon/hwmon${3}/${4} 2> /dev/null
-}
-
-get_hwmon_id() {
-	path="/sys/bus/i2c/devices/i2c-${1}/${1}-00${2}/"
-	str=$(find $path -name "$3")
-	id=$(echo $str | awk -F 'hwmon' '{print $3}' | awk -F '/' '{print $1}')
-	if [ $id ]; then
-		if [ "$id" -gt 0 ] 2>/dev/null; then
-			echo $id
-		else
-			echo 0
-		fi
-		return 0
-	fi
-	echo 0
-}
-
 board_type=$(board_type)
 
 #func    bus addr node val

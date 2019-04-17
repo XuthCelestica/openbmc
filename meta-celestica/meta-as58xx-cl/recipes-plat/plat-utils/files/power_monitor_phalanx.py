@@ -13,7 +13,7 @@ TEMP_NUM = 11
 MONITOR_POLL_TIME = (60 * 10) #10 mins
 MonitorItem = [
 ######sensors#######
-	['PSU', 'dps1100-i2c-24-58', 'dps1100-i2c-25-58', 'dps1100-i2c-26-58', 'dps1100-i2c-27-58'], #PSU
+	['PSU', 'dps1100-i2c-27-58', 'dps1100-i2c-26-58', 'dps1100-i2c-25-58', 'dps1100-i2c-24-58'], #PSU
 	['IR358x', 'ir3584-i2c-4-15', 'ir3584-i2c-4-16', 'ir38062-i2c-4-42', 
 	'ir3584-i2c-16-70', 'ir38062-i2c-16-49', 
 	'ir38060-i2c-17-45', 'ir38062-i2c-17-49', 
@@ -195,7 +195,96 @@ class PSU_Obj():
 		self.pout = Alarm_Data('pout1')
 		self.iin = Alarm_Data('iin')
 		self.iout = Alarm_Data('iout1')
+		self.present = 0
+		self.power_on = 0
+		self.ac_ok = 0
+		self.power_type = -1
 
+	def get_psu_present(self, num):
+		cmd = 'cat /sys/bus/i2c/devices/i2c-0/0-000d/psu_' + str(PSU_NUM - num) + '_present | head -n 1'
+		sys.stdout.flush()
+		recv = os.popen(cmd).read()
+		if recv.strip() == '0x0':
+			self.present = 1
+		else:
+			self.present = 0
+
+
+	def get_psu_power_ok(self, num):
+		cmd = 'cat /sys/bus/i2c/devices/i2c-0/0-000d/psu_' + str(PSU_NUM - num) + '_status | head -n 1'
+		sys.stdout.flush()
+		recv = os.popen(cmd).read()
+		if recv.strip() == '0x1':
+			if self.power_on == 0:
+				syslog.syslog(syslog.LOG_INFO, 'PSU' + psu_rename(num + 1) + ' power on')
+				self.power_on = 1
+		else:
+			if self.power_on == 1:
+				syslog.syslog(syslog.LOG_WARNING, 'PSU' + psu_rename(num + 1) + ' power off')
+				self.power_on = 0
+
+
+	def get_psu_ac_ok(self, num):
+		cmd = 'cat /sys/bus/i2c/devices/i2c-0/0-000d/psu_' + str(PSU_NUM - num) + '_ac_status | head -n 1'
+		sys.stdout.flush()
+		recv = os.popen(cmd).read()
+		if recv.strip() == '0x1':
+			if self.ac_ok == 0:
+				syslog.syslog(syslog.LOG_INFO, 'PSU' + psu_rename(num + 1) + ' AC status OK')
+				self.ac_ok = 1
+		else:
+			if self.ac_ok == 1:
+				syslog.syslog(syslog.LOG_WARNING, 'PSU' + psu_rename(num + 1) + ' AC status not OK')
+				self.ac_ok = 0
+
+	def get_psu_power_type(self, num):
+		min_threshold_cmd = ''
+		max_threshold_cmd = ''
+		if num == 0:
+			cmd = 'i2cget -f -y 27 0x58 0xd8'
+			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 27 58 in1_min 90000'
+			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 27 58 in1_max 260000'
+		elif num == 1:
+			cmd = 'i2cget -f -y 26 0x58 0xd8'
+			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 26 58 in1_min 90000'
+			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 26 58 in1_max 260000'
+		elif num == 2:
+			cmd = 'i2cget -f -y 25 0x58 0xd8'
+			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 58 in1_min 90000'
+			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 58 in1_max 260000'
+		elif num == 3:
+			cmd = 'i2cget -f -y 24 0x58 0xd8'
+			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_min 90000'
+			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max 260000'
+		sys.stdout.flush()
+		recv = os.popen(cmd).read()
+		if recv.strip() == '0x00':
+			if self.power_type != 1:
+				syslog.syslog(syslog.LOG_INFO, 'PSU' + psu_rename(num + 1) + ' power type: AC')
+				self.power_type = 1
+				sys.stdout.flush()
+				recv = os.popen(min_threshold_cmd).read()
+				sys.stdout.flush()
+				recv = os.popen(max_threshold_cmd).read()
+				update_psu_threshold(num)
+		elif recv.strip() == '0x01':
+			if self.power_type != 2:
+				syslog.syslog(syslog.LOG_INFO, 'PSU' + psu_rename(num + 1) + ' power type: DC')
+				self.power_type = 2
+				sys.stdout.flush()
+				recv = os.popen(min_threshold_cmd).read()
+				sys.stdout.flush()
+				recv = os.popen(max_threshold_cmd).read()
+				update_psu_threshold(num)
+		else:
+			if self.power_type != 0:
+				syslog.syslog(syslog.LOG_WARNING, 'PSU' + psu_rename(num + 1) + ' power type: Unknown')
+				self.power_type = 0
+				sys.stdout.flush()
+				recv = os.popen(min_threshold_cmd).read()
+				sys.stdout.flush()
+				recv = os.popen(max_threshold_cmd).read()
+				update_psu_threshold(num)
 
 
 class IR358x_Obj():
@@ -214,6 +303,13 @@ def psu_init(item):
 	i = 0
 	for i in range(PSU_NUM):
 		psu_obj[i] = PSU_Obj(item[i + 1])
+		psu_obj[i].get_psu_present(i)
+		if psu_obj[i].present == 0:
+			continue
+		psu_obj[i].get_psu_power_ok(i)
+		if psu_obj[i].power_on == 0:
+			continue
+
 		cmd = '/usr/bin/sensors ' + item[i + 1]
 		sys.stdout.flush()
 		recv = os.popen(cmd).read()
@@ -249,10 +345,70 @@ def psu_init(item):
 
 			iout_line = get_mached_line(recv, psu_obj[i].iout.alarm_name)
 			psu_obj[i].iout.get_threshold(iout_line)
-	
+
+def update_psu_threshold(i):
+	cmd = '/usr/bin/sensors ' + psu_obj[i].name
+	sys.stdout.flush()
+	recv = os.popen(cmd).read()
+	if recv == '':
+		return -1
+	else:
+		in1_line = get_mached_line(recv, psu_obj[i].in1.alarm_name)
+		psu_obj[i].in1.get_threshold(in1_line)
+
+		in2_line = get_mached_line(recv, psu_obj[i].in2.alarm_name)
+		psu_obj[i].in2.get_threshold(in2_line)
+
+		fan1_line = get_mached_line(recv, psu_obj[i].fan1.alarm_name)
+		psu_obj[i].fan1.get_threshold(fan1_line)
+
+		temp1_line = get_mached_line(recv, psu_obj[i].temp1.alarm_name)
+		psu_obj[i].temp1.get_temp_threshold(temp1_line)
+
+		temp2_line = get_mached_line(recv, psu_obj[i].temp2.alarm_name)
+		psu_obj[i].temp2.get_temp_threshold(temp2_line)
+
+		pin_line = get_mached_line(recv, psu_obj[i].pin.alarm_name)
+		psu_obj[i].pin.get_power_threshold(pin_line)
+
+		pout_line = get_mached_line(recv, psu_obj[i].pout.alarm_name)
+		psu_obj[i].pout.get_power_threshold(pout_line)
+
+		iin_line = get_mached_line(recv, psu_obj[i].iin.alarm_name)
+		psu_obj[i].iin.get_threshold(iin_line)
+
+		iout_line = get_mached_line(recv, psu_obj[i].iout.alarm_name)
+		psu_obj[i].iout.get_threshold(iout_line)
+
+
+def psu_reinit():
+	i = 0
+	for i in range(PSU_NUM):
+		psu_obj[i].get_psu_present(i)
+		if psu_obj[i].present == 0:
+			continue
+		psu_obj[i].get_psu_power_ok(i)
+		if psu_obj[i].power_on == 0:
+			continue
+
+		psu_obj[i].get_psu_ac_ok(i)
+		psu_obj[i].get_psu_power_type(i)
+
+def psu_rename(num):
+	psu_name = {
+		1 : '1-1',
+		2 : '1-2',
+		3 : '2-1',
+		4 : '2-2'
+	}
+	return psu_name.get(num, None)
+
 def psu_monitor(item):
 	i = 0
 	for i in range(PSU_NUM):
+		if psu_obj[i].present == 0 or psu_obj[i].power_on == 0:
+			continue
+
 		cmd = '/usr/bin/sensors ' + item[i + 1]
 		sys.stdout.flush()
 		recv = os.popen(cmd).read()
@@ -387,6 +543,7 @@ def temp_monitor(item):
 
 def main():
 	i = 0
+	global psu_obj
 	#print ('TestItem len:' + str(len))
 	syslog.openlog("Power_monitor")
 	for i in range(len):
@@ -401,6 +558,7 @@ def main():
 			func(item)
 	while 1:
 		time.sleep(MONITOR_POLL_TIME)
+		psu_reinit()
 		psu_monitor(MonitorItem[0])
 		ir358x_monitor(MonitorItem[1])
 		temp_monitor(MonitorItem[2])
