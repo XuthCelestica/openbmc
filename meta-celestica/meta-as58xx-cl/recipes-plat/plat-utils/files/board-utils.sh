@@ -468,3 +468,36 @@ upgrade_syslog_server() {
         echo "fail"
     fi
 }
+
+set_hwmon_value() {
+	echo ${5} > /sys/bus/i2c/devices/i2c-${1}/${1}-00${2}/hwmon/hwmon${3}/${4} 2> /dev/null
+}
+
+get_hwmon_id() {
+	path="/sys/bus/i2c/devices/i2c-${1}/${1}-00${2}/"
+	str=$(find $path -name "$3")
+	id=$(echo $str | awk -F 'hwmon' '{print $3}' | awk -F '/' '{print $1}')
+	if [ $id ]; then
+		if [ "$id" -gt 0 ] 2>/dev/null; then
+			echo $id
+		else
+			echo 0
+		fi
+		return 0
+	fi
+	echo 0
+}
+
+set_hwmon_threshold() {
+    id=$(get_hwmon_id $1 $2 in1_min)
+    if [ "$id" -gt "0" ] ; then
+        set_hwmon_value $1 $2 $id $3 $4
+        if [ $? -eq 0 ]; then
+            echo "0"
+        else
+            echo "-1"
+        fi
+    else
+        echo "-1"
+    fi
+}

@@ -1,6 +1,6 @@
-From c84500eb32222c123f67bee393c384f610c659ad Mon Sep 17 00:00:00 2001
+From 9857474f6ca34c563d14fcf4c91525e77b8cade6 Mon Sep 17 00:00:00 2001
 From: zmzhan <mzhan@celestica.com>
-Date: Fri, 12 Apr 2019 14:25:51 +0800
+Date: Thu, 18 Apr 2019 15:40:39 +0800
 Subject: [PATCH] Add Celestica Questone2 and AS58XX-CL projects
 
 ---
@@ -10,12 +10,12 @@ Subject: [PATCH] Add Celestica Questone2 and AS58XX-CL projects
  arch/arm/plat-aspeed/dev-i2c-cel.c       |  49 ++++++++
  arch/arm/plat-aspeed/dev-sdhci.c         |   7 ++
  arch/arm/plat-aspeed/dev-spi-fb.c        |  56 ++++++++-
- arch/arm/plat-aspeed/dev-uart.c          |  27 +++--
+ arch/arm/plat-aspeed/dev-uart.c          |  22 +++-
  drivers/hwmon/pmbus/pmbus_core.c         |   2 +
  drivers/i2c/busses/i2c-ast.c             |  17 ++-
  drivers/net/ethernet/faraday/ftgmac100.c | 195 ++++++++++++++++++++++++++++++-
  drivers/net/phy/broadcom.c               |   2 +-
- 11 files changed, 361 insertions(+), 22 deletions(-)
+ 11 files changed, 361 insertions(+), 17 deletions(-)
  create mode 100644 arch/arm/plat-aspeed/dev-i2c-cel.c
 
 diff --git a/arch/arm/mach-aspeed/Kconfig b/arch/arm/mach-aspeed/Kconfig
@@ -264,7 +264,7 @@ index 1a68a0a..c88d0b6 100644
  	spi_register_board_info(ast_spi0_devices, ARRAY_SIZE(ast_spi0_devices));
  #elif defined(CONFIG_MINIPACK) || defined(CONFIG_WEDGE400)
 diff --git a/arch/arm/plat-aspeed/dev-uart.c b/arch/arm/plat-aspeed/dev-uart.c
-index 15eca23..98c3e69 100644
+index 80a6612..95ca9cd 100644
 --- a/arch/arm/plat-aspeed/dev-uart.c
 +++ b/arch/arm/plat-aspeed/dev-uart.c
 @@ -195,7 +195,7 @@ static struct plat_serial8250_port ast_uart_data[] = {
@@ -295,26 +295,21 @@ index 15eca23..98c3e69 100644
  #endif
  	{},
  
-@@ -434,16 +446,17 @@ iounmap(reg_base);
- 	ast_scu_multi_func_uart(2);
- 	ast_scu_multi_func_uart(3);
- 	ast_scu_multi_func_uart(4);
--#elif defined CONFIG_YAMP
-+#elif defined(CONFIG_YAMP) || defined(CONFIG_AS58XX_CL)
+@@ -429,11 +441,17 @@ writel(readl(reg_base + AST_LPC_HICR9)
+ iounmap(reg_base);
+ #elif defined(CONFIG_LIGHTNING)
+ 
+-#elif defined(CONFIG_MINIPACK) || defined(CONFIG_YAMP) || defined(CONFIG_WEDGE400)
++#elif defined(CONFIG_MINIPACK) || defined(CONFIG_YAMP) || defined(CONFIG_WEDGE400)  || defined(CONFIG_AS58XX_CL)
 +	ast_scu_multi_func_uart(1);
 +	ast_scu_multi_func_uart(2);
 +	ast_scu_multi_func_uart(3);
 +	ast_scu_multi_func_uart(4);
-+#elif defined(CONFIG_QUESTONE2) || defined(CONFIG_WEDGE400)
++#elif defined(CONFIG_QUESTONE2)
  	ast_scu_multi_func_uart(1);
  	ast_scu_multi_func_uart(2);
  	ast_scu_multi_func_uart(3);
  	ast_scu_multi_func_uart(4);
--#elif defined CONFIG_WEDGE400
--    ast_scu_multi_func_uart(1);
--    ast_scu_multi_func_uart(2);
--    ast_scu_multi_func_uart(3);
--    ast_scu_multi_func_uart(4);
 +	ast_scu_multi_func_uart(6);
  #else
  	ast_scu_multi_func_uart(1);

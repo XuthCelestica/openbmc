@@ -13,7 +13,7 @@ TEMP_NUM = 2
 MONITOR_POLL_TIME = (60 * 10) #10 mins
 MonitorItem = [
 ######sensors#######
-['PSU', 'dps1100-i2c-24-58', 'dps1100-i2c-25-59'], #PSU
+['PSU', 'dps1100-i2c-25-59', 'dps1100-i2c-24-58'], #PSU
 ['IR358x', 'ir38060-i2c-4-43', 'ir38062-i2c-4-49', 'ir3595-i2c-16-12', 'ir38060-i2c-17-47', 'ir3584-i2c-18-70', 'ir3584-i2c-18-71', 'ir3584-i2c-4-15', 'ir3584-i2c-4-16'], #IR358x
 ['Temp', 'tmp75-i2c-7-4d', 'tmp75-i2c-39-48'], #Temp
 ]
@@ -170,7 +170,7 @@ def report_error(obj, alarm, ret):
 		syslog.syslog(syslog.LOG_WARNING, 'Recovery: ('+ obj.name + ' ' + alarm.alarm_name + ')  min: ' \
 				+ str(alarm.alarm_min) + ', max: ' + str(alarm.alarm_max) + '),' \
 				+ ' read value: ' + str(alarm.value))
-	
+
 
 class PSU_Obj():
 	def __init__(self, name):
@@ -184,7 +184,116 @@ class PSU_Obj():
 		self.pout = Alarm_Data('pout1')
 		self.iin = Alarm_Data('iin')
 		self.iout = Alarm_Data('iout1')
+		self.present = 0
+		self.power_on = 0
+		self.ac_ok = 0
+		self.power_type = -1
 
+	def get_psu_present(self):
+		if self.name == 'dps1100-i2c-24-58':
+			cmd = 'cat /sys/bus/i2c/devices/i2c-0/0-000d/psu_l_present | head -n 1'
+		else:
+			cmd = 'cat /sys/bus/i2c/devices/i2c-0/0-000d/psu_r_present | head -n 1'
+		sys.stdout.flush()
+		recv = os.popen(cmd).read()
+		if recv.strip() == '0x0':
+			self.present = 1
+		else:
+			self.present = 0
+		#print ('get_psu_present return ' + str(self.present)) #zmzhan add temp
+
+
+	def get_psu_power_ok(self, num):
+		if self.name == 'dps1100-i2c-24-58':
+			cmd = 'cat /sys/bus/i2c/devices/i2c-0/0-000d/psu_l_status | head -n 1'
+		else:
+			cmd = 'cat /sys/bus/i2c/devices/i2c-0/0-000d/psu_r_status | head -n 1'
+		sys.stdout.flush()
+		recv = os.popen(cmd).read()
+		if recv.strip() == '0x1':
+			if self.power_on == 0:
+				syslog.syslog(syslog.LOG_INFO, 'PSU' + str(num + 1) + ' power on')
+				self.power_on = 1
+		else:
+			if self.power_on == 1:
+				syslog.syslog(syslog.LOG_WARNING, 'PSU' + str(num + 1) + ' power off')
+				self.power_on = 0
+
+
+	def get_psu_ac_ok(self, num):
+		if self.name == 'dps1100-i2c-24-58':
+			cmd = 'cat /sys/bus/i2c/devices/i2c-0/0-000d/psu_l_ac_status | head -n 1'
+		else:
+			cmd = 'cat /sys/bus/i2c/devices/i2c-0/0-000d/psu_r_ac_status | head -n 1'
+		sys.stdout.flush()
+		recv = os.popen(cmd).read()
+		if recv.strip() == '0x1':
+			if self.ac_ok == 0:
+				syslog.syslog(syslog.LOG_INFO, 'PSU' + str(num + 1) + ' AC status OK')
+				self.ac_ok = 1
+		else:
+			if self.ac_ok == 1:
+				syslog.syslog(syslog.LOG_WARNING, 'PSU' + str(num + 1) + ' AC status not OK')
+				self.ac_ok = 0
+
+	def get_psu_power_type(self, num):
+		if self.name == 'dps1100-i2c-24-58':
+			cmd = 'i2cget -f -y 24 0x58 0xd8'
+		else:
+			cmd = 'i2cget -f -y 25 0x59 0xd8'
+		sys.stdout.flush()
+		recv = os.popen(cmd).read()
+		if recv.strip() == '0x00':
+			if self.power_type != 1:
+				syslog.syslog(syslog.LOG_INFO, 'PSU' + str(num + 1) + ' power type: AC')
+				self.power_type = 1
+				if self.name == 'dps1100-i2c-24-58':
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_min 90000'
+				else:
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_min 90000'
+				sys.stdout.flush()
+				recv = os.popen(cmd).read()
+				if self.name == 'dps1100-i2c-24-58':
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max 260000'
+				else:
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_max 260000'
+				sys.stdout.flush()
+				recv = os.popen(cmd).read()
+				update_psu_threshold(num)
+		elif recv.strip() == '0x01':
+			if self.power_type != 2:
+				syslog.syslog(syslog.LOG_INFO, 'PSU' + str(num + 1) + ' power type: DC')
+				self.power_type = 2
+				if self.name == 'dps1100-i2c-24-58':
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_min 90000'
+				else:
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_min 90000'
+				sys.stdout.flush()
+				recv = os.popen(cmd).read()
+				if self.name == 'dps1100-i2c-24-58':
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max 310000'
+				else:
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_max 310000'
+				sys.stdout.flush()
+				recv = os.popen(cmd).read()
+				update_psu_threshold(num)
+		else:
+			if self.power_type != 0:
+				syslog.syslog(syslog.LOG_WARNING, 'PSU' + str(num + 1) + ' power type: Unknown')
+				self.power_type = 0
+				if self.name == 'dps1100-i2c-24-58':
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_min 90000'
+				else:
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_min 90000'
+				sys.stdout.flush()
+				recv = os.popen(cmd).read()
+				if self.name == 'dps1100-i2c-24-58':
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max 260000'
+				else:
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_max 260000'
+				sys.stdout.flush()
+				recv = os.popen(cmd).read()
+				update_psu_threshold(num)
 
 
 class IR358x_Obj():
@@ -203,6 +312,13 @@ def psu_init(item):
 	i = 0
 	for i in range(PSU_NUM):
 		psu_obj[i] = PSU_Obj(item[i + 1])
+		psu_obj[i].get_psu_present()
+		if psu_obj[i].present == 0:
+			continue
+		psu_obj[i].get_psu_power_ok(i)
+		if psu_obj[i].power_on == 0:
+			continue
+
 		cmd = '/usr/bin/sensors ' + item[i + 1]
 		sys.stdout.flush()
 		recv = os.popen(cmd).read()
@@ -238,10 +354,62 @@ def psu_init(item):
 
 			iout_line = get_mached_line(recv, psu_obj[i].iout.alarm_name)
 			psu_obj[i].iout.get_threshold(iout_line)
-	
+
+def update_psu_threshold(i):
+	cmd = '/usr/bin/sensors ' + psu_obj[i].name
+	sys.stdout.flush()
+	recv = os.popen(cmd).read()
+	if recv == '':
+		return -1
+	else:
+		in1_line = get_mached_line(recv, psu_obj[i].in1.alarm_name)
+		psu_obj[i].in1.get_threshold(in1_line)
+
+		in2_line = get_mached_line(recv, psu_obj[i].in2.alarm_name)
+		psu_obj[i].in2.get_threshold(in2_line)
+
+		fan1_line = get_mached_line(recv, psu_obj[i].fan1.alarm_name)
+		psu_obj[i].fan1.get_threshold(fan1_line)
+
+		temp1_line = get_mached_line(recv, psu_obj[i].temp1.alarm_name)
+		psu_obj[i].temp1.get_temp_threshold(temp1_line)
+
+		temp2_line = get_mached_line(recv, psu_obj[i].temp2.alarm_name)
+		psu_obj[i].temp2.get_temp_threshold(temp2_line)
+
+		pin_line = get_mached_line(recv, psu_obj[i].pin.alarm_name)
+		psu_obj[i].pin.get_power_threshold(pin_line)
+
+		pout_line = get_mached_line(recv, psu_obj[i].pout.alarm_name)
+		psu_obj[i].pout.get_power_threshold(pout_line)
+
+		iin_line = get_mached_line(recv, psu_obj[i].iin.alarm_name)
+		psu_obj[i].iin.get_threshold(iin_line)
+
+		iout_line = get_mached_line(recv, psu_obj[i].iout.alarm_name)
+		psu_obj[i].iout.get_threshold(iout_line)
+
+
+def psu_reinit():
+	i = 0
+	for i in range(PSU_NUM):
+		psu_obj[i].get_psu_present()
+		if psu_obj[i].present == 0:
+			continue
+		psu_obj[i].get_psu_power_ok(i)
+		if psu_obj[i].power_on == 0:
+			continue
+
+		psu_obj[i].get_psu_ac_ok(i)
+		psu_obj[i].get_psu_power_type(i)
+
+
 def psu_monitor(item):
 	i = 0
 	for i in range(PSU_NUM):
+		if psu_obj[i].present == 0 or psu_obj[i].power_on == 0:
+			continue
+
 		cmd = '/usr/bin/sensors ' + item[i + 1]
 		sys.stdout.flush()
 		recv = os.popen(cmd).read()
@@ -376,6 +544,7 @@ def temp_monitor(item):
 
 def main():
 	i = 0
+	global psu_obj
 	#print ('TestItem len:' + str(len))
 	syslog.openlog("Power_monitor")
 	for i in range(len):
@@ -390,11 +559,12 @@ def main():
 			func(item)
 	while 1:
 		time.sleep(MONITOR_POLL_TIME)
+		psu_reinit()
 		psu_monitor(MonitorItem[0])
 		ir358x_monitor(MonitorItem[1])
 		temp_monitor(MonitorItem[2])
 
-		
+
 
 len = len(MonitorItem)
 rc = main()
