@@ -18,7 +18,7 @@ def get_openbmc_version(d):
     gitdir = os.path.join(cur, '.git')
     if cur and is_openbmc_root:
         cmd = ['git', '--git-dir=%s' % gitdir , '--work-tree=%s' % cur,
-               'describe', '--tags', '--dirty', '--always']
+               'describe', '--tags', '--always']
         exitstatus, output = oe.utils.getstatusoutput(' '.join(cmd))
         if exitstatus != 0:
             output = ''
