@@ -310,6 +310,8 @@ def psu_init(item):
 		if psu_obj[i].power_on == 0:
 			continue
 
+                psu_obj[i].get_psu_power_type(i)
+
 		cmd = '/usr/bin/sensors ' + item[i + 1]
 		sys.stdout.flush()
 		recv = os.popen(cmd).read()
