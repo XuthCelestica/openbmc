@@ -242,26 +242,28 @@ class PSU_Obj():
 		max_threshold_cmd = ''
 		if num == 0:
 			cmd = 'i2cget -f -y 27 0x58 0xd8'
-			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 27 58 in1_min 90000'
-			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 27 58 in1_max 260000'
+			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 27 58 in1_min'
+			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 27 58 in1_max'
 		elif num == 1:
 			cmd = 'i2cget -f -y 26 0x58 0xd8'
-			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 26 58 in1_min 90000'
-			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 26 58 in1_max 260000'
+			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 26 58 in1_min'
+			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 26 58 in1_max'
 		elif num == 2:
 			cmd = 'i2cget -f -y 25 0x58 0xd8'
-			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 58 in1_min 90000'
-			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 58 in1_max 260000'
+			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 58 in1_min'
+			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 58 in1_max'
 		elif num == 3:
 			cmd = 'i2cget -f -y 24 0x58 0xd8'
-			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_min 90000'
-			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max 260000'
+			min_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_min'
+			max_threshold_cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max'
 		sys.stdout.flush()
 		recv = os.popen(cmd).read()
 		if recv.strip() == '0x00':
 			if self.power_type != 1:
 				syslog.syslog(syslog.LOG_INFO, 'PSU' + psu_rename(num + 1) + ' power type: AC')
 				self.power_type = 1
+				min_threshold_cmd += ' 90000'
+				max_threshold_cmd += ' 264000'
 				sys.stdout.flush()
 				recv = os.popen(min_threshold_cmd).read()
 				sys.stdout.flush()
@@ -271,6 +273,8 @@ class PSU_Obj():
 			if self.power_type != 2:
 				syslog.syslog(syslog.LOG_INFO, 'PSU' + psu_rename(num + 1) + ' power type: DC')
 				self.power_type = 2
+				min_threshold_cmd += ' 200000'
+				max_threshold_cmd += ' 280000'
 				sys.stdout.flush()
 				recv = os.popen(min_threshold_cmd).read()
 				sys.stdout.flush()
@@ -280,6 +284,8 @@ class PSU_Obj():
 			if self.power_type != 0:
 				syslog.syslog(syslog.LOG_WARNING, 'PSU' + psu_rename(num + 1) + ' power type: Unknown')
 				self.power_type = 0
+				min_threshold_cmd += ' 90000'
+				max_threshold_cmd += ' 264000'
 				sys.stdout.flush()
 				recv = os.popen(min_threshold_cmd).read()
 				sys.stdout.flush()
@@ -310,7 +316,7 @@ def psu_init(item):
 		if psu_obj[i].power_on == 0:
 			continue
 
-                psu_obj[i].get_psu_power_type(i)
+		psu_obj[i].get_psu_power_type(i)
 
 		cmd = '/usr/bin/sensors ' + item[i + 1]
 		sys.stdout.flush()

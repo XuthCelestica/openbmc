@@ -229,6 +229,10 @@ come_status_monitor() {
         if [ $st -gt 0 ]; then
             logger "COMe status arrive SUS_S3 status"
         fi
+        ((st=$val&0x10))
+        if [ $st -gt 0 ]; then
+            logger "COMe status arrive SUS_S0 status"
+        fi
     fi
     return $val
 }

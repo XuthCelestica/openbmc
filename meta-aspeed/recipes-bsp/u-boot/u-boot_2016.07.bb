@@ -11,7 +11,7 @@ DEPENDS += "dtc-native bc-native"
 SRCBRANCH = "openbmc/helium/v2016.07"
 SRCREV = "AUTOINC"
 
-SRC_URI = "git://github.com/theopolis/u-boot.git;branch=${SRCBRANCH};protocol=https \
+SRC_URI = "git://github.com/SW-CSA/u-boot.git;branch=${SRCBRANCH};protocol=https \
            file://fw_env.config \
            file://fw_env.config.full \
            file://0001-Support-Celestica-Questone2-and-AS58XX-CL-projects.patch \
