@@ -396,10 +396,11 @@ static const i2c_dev_attr_st syscpld_attr_table_fishbone[] = {
 	  "0x1: SUS_S3_N\n"
 	  "0x2: SUS_S4_N\n"
 	  "0x4: SUS_S5_N\n"
-	  "0x8: SUS_STAT_N",
+	  "0x8: SUS_STAT_N\n"
+	  "0x10: SUS_S0_N",
 	  I2C_DEV_ATTR_SHOW_DEFAULT,
 	  NULL,
-	  0x22, 0, 4,
+	  0x22, 0, 5,
 	},
 	{
 	  "bios_cs",
@@ -1384,7 +1385,7 @@ int reset_i2c_mux(int bus)
 	if(syscpld_client == NULL)
 		return -ENODEV;
 
-	printk(KERN_WARNING "bus %d is huang, try to reset the PCA9548\n", bus);
+	printk(KERN_WARNING "bus %d is hanged, try to reset the PCA9548\n", bus);
 	data = i2c_get_clientdata(syscpld_client);
 	mutex_lock(&data->idd_lock);
 	/* get reset reigster status */

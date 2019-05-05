@@ -63,6 +63,11 @@ static int mca_high = 0;
 static struct workqueue_struct *mca_wq = NULL;
 static struct delayed_work mca_dwq;
 
+static int aer_0_assert = 0;
+static int aer_1_assert = 0;
+static int aer_2_assert = 0;
+static int mca_assert = 0;
+
 static irqreturn_t cpu_error_handler(int irq, void *dev_id)
 {
 	int gpio;
@@ -73,22 +78,34 @@ static irqreturn_t cpu_error_handler(int irq, void *dev_id)
 	CPU_ERROR_DEBUG("irq=%d, gpio=%d, value=%d\n", irq, gpio, value);
 	switch(gpio) {
 		case CPU_AER_0_GPIO:
-			if(value)
-				printk(KERN_ALERT "AER ERR[0] is recovered\n");
-			else
+			if(value) {
+                if(aer_0_assert == 1)
+				    printk(KERN_ALERT "AER ERR[0] is recovered\n");
+                aer_0_assert = 0;
+            } else {
 				printk(KERN_ALERT "AER ERR[0] is asserted\n");
+                aer_0_assert = 1;
+            }
 			break;
 		case CPU_AER_1_GPIO:
-			if(value)
-				printk(KERN_ALERT "AER ERR[1] is recovered\n");
-			else
+			if(value) {
+                if(aer_1_assert == 1)
+				    printk(KERN_ALERT "AER ERR[1] is recovered\n");
+                aer_1_assert = 0;
+            } else {
 				printk(KERN_ALERT "AER ERR[1] is asserted\n");
+                aer_1_assert = 1;
+            }
 			break;
 		case CPU_AER_2_GPIO:
-			if(value)
-				printk(KERN_ALERT "AER ERR[2] is recovered\n");
-			else
+			if(value) {
+                if(aer_2_assert == 1)
+				    printk(KERN_ALERT "AER ERR[2] is recovered\n");
+                aer_2_assert = 0;
+            } else {
 				printk(KERN_ALERT "AER ERR[2] is asserted\n");
+                aer_2_assert = 1;
+            }
 			break;
 		case CPU_MCA_GPIO:
 			if(value) {
@@ -108,12 +125,16 @@ static void mca_error_delay_worker(struct work_struct *work)
 
 	if(mca_low == 1) {
 		printk(KERN_ALERT "CATERR# remains asserted\n");
+        mca_assert = 1;
 	} else if(mca_low >= 8) {
 		printk(KERN_ALERT "CATERR# is asserted for 16 BCLKs\n");
+        mca_assert = 1;
 	}
 
 	if(mca_high == 1) {
-		printk(KERN_ALERT "CATERR# is recovered\n");
+        if(mca_assert == 1)
+		    printk(KERN_ALERT "CATERR# is recovered\n");
+        mca_assert = 0;
 	}
 	mca_low = 0;
 	mca_high = 0;

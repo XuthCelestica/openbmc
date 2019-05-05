@@ -2121,7 +2121,10 @@ static int get_fan_direction(void)
 				syslog(LOG_INFO, "%s direction changed to [Rear to front]", fantray->name);
 			} else {
 				fantray->direction = FAN_DIR_FAULT;
-				syslog(LOG_WARNING, "%s module unrecognized, set to [Fault]", fantray->name);
+				if(strlen(buffer) > 0)
+					syslog(LOG_WARNING, "%s wrong module inserted!", fantray->name);
+				else
+					syslog(LOG_WARNING, "%s module unrecognized, set to [Fault]", fantray->name);
 			}
 		} else {
 			if(find_sub_string(buffer, DELTA_PSU_DIR_F2B_STR, sizeof(buffer))) {
@@ -2138,7 +2141,10 @@ static int get_fan_direction(void)
 				syslog(LOG_INFO, "%s direction changed to [Rear to front]", fantray->name);
 			} else {
 				fantray->direction = FAN_DIR_FAULT;
-				syslog(LOG_WARNING, "%s module unrecognized, set to [Fault]", fantray->name);
+				if(strlen(buffer) > 0)
+					syslog(LOG_WARNING, "%s wrong module inserted!", fantray->name);
+				else
+					syslog(LOG_WARNING, "%s module unrecognized, set to [Fault]", fantray->name);
 			}
 		}
 		fantray->read_eeprom = 0;

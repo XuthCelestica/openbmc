@@ -254,9 +254,9 @@ class PSU_Obj():
 				sys.stdout.flush()
 				recv = os.popen(cmd).read()
 				if self.name == 'dps1100-i2c-24-58':
-					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max 260000'
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max 264000'
 				else:
-					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_max 260000'
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_max 264000'
 				sys.stdout.flush()
 				recv = os.popen(cmd).read()
 				update_psu_threshold(num)
@@ -265,15 +265,15 @@ class PSU_Obj():
 				syslog.syslog(syslog.LOG_INFO, 'PSU' + str(num + 1) + ' power type: DC')
 				self.power_type = 2
 				if self.name == 'dps1100-i2c-24-58':
-					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_min 90000'
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_min 200000'
 				else:
-					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_min 90000'
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_min 200000'
 				sys.stdout.flush()
 				recv = os.popen(cmd).read()
 				if self.name == 'dps1100-i2c-24-58':
-					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max 310000'
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max 280000'
 				else:
-					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_max 310000'
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_max 280000'
 				sys.stdout.flush()
 				recv = os.popen(cmd).read()
 				update_psu_threshold(num)
@@ -288,9 +288,9 @@ class PSU_Obj():
 				sys.stdout.flush()
 				recv = os.popen(cmd).read()
 				if self.name == 'dps1100-i2c-24-58':
-					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max 260000'
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 24 58 in1_max 264000'
 				else:
-					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_max 260000'
+					cmd = 'source /usr/local/bin/openbmc-utils.sh;set_hwmon_threshold 25 59 in1_max 264000'
 				sys.stdout.flush()
 				recv = os.popen(cmd).read()
 				update_psu_threshold(num)
@@ -318,6 +318,8 @@ def psu_init(item):
 		psu_obj[i].get_psu_power_ok(i)
 		if psu_obj[i].power_on == 0:
 			continue
+
+		psu_obj[i].get_psu_power_type(i)
 
 		cmd = '/usr/bin/sensors ' + item[i + 1]
 		sys.stdout.flush()
