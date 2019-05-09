@@ -57,7 +57,7 @@ wedge_is_us_on() {
     ((val=$(cat $USRV_STATUS_SYSFS 2> /dev/null | head -n 1)))
 	if [ -z "$val" ]; then
         return $default
-	elif [ $val -eq 31 ]; then
+	elif [ $val -eq 15 ]; then
         return 0            # powered on
     elif [ $val -eq 8 ]; then
         return 1

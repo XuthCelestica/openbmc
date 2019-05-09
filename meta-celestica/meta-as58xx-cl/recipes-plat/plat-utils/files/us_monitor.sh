@@ -229,7 +229,8 @@ come_status_monitor() {
         if [ $st -gt 0 ]; then
             logger "COMe status arrive SUS_S3 status"
         fi
-        ((st=$val&0x10))
+        ((tmp=$(i2cget -f -y 0 0x0d 0x18 2> /dev/null | head -n 1)))
+        ((st=$tmp&0x08))
         if [ $st -gt 0 ]; then
             logger "COMe status arrive SUS_S0 status"
         fi
