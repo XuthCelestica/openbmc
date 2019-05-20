@@ -28,6 +28,7 @@ psu_register=(
 "i2c_device_delete 24 0x58;i2c_device_delete 24 0x50;i2c_device_add 24 0x58 dps1100;i2c_device_add 24 0x50 24c32"
 )
 
+board_type=$(board_type)
 
 psu_status_init() {
 	id=0
@@ -192,12 +193,12 @@ fan_wdt_monitor() {
         return $1
     elif [ $val -eq 1 ]; then
         if [ $1 -eq 0 ]; then
-            logger "Fan WDT is abnormal!"
+            logger -p user.error "FAN watchdog timeout, FAN speed is set to 100%"
         fi
         return 1            #fan wdt assert
     elif [ $val -eq 0 ]; then
         if [ $1 -eq 1 ]; then
-            logger "Fan WDT is recovery!"
+            logger -p user.warning "FAN watchdog recovered"
         fi
         return 0
     fi
@@ -215,24 +216,24 @@ come_status_monitor() {
     if [ $val -ne $1 ]; then
         ((st=$val&0x8))
         if [ $st -gt 0 ]; then
-            logger "COMe status arrive SUS_STAT status"
+            logger -p user.crit "CPU state changed to power saving mode SUS_STAT"
         fi
         ((st=$val&0x4))
         if [ $st -gt 0 ]; then
-            logger "COMe status arrive SUS_S5 status"
+            logger -p user.crit "CPU state changed to power saving mode S5"
         fi
         ((st=$val&0x2))
         if [ $st -gt 0 ]; then
-            logger "COMe status arrive SUS_S4 status"
+            logger -p user.crit "CPU state changed to power saving mode S4"
         fi
         ((st=$val&0x1))
         if [ $st -gt 0 ]; then
-            logger "COMe status arrive SUS_S3 status"
+            logger -p user.crit "CPU state changed to power saving mode S3"
         fi
         ((tmp=$(i2cget -f -y 0 0x0d 0x18 2> /dev/null | head -n 1)))
         ((st=$tmp&0x08))
         if [ $st -gt 0 ]; then
-            logger "COMe status arrive SUS_S0 status"
+            logger -p user.warning "CPU state changed to power saving mode S0"
         fi
     fi
     return $val
@@ -248,13 +249,13 @@ bios_boot_monitor() {
     if [ $boot_source -eq 1 ]; then #boot from slave
         if [ $boot_status -eq 1 ]; then
             if [ $1 -ne 1 ]; then
-                logger "COMe boots from BIOS Slave flash: OK"
+                logger -p user.warning "BIOS boot from secondary flash succeed"
                 sys_led yellow on
             fi
             return 1
         else
             if [ $1 -ne 2 -a $1 -ge 5 ]; then
-                logger "COMe boots from BIOS Slave flash: Fail"
+                logger -p user.crit "BIOS boot from secondary flash failed"
                 sys_led yellow slow
                 return 2
             elif [ $1 -ne 2 ]; then
@@ -263,10 +264,21 @@ bios_boot_monitor() {
             return 2
         fi
     else
-        if [ $1 -ne 0 ]; then
-            sys_led green on
+    	if [ $boot_status -eq 1 ]; then
+            if [ $1 -ne 1 ]; then
+                logger -p user.notice "BIOS boot from primary flash succeed"
+                sys_led green on
+            fi
+            return 1
+        else
+            if [ $1 -ne 2 -a $1 -ge 5 ]; then
+                logger -p user.error "BIOS boot from primary flash failed"
+                return 2
+            elif [ $1 -ne 2 ]; then
+                return $(($1+3))
+            fi
+            return 2
         fi
-        return 0
     fi
 
 }
@@ -344,14 +356,14 @@ come_wdt_monitor() {
     if [ -f "/tmp/watchdog" ]; then
         ((val=$(cat /tmp/watchdog)))
         if [ $val -eq 0 ]; then
-            logger "Disable COMe watchdog"
+            logger -p user.warning "Host CPU watchdog disabled"
             come_wdt_enable=0
             come_wdt_count=0
             rm /tmp/watchdog
             return 0
         elif [ $come_wdt_count -eq 0 ]; then
             if [ $come_wdt_enable -eq 0 ]; then
-                logger "Enable COMe watchdog"
+                logger -p user.warning "Host CPU watchdog enabled"
             fi
             come_wdt_enable=1
             come_wdt_count=$(($val/7+1))
@@ -363,7 +375,7 @@ come_wdt_monitor() {
         if [ $come_wdt_count -gt 0 ]; then
             come_wdt_count=$(($come_wdt_count-1))
         else
-            logger "COMe maybe hang or OOB is disconnect!"
+            logger -p user.crit "Host CPU watchdog timeout"
             come_wdt_enable=0
         fi
     fi
@@ -394,11 +406,20 @@ come_wdt_enable=0
 echo 70000 >/sys/bus/i2c/devices/i2c-7/7-004d/hwmon/hwmon3/temp1_max
 echo 60000 >/sys/bus/i2c/devices/i2c-7/7-004d/hwmon/hwmon3/temp1_max_hyst
 
+if /usr/local/bin/boot_info.sh |grep "Slave Flash" ; then
+    logger -p user.warning "BMC boot from slave flash succeded"
+else
+    logger -p user.warning "BMC boot from master flash succeded"
+fi
+
+
 while true; do
-	for((i = 0; i < $PSU_NUM; i++))
-	do
-		psu_status_check $i
-	done
+    if [ "$board_type" = "Fishbone48" -o "$board_type" = "Fishbone32" ]; then
+	    for((i = 0; i < $PSU_NUM; i++))
+	    do
+		    psu_status_check $i
+	    done
+    fi
 
 	come_rest_status 1
 	if [ $? -ne $come_rst_st ]; then

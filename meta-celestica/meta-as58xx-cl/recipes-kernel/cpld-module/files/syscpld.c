@@ -1384,7 +1384,7 @@ int reset_i2c_mux(int bus)
 	if(syscpld_client == NULL)
 		return -ENODEV;
 
-	printk(KERN_WARNING "bus %d is hanged, try to reset the PCA9548\n", bus);
+	//printk(KERN_WARNING "bus %d is hanged, try to reset the PCA9548\n", bus);
 	data = i2c_get_clientdata(syscpld_client);
 	mutex_lock(&data->idd_lock);
 	/* get reset reigster status */

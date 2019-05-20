@@ -31,6 +31,7 @@ vconfig add $IFACE $vlan
 ip addr add 240.1.1.1/30 dev $intf
 ifconfig $intf up
 sleep 1
+export HOSTNAME=bmc
 count=0
 while [ $count -lt 3 ]
 do
