@@ -501,3 +501,123 @@ set_hwmon_threshold() {
         echo "-1"
     fi
 }
+
+bmc_reboot() {
+    slave=0
+    if [ $# -lt 1 ] ; then
+        return 1
+    fi
+    if /usr/local/bin/boot_info.sh |grep "Slave Flash" ; then
+        slave=1
+    else
+        slave=0
+    fi
+    if [ "$1" == "master" ]; then
+        if [ $slave -eq 1 ]; then #current is slave booting
+            devmem_set_bit 0x1e78502c 7
+            logger -p user.warning "Set BMC booting flash to master"
+        fi
+        return 0
+    elif [ "$1" == "slave" ]; then
+        if [ $slave -eq 0 ]; then ##current is master booting
+            devmem_set_bit 0x1e78502c 7
+            logger -p user.warning "Set BMC booting flash to slave"
+        fi
+        return 0
+    elif [ "$1" == "reboot" ]; then
+        ((val=$(devmem 0x1e78502c)))
+        ((ret=$val&0x80))
+        if [ $ret -gt 0 ]; then
+            if [ $slave -eq 1 ]; then #current is slave, switch to master
+                logger -p user.warning "BMC will be booting from master flash"
+                boot_from master
+            else
+                logger -p user.warning "BMC will be booting from slave flash"
+                boot_from slave
+            fi
+        else
+            logger -p user.warning "BMC will be booting from current flash"
+            reboot #not set boot flash, just reboot bmc
+        fi
+        return 0
+    fi
+    return 1
+}
+
+cpld_refresh() {
+    ret=1
+	if [ $# -lt 2 ]; then
+		echo "cpld_refresh <type> <image_path>"
+		return 1
+	fi
+	boardtype=$(board_type)
+	if [ "$boardtype" = "Fishbone32" ] || [ "$boardtype" = "Fishbone48" ]; then
+        #power off CPU
+        logger -p user.warning "cpld_refresh: power off CPU"
+        /usr/local/bin/wedge_power.sh off
+        sleep 1
+        logger -p user.warning "cpld_refresh: power on Switch"
+        i2cset -f -y 0 0x0d 0x40 0x1
+        sleep 3
+
+        logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
+		gpio_set L2 1
+		ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+        ret=$?
+        logger -p user.warning "cpld_refresh: done, result=$ret"
+		gpio_set L2 0
+        logger -p user.warning "cpld_refresh: power cycle CPU"
+        /usr/local/bin/wedge_power.sh cycle
+        logger -p user.warning "cpld_refresh: BMC rebooting"
+        reboot
+	elif [ $boardtype = "Phalanx" ]; then
+        #power off CPU
+        logger -p user.warning "cpld_refresh: power off CPU"
+        /usr/local/bin/wedge_power.sh off
+        sleep 1
+        logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
+		if [ "$1" = "fan" -o "$1" = "switch" -o "$1" = "cpu" -o "$1" = "base" -o "$1" = "combo" ]; then #loop1
+			if [ -e $2 ]; then
+				gpio_set L2 1
+				gpio_set P0 0
+				ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+                ret=$?
+				gpio_set L2 0
+				gpio_set P0 0
+				gpio_set O0 0
+			fi
+		elif [ "$1" = "top_lc" ]; then #loop2
+			if [ -e $2 ]; then
+				gpio_set L2 1
+				gpio_set P0 1
+				gpio_set O0 0
+				ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+                ret=$?
+				gpio_set L2 0
+				gpio_set P0 0
+				gpio_set O0 0
+			fi
+		elif [ "$1" = "bottom_lc" ]; then #loop3
+			if [ -e $2 ]; then
+				gpio_set L2 1
+				gpio_set P0 1
+				gpio_set O0 1
+				ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+                ret=$?
+				gpio_set L2 0
+				gpio_set P0 0
+				gpio_set O0 0
+			fi
+		else
+		    echo "cpld_refresh <type> <image_path>"
+		fi
+        logger -p user.warning "cpld_refresh: done, result=$ret"
+        logger -p user.warning "cpld_refresh: power cycle CPU"
+        /usr/local/bin/wedge_power.sh cycle
+        logger -p user.warning "cpld_refresh: BMC rebooting"
+        reboot
+	else
+		echo "Board not support"
+	fi
+    return $ret
+}
