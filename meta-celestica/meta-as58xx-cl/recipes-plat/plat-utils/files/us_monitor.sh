@@ -389,6 +389,13 @@ rsyslog_update() {
     fi
 }
 
+cpld_refresh_monitor() {
+    if [ -f "/tmp/cpld_refresh" ]; then
+        para=$(cat /tmp/cpld_refresh)
+        cpld_refresh $para
+        rm /tmp/cpld_refresh
+    fi
+}
 
 psu_status_init
 come_rest_status 2
@@ -459,6 +466,8 @@ while true; do
     come_wdt_monitor
 
     rsyslog_update
+
+    cpld_refresh_monitor
 
     usleep 3000000
 done

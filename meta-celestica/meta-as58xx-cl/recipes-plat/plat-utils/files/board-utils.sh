@@ -546,10 +546,11 @@ bmc_reboot() {
 
 cpld_refresh() {
     ret=1
-	if [ $# -lt 2 ]; then
-		echo "cpld_refresh <type> <image_path>"
+	if [ $# -lt 1 ]; then
+		echo "cpld_refresh <type> [image_path]"
 		return 1
 	fi
+    logger -p user.info "cpld_refresh para: $@"
 	boardtype=$(board_type)
 	if [ "$boardtype" = "Fishbone32" ] || [ "$boardtype" = "Fishbone48" ]; then
         #power off CPU
@@ -560,12 +561,14 @@ cpld_refresh() {
         i2cset -f -y 0 0x0d 0x40 0x1
         sleep 3
 
-        logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
-		gpio_set L2 1
-		ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
-        ret=$?
-        logger -p user.warning "cpld_refresh: done, result=$ret"
-		gpio_set L2 0
+        if [ $# -ge 2 ]; then
+            logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
+		    gpio_set L2 1
+		    ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+            ret=$?
+		    gpio_set L2 0
+            logger -p user.warning "cpld_refresh: done, result=$ret"
+        fi
         logger -p user.warning "cpld_refresh: power cycle CPU"
         /usr/local/bin/wedge_power.sh cycle
         logger -p user.warning "cpld_refresh: BMC rebooting"
@@ -575,9 +578,9 @@ cpld_refresh() {
         logger -p user.warning "cpld_refresh: power off CPU"
         /usr/local/bin/wedge_power.sh off
         sleep 1
-        logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
 		if [ "$1" = "fan" -o "$1" = "switch" -o "$1" = "cpu" -o "$1" = "base" -o "$1" = "combo" ]; then #loop1
-			if [ -e $2 ]; then
+            logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
+			if [ $# -ge 2 ]; then
 				gpio_set L2 1
 				gpio_set P0 0
 				ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
@@ -586,8 +589,10 @@ cpld_refresh() {
 				gpio_set P0 0
 				gpio_set O0 0
 			fi
+            logger -p user.warning "cpld_refresh: done, result=$ret"
 		elif [ "$1" = "top_lc" ]; then #loop2
-			if [ -e $2 ]; then
+            logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
+			if [ $# -ge 2 ]; then
 				gpio_set L2 1
 				gpio_set P0 1
 				gpio_set O0 0
@@ -597,8 +602,10 @@ cpld_refresh() {
 				gpio_set P0 0
 				gpio_set O0 0
 			fi
+            logger -p user.warning "cpld_refresh: done, result=$ret"
 		elif [ "$1" = "bottom_lc" ]; then #loop3
-			if [ -e $2 ]; then
+            logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
+			if [ $# -ge 2 ]; then
 				gpio_set L2 1
 				gpio_set P0 1
 				gpio_set O0 1
@@ -608,10 +615,8 @@ cpld_refresh() {
 				gpio_set P0 0
 				gpio_set O0 0
 			fi
-		else
-		    echo "cpld_refresh <type> <image_path>"
+            logger -p user.warning "cpld_refresh: done, result=$ret"
 		fi
-        logger -p user.warning "cpld_refresh: done, result=$ret"
         logger -p user.warning "cpld_refresh: power cycle CPU"
         /usr/local/bin/wedge_power.sh cycle
         logger -p user.warning "cpld_refresh: BMC rebooting"
