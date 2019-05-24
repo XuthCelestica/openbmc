@@ -517,12 +517,16 @@ bmc_reboot() {
             devmem_set_bit 0x1e78502c 7
             logger -p user.warning "Set BMC booting flash to master"
         fi
+        if [ -f /var/log/boot_slave ]; then
+            rm /var/log/boot_slave
+        fi
         return 0
     elif [ "$1" == "slave" ]; then
         if [ $slave -eq 0 ]; then ##current is master booting
             devmem_set_bit 0x1e78502c 7
             logger -p user.warning "Set BMC booting flash to slave"
         fi
+        echo 1 > /var/log/boot_slave
         return 0
     elif [ "$1" == "reboot" ]; then
         ((val=$(devmem 0x1e78502c)))
@@ -564,11 +568,23 @@ cpld_refresh() {
         if [ $# -ge 2 ]; then
             logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
 		    gpio_set L2 1
-		    ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+		    #ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+		    ispvm dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
             ret=$?
 		    gpio_set L2 0
             logger -p user.warning "cpld_refresh: done, result=$ret"
         fi
+        sleep 5
+        if [ $# -ge 4 ]; then
+            logger -p user.warning "cpld_refresh: start $3 CPLD refreshing"
+		    gpio_set L2 1
+		    #ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $4 --tdo 212 --tdi 213 --tms 214 --tck 215
+		    ispvm dll /usr/lib/libcpldupdate_dll_gpio.so $4 --tdo 212 --tdi 213 --tms 214 --tck 215
+            ret=$?
+		    gpio_set L2 0
+            logger -p user.warning "cpld_refresh: done, result=$ret"
+        fi
+        sleep 5
         logger -p user.warning "cpld_refresh: power cycle CPU"
         /usr/local/bin/wedge_power.sh cycle
         logger -p user.warning "cpld_refresh: BMC rebooting"
@@ -578,45 +594,32 @@ cpld_refresh() {
         logger -p user.warning "cpld_refresh: power off CPU"
         /usr/local/bin/wedge_power.sh off
         sleep 1
-		if [ "$1" = "fan" -o "$1" = "switch" -o "$1" = "cpu" -o "$1" = "base" -o "$1" = "combo" ]; then #loop1
+		if [ $# -ge 2 ]; then
             logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
-			if [ $# -ge 2 ]; then
-				gpio_set L2 1
-				gpio_set P0 0
-				ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
-                ret=$?
-				gpio_set L2 0
-				gpio_set P0 0
-				gpio_set O0 0
-			fi
-            logger -p user.warning "cpld_refresh: done, result=$ret"
-		elif [ "$1" = "top_lc" ]; then #loop2
-            logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
-			if [ $# -ge 2 ]; then
-				gpio_set L2 1
-				gpio_set P0 1
-				gpio_set O0 0
-				ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
-                ret=$?
-				gpio_set L2 0
-				gpio_set P0 0
-				gpio_set O0 0
-			fi
-            logger -p user.warning "cpld_refresh: done, result=$ret"
-		elif [ "$1" = "bottom_lc" ]; then #loop3
-            logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
-			if [ $# -ge 2 ]; then
-				gpio_set L2 1
-				gpio_set P0 1
-				gpio_set O0 1
-				ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
-                ret=$?
-				gpio_set L2 0
-				gpio_set P0 0
-				gpio_set O0 0
-			fi
+			gpio_set L2 1
+			gpio_set P0 0
+			#ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+			ispvm dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+            ret=$?
+			gpio_set L2 0
+			gpio_set P0 0
+			gpio_set O0 0
             logger -p user.warning "cpld_refresh: done, result=$ret"
 		fi
+        sleep 5
+		if [ $# -ge 4 ]; then
+            logger -p user.warning "cpld_refresh: start $3 CPLD refreshing"
+			gpio_set L2 1
+			gpio_set P0 0
+			#ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $4 --tdo 212 --tdi 213 --tms 214 --tck 215
+			ispvm dll /usr/lib/libcpldupdate_dll_gpio.so $4 --tdo 212 --tdi 213 --tms 214 --tck 215
+            ret=$?
+			gpio_set L2 0
+			gpio_set P0 0
+			gpio_set O0 0
+            logger -p user.warning "cpld_refresh: done, result=$ret"
+		fi
+        sleep 5
         logger -p user.warning "cpld_refresh: power cycle CPU"
         /usr/local/bin/wedge_power.sh cycle
         logger -p user.warning "cpld_refresh: BMC rebooting"

@@ -28,6 +28,15 @@ psu_register=(
 "i2c_device_delete 24 0x58;i2c_device_delete 24 0x50;i2c_device_add 24 0x58 dps1100;i2c_device_add 24 0x50 24c32"
 )
 
+PHALANX_PSU_NUM=4
+phalanx_psu_status=(0 0 0 0)
+phalanx_psu_register=(
+"i2c_device_delete 27 0x58;i2c_device_delete 27 0x50;i2c_device_add 27 0x58 dps1100;i2c_device_add 27 0x50 24c32"
+"i2c_device_delete 26 0x58;i2c_device_delete 26 0x50;i2c_device_add 26 0x58 dps1100;i2c_device_add 26 0x50 24c32"
+"i2c_device_delete 25 0x58;i2c_device_delete 25 0x50;i2c_device_add 25 0x58 dps1100;i2c_device_add 25 0x50 24c32"
+"i2c_device_delete 24 0x58;i2c_device_delete 24 0x50;i2c_device_add 24 0x58 dps1100;i2c_device_add 24 0x50 24c32"
+)
+
 board_type=$(board_type)
 
 psu_status_init() {
@@ -88,6 +97,58 @@ psu_status_check() {
 			logger "us_monitor: Register PSU $(($i + 1))"
 			eval "${psu_register[$1]}"
 			psu_status_init
+			return 0
+		fi
+	fi
+}
+
+
+phalanx_psu_present() {
+    ((psu_num=$PHALANX_PSU_NUM - $1 + 1))
+    ((val=$(read_info 0 0d psu_${psu_num}_present)))
+    if [ $val -eq 0 ]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+phalanx_psu_power() {
+    ((psu_num=$PHALANX_PSU_NUM - $1 + 1))
+    ((val=$(read_info 0 0d psu_${psu_num}_status)))
+    if [ $val -eq 0 ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+phalanx_psu_status_init() {
+    for((i = 0; i < $PHALANX_PSU_NUM; i++))
+    do
+	    phalanx_psu_present $(($i + 1))
+	    if [ $? -eq 1 ]; then
+		    phalanx_psu_power $(($i + 1))
+		    power_ok=$?
+		    if [ $power_ok -eq 1 ]; then
+			    phalanx_psu_status[$i]=1
+		    fi
+	    fi
+    done
+}
+phalanx_psu_status_check() {
+	if [ $# -le 0 ]; then
+		return 1
+	fi
+
+	phalanx_psu_present $(($1 + 1))
+	if [ $? -eq 1 ]; then
+		phalanx_psu_power $(($1 + 1))
+		power_ok=$?
+		if [ ${phalanx_psu_status[$1]} -eq 0 ] && [ $power_ok -eq 1 ]; then
+			logger "us_monitor: Register PSU $(($i + 1))"
+			eval "${phalanx_psu_register[$1]}"
+			phalanx_psu_status[$1]=1
 			return 0
 		fi
 	fi
@@ -397,7 +458,11 @@ cpld_refresh_monitor() {
     fi
 }
 
-psu_status_init
+if [ "$board_type" = "Fishbone48" -o "$board_type" = "Fishbone32" ]; then
+    psu_status_init
+else
+    phalanx_psu_status_init
+fi
 come_rest_status 2
 come_rst_st=$?
 revise_temp=0
@@ -425,6 +490,11 @@ while true; do
 	    for((i = 0; i < $PSU_NUM; i++))
 	    do
 		    psu_status_check $i
+	    done
+    else
+	    for((i = 0; i < $PHALANX_PSU_NUM; i++))
+	    do
+		    phalanx_psu_status_check $i
 	    done
     fi
 
