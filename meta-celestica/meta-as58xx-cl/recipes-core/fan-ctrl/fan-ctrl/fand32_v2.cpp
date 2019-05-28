@@ -109,8 +109,8 @@
 #define FAN_DIR_FAULT 0
 #define FAN_DIR_B2F 1
 #define FAN_DIR_F2B 2
-#define THERMAL_DIR_F2B_STR "R1241-F0001"
-#define THERMAL_DIR_B2F_STR "R1241-F0002"
+#define THERMAL_DIR_F2B_STR "R1241-F1001"
+#define THERMAL_DIR_B2F_STR "R1241-F1002"
 #define FAN_DIR_F2B_STR "R1241-F9001"
 #define FAN_DIR_B2F_STR "R1241-F9002"
 #define DELTA_PSU_DIR_F2B_STR "DPS-1100FB"
@@ -2136,7 +2136,7 @@ static int get_fan_direction(int direction)
 				if(direction != fantray->direction)
 					syslog(LOG_ERR, "%s airflow direction mismatch, direction is F2B, system direction is B2F", fantray->name);
 				else
-					syslog(LOG_INFO, "%s airflow direction match, direction is F2B, system direction is F2B", fantray->name);
+					syslog(LOG_WARNING, "%s airflow direction match, direction is F2B, system direction is F2B", fantray->name);
 			} else if(find_sub_string(buffer, FAN_DIR_B2F_STR, sizeof(buffer))) {
 				r2f_fan_cnt++;
 				if(fantray->direction == FAN_DIR_FAULT) {
@@ -2150,7 +2150,7 @@ static int get_fan_direction(int direction)
 				if(direction != fantray->direction)
 					syslog(LOG_ERR, "%s airflow direction mismatch, direction is B2F, system direction is F2B", fantray->name);
 				else
-					syslog(LOG_INFO, "%s airflow direction match, direction is B2F, system direction is B2F", fantray->name);
+					syslog(LOG_WARNING, "%s airflow direction match, direction is B2F, system direction is B2F", fantray->name);
 			} else {
 				fantray->direction = FAN_DIR_FAULT;
 				if(strlen(buffer) > 0)
@@ -2173,7 +2173,7 @@ static int get_fan_direction(int direction)
 				if(direction != fantray->direction)
 					syslog(LOG_ERR, "%s airflow direction mismatch, direction is F2B, system direction is B2F", fantray->name);
 				else
-					syslog(LOG_INFO, "%s airflow direction match, direction is F2B, system direction is F2B", fantray->name);
+					syslog(LOG_WARNING, "%s airflow direction match, direction is F2B, system direction is F2B", fantray->name);
 			} else if(find_sub_string(buffer, DELTA_PSU_DIR_B2F_STR, sizeof(buffer))) {
 				if(fantray->direction == FAN_DIR_FAULT) {
 					if(fantray->eeprom_fail) {
@@ -2186,7 +2186,7 @@ static int get_fan_direction(int direction)
 				if(direction != fantray->direction)
 					syslog(LOG_ERR, "%s airflow direction mismatch, direction is B2F, system direction is F2B", fantray->name);
 				else
-					syslog(LOG_INFO, "%s airflow direction match, direction is B2F, system direction is B2F", fantray->name);
+					syslog(LOG_WARNING, "%s airflow direction match, direction is B2F, system direction is B2F", fantray->name);
 			} else if(find_sub_string(buffer, ACBEL_PSU_DIR_F2B_STR, sizeof(buffer))) {
 				if(fantray->direction == FAN_DIR_FAULT) {
 					if(fantray->eeprom_fail) {
@@ -2199,7 +2199,7 @@ static int get_fan_direction(int direction)
 				if(direction != fantray->direction)
 					syslog(LOG_ERR, "%s airflow direction mismatch, direction is F2B, system direction is B2F", fantray->name);
 				else
-					syslog(LOG_INFO, "%s airflow direction match, direction is F2B, system direction is F2B", fantray->name);
+					syslog(LOG_WARNING, "%s airflow direction match, direction is F2B, system direction is F2B", fantray->name);
 			} else if(find_sub_string(buffer, ACBEL_PSU_DIR_B2F_STR, sizeof(buffer))) {
 				if(fantray->direction == FAN_DIR_FAULT) {
 					if(fantray->eeprom_fail) {
@@ -2212,7 +2212,7 @@ static int get_fan_direction(int direction)
 				if(direction != fantray->direction)
 					syslog(LOG_ERR, "%s airflow direction mismatch, direction is B2F, system direction is F2B", fantray->name);
 				else
-					syslog(LOG_INFO, "%s airflow direction match, direction is B2F, system direction is B2F", fantray->name);
+					syslog(LOG_WARNING, "%s airflow direction match, direction is B2F, system direction is B2F", fantray->name);
 			} else {
 				fantray->direction = FAN_DIR_FAULT;
 				if(strlen(buffer) > 0)
@@ -2247,6 +2247,7 @@ int get_thermal_direction(void)
 	sprintf(command, "/usr/local/bin/fruid-util sys | grep 'Product Part Number' 2>/dev/null");
 	fp = popen(command, "r");
 	int thermal_dir;
+	int fan, fan_speed;
 
 	if (!fp) {
 		syslog(LOG_ERR, "failed to get thermal direction");
@@ -2258,11 +2259,18 @@ int get_thermal_direction(void)
 		fread(buffer, sizeof(char), sizeof(buffer), fp);
 		pclose(fp);
 		if(find_sub_string(buffer, THERMAL_DIR_F2B_STR, sizeof(buffer))) {
-			//syslog(LOG_INFO, "thermal direction changed to [Front to rear]");
+			syslog(LOG_INFO, "system direction is F2B");
 			thermal_dir = FAN_DIR_F2B;
 		} else if(find_sub_string(buffer, THERMAL_DIR_B2F_STR, sizeof(buffer))) {
-			//syslog(LOG_INFO, "thermal direction changed to [Rear to front]");
+			syslog(LOG_INFO, "system direction is B2F");
 			thermal_dir = FAN_DIR_B2F;
+		} else {
+			syslog(LOG_ERR, "system direction is unknown, FAN speed is set to 100%");
+			fan_speed = FAN_MAX;
+			for (fan = 0; fan < TOTAL_FANS; fan++) {
+				write_fan_speed(fan, fan_speed);
+			}
+			write_psu_fan_speed(fan, fan_speed);
 		}
 	}
 	get_fan_direction(thermal_dir);
@@ -2277,11 +2285,11 @@ static void update_thermal_direction()
 	if(direction != dir) {
 		direction = dir;
 		if(direction == FAN_DIR_F2B) {
-			syslog(LOG_INFO, "Thermal direction set to [Front to rear]");
+			syslog(LOG_INFO, "setting F2B thermal policy");
 			policy = &f2b_normal_policy;
 		}
 		if(direction == FAN_DIR_B2F) {
-			syslog(LOG_INFO, "Thermal direction set to [Rear to front]");
+			syslog(LOG_INFO, "setting B2F thermal policy");
 			policy = &b2f_normal_policy;
 		}
 	}

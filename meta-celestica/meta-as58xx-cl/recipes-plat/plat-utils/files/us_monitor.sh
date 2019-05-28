@@ -294,7 +294,7 @@ come_status_monitor() {
         ((tmp=$(i2cget -f -y 0 0x0d 0x18 2> /dev/null | head -n 1)))
         ((st=$tmp&0x08))
         if [ $st -gt 0 ]; then
-            logger -p user.warning "CPU state changed to power saving mode S0"
+            logger -p user.warning "CPU state changed to S0"
         fi
     fi
     return $val
@@ -474,15 +474,11 @@ bios_status=0
 #mca_error=0
 come_wdt_count=0
 come_wdt_enable=0
+bmc_boot_check=20
 
 echo 70000 >/sys/bus/i2c/devices/i2c-7/7-004d/hwmon/hwmon3/temp1_max
 echo 60000 >/sys/bus/i2c/devices/i2c-7/7-004d/hwmon/hwmon3/temp1_max_hyst
 
-if /usr/local/bin/boot_info.sh |grep "Slave Flash" ; then
-    logger -p user.warning "BMC boot from slave flash succeded"
-else
-    logger -p user.warning "BMC boot from master flash succeded"
-fi
 
 
 while true; do
@@ -538,6 +534,17 @@ while true; do
     rsyslog_update
 
     cpld_refresh_monitor
+
+    if [ $bmc_boot_check -gt 1 ]; then
+        bmc_boot_check=$(($bmc_boot_check-1))
+    elif [ $bmc_boot_check -eq 1 ]; then
+        bmc_boot_check=0
+        if /usr/local/bin/boot_info.sh |grep "Slave Flash" ; then
+            logger -p user.warning "BMC boot from slave flash succeded"
+        else
+            logger -p user.warning "BMC boot from master flash succeded"
+        fi
+    fi
 
     usleep 3000000
 done
