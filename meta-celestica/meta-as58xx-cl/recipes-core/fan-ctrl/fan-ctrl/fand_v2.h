@@ -89,6 +89,7 @@ struct fantray_info_stu_sysfs {
   int status;
   int failed; //for fantray fail
   int direction;
+  int eeprom_fail;
   struct fan_info_stu_sysfs fan1;
 };
 

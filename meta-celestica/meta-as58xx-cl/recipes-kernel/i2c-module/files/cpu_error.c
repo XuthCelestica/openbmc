@@ -80,30 +80,30 @@ static irqreturn_t cpu_error_handler(int irq, void *dev_id)
 		case CPU_AER_0_GPIO:
 			if(value) {
                 if(aer_0_assert == 1)
-				    printk(KERN_ALERT "AER ERR[0] is recovered\n");
+				    printk(KERN_WARNING "ERR[0] is recovered\n");
                 aer_0_assert = 0;
             } else {
-				printk(KERN_ALERT "AER ERR[0] is asserted\n");
+				printk(KERN_CRIT "ERR[0] asserted, CPU hardware correctable error detected\n");
                 aer_0_assert = 1;
             }
 			break;
 		case CPU_AER_1_GPIO:
 			if(value) {
                 if(aer_1_assert == 1)
-				    printk(KERN_ALERT "AER ERR[1] is recovered\n");
+				    printk(KERN_WARNING "ERR[1] is recovered\n");
                 aer_1_assert = 0;
             } else {
-				printk(KERN_ALERT "AER ERR[1] is asserted\n");
+				printk(KERN_CRIT "ERR[1] asserted, Non-fatal error detected\n");
                 aer_1_assert = 1;
             }
 			break;
 		case CPU_AER_2_GPIO:
 			if(value) {
                 if(aer_2_assert == 1)
-				    printk(KERN_ALERT "AER ERR[2] is recovered\n");
+				    printk(KERN_WARNING "ERR[2] is recovered\n");
                 aer_2_assert = 0;
             } else {
-				printk(KERN_ALERT "AER ERR[2] is asserted\n");
+				printk(KERN_CRIT "ERR[2] asserted, Fatal error detected\n");
                 aer_2_assert = 1;
             }
 			break;
@@ -124,16 +124,16 @@ static void mca_error_delay_worker(struct work_struct *work)
 	struct workqueue_struct *wq = mca_wq;
 
 	if(mca_low == 1) {
-		printk(KERN_ALERT "CATERR# remains asserted\n");
+		printk(KERN_CRIT "CPU IERR detected\n");
         mca_assert = 1;
 	} else if(mca_low >= 8) {
-		printk(KERN_ALERT "CATERR# is asserted for 16 BCLKs\n");
+		printk(KERN_CRIT "CPU MCERR detected\n");
         mca_assert = 1;
 	}
 
 	if(mca_high == 1) {
         if(mca_assert == 1)
-		    printk(KERN_ALERT "CATERR# is recovered\n");
+		    printk(KERN_WARNING "CPU MCERR/IERR is recovered\n");
         mca_assert = 0;
 	}
 	mca_low = 0;
