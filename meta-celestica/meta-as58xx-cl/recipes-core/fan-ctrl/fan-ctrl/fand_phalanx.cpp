@@ -581,7 +581,7 @@ static struct fan_info_stu_sysfs psu1_fan_info = {
 static struct board_info_stu_sysfs board_info[] = {
 	/*B2F*/
 	{
-		.name = "pdbboard_onboard_u10",
+		.name = "INLET_TEMP",
 		.slot_id = FAN_DIR_B2F,
 		.correction = -4,
 		.lwarn = 40,
@@ -594,7 +594,7 @@ static struct board_info_stu_sysfs board_info[] = {
 	},
 #ifdef CONFIG_FSC_CONTROL_PID
 	{
-		.name = "Switch_inlet",
+		.name = "SWITCH_TEMP",
 		.slot_id = FAN_DIR_B2F,
 		.correction = 4,
 		.lwarn = 105,
@@ -606,7 +606,7 @@ static struct board_info_stu_sysfs board_info[] = {
 		.alarm = &switchboard_inlet_sensor,
 	},
 	{
-		.name = "cpu_inlet",
+		.name = "CPU_TEMP",
 		.slot_id = FAN_DIR_B2F,
 		.correction = 0,
 		.lwarn = 101,
@@ -620,7 +620,7 @@ static struct board_info_stu_sysfs board_info[] = {
 #endif
 	/*F2B*/
 	{
-		.name = "pdbboard_onboard_u10",
+		.name = "INLET_TEMP",
 		.slot_id = FAN_DIR_F2B,
 		.correction = -4,
 		.lwarn = 40,
@@ -633,7 +633,7 @@ static struct board_info_stu_sysfs board_info[] = {
 	},
 #ifdef CONFIG_FSC_CONTROL_PID
 	{
-		.name = "Switch_inlet",
+		.name = "SWITCH_TEMP",
 		.slot_id = FAN_DIR_F2B,
 		.correction = 4,
 		.lwarn = 105,
@@ -645,7 +645,7 @@ static struct board_info_stu_sysfs board_info[] = {
 		.alarm = &switchboard_inlet_sensor,
 	},
 	{
-		.name = "cpu_inlet",
+		.name = "CPU_TEMP",
 		.slot_id = FAN_DIR_F2B,
 		.correction = 0,
 		.lwarn = 101,
