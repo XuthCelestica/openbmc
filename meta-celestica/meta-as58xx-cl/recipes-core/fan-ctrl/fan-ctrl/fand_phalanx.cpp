@@ -1431,7 +1431,7 @@ static int alarm_temp_update(int *alarm)
 				(info->lwarn - temp <= ALARM_TEMP_THRESHOLD) && info->warn_count))) {
 				if(++info->warn_count >= ALARM_START_REPORT) {
 					if(!(info->flag & LOW_WARN_BIT))
-						syslog(LOG_WARNING, "%s exceeded upper high, value is %d C, upper high is %d c",
+						syslog(LOG_WARNING, "%s exceeded upper high, value is %d C, upper high is %d C",
 							info->name, temp, info->lwarn);
 					info->warn_count = 0;
 					info->flag |= LOW_WARN_BIT;
@@ -2276,6 +2276,7 @@ static int get_fan_direction(int direction)
 	FILE *fp;
 	int i = 0;
 	char *pn;
+	int ret;
 
 	for(; i < TOTAL_FANS + TOTAL_PSUS; i++)
 	{
@@ -2305,7 +2306,7 @@ static int get_fan_direction(int direction)
 		char temp;
 		int len;
 		memset(buffer, 0, sizeof(buffer));
-		fread(buffer, sizeof(char), sizeof(buffer), fp);
+		ret = fread(buffer, sizeof(char), sizeof(buffer), fp);
 		fclose(fp);
 		if(i < TOTAL_FANS) {
 			if(pn = find_sub_string(buffer, FAN_DIR_F2B_STR, sizeof(buffer))) {
@@ -2330,9 +2331,10 @@ static int get_fan_direction(int direction)
 				}
 			} */else {
 				fantray->direction = FAN_DIR_FAULT;
-				if(strlen(buffer) > 0)
+				if(ret > 0) {
+					fantray->eeprom_fail = 0;
 					syslog(LOG_CRIT, "%s model mismatch, part number is %s", fantray->name, pn);
-				else {
+				} else {
 					fantray->eeprom_fail = 1;
 					syslog(LOG_WARNING, "%s eeprom is ABNORMAL, read %s eeprom failed", fantray->name, fantray->name);
 				}
@@ -2392,9 +2394,10 @@ static int get_fan_direction(int direction)
 					syslog(LOG_WARNING, "%s airflow direction match, direction is B2F, system direction is B2F", fantray->name);
 			} else {
 				fantray->direction = FAN_DIR_FAULT;
-				if(strlen(buffer) > 0)
+				if(ret > 0) {
+					fantray->eeprom_fail = 0;
 					syslog(LOG_CRIT, "%s model mismatch, part number is %s", fantray->name, pn);
-				else {
+				} else {
 					fantray->eeprom_fail = 1;
 					syslog(LOG_WARNING, "%s eeprom is ABNORMAL, read %s eeprom failed", fantray->name, fantray->name);
 				}
