@@ -3,10 +3,10 @@
 /var/log/dhclient.log
 /var/log/messages
 {
-        rotate 4
+        rotate 9
         missingok
         notifempty
-        size 10M
+        size 20M
         delaycompress
         compress
         postrotate

@@ -385,43 +385,43 @@ come_rest_status() {
 	val=$(cat $COME_RESET_STATUS_SYSFS 2> /dev/null | head -n 1)
 	case "$val" in
 		0x11)
-			info="Power on reset"
+			info="Last reset type is POWER_ON_RESET"
 	        ret=0 #0x11 powered on reset
 			;;
 		0x22)
-			info="Software trigger CPU to warm reset"
+			info="Last reset type is Software trigger WARM_RESET"
 	        ret=1 #0x22 Software trigger CPU warm reset
 			;;
 		0x33)
-			info="Software trigger CPU to cold reset"
+			info="Last reset type is Software trigger COLD_RESET"
 	        ret=2 #0x33 Software trigger CPU cold reset
 			;;
 		0x44)
-			info="CPU warm reset"
+			info="Last reset type is WARM_RESET"
 	        ret=3 #0x44 CPU warm reset
 			;;
 		0x55)
-			info="CPU cold reset"
+			info="Last reset type is COLD_RESET"
 	        ret=4 #0x55 CPU cold reset
 			;;
 		0x66)
-			info="Watchdog reset"
+			info="Last reset type is WDT_RESET"
 	        ret=5 #0x66 CPU watchdog reset
 			;;
 		0x77)
-			info="CPU power cycle"
+			info="Last reset type is POWER_CYCLE"
 	        ret=6 #0x77 CPU power cycle
 			;;
 		*)
-			info="Power on reset"
+			info="Last reset type is POWER_ON_RESET"
 			ret=0 #default power on reset
 			;;
 	esac
 
 	if [ $silent -eq 0 ]; then
-		echo "COMe reset status: $info"
+		echo "$info"
 	elif [ $silent -eq 2 ]; then
-		logger "COMe reset status: $info"
+		logger -p user.crit "$info"
 	fi
 
 	return $ret
