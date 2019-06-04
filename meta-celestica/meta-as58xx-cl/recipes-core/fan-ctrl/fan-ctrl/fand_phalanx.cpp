@@ -712,7 +712,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
     .fan1 = fan1_info,
   },
   {
-	.name = "PSU 1-1",
+	.name = "PSU 1",
 	.present = 1,
 	.read_eeprom = 1,
 	.status = 1,
@@ -722,7 +722,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
 	.fan1 = psu1_fan_info,
   },
   {
-	.name = "PSU 1-2",
+	.name = "PSU 2",
 	.present = 1,
 	.read_eeprom = 1,
 	.status = 1,
@@ -732,7 +732,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
 	.fan1 = psu2_fan_info,
   },
   {
-	.name = "PSU 2-1",
+	.name = "PSU 3",
 	.present = 1,
 	.read_eeprom = 1,
     .status = 1,
@@ -742,7 +742,7 @@ static struct fantray_info_stu_sysfs fantray_info[] = {
 	.fan1 = psu3_fan_info,
   },
   {
-	.name = "PSU 2-2",
+	.name = "PSU 4",
 	.present = 1,
 	.read_eeprom = 1,
     .status = 1,
@@ -2604,10 +2604,10 @@ void fand_interrupt(int sig)
 }
 
 const char *psu_name[TOTAL_PSUS] = {
-	"PSU 1-1",
-	"PSU 1-2",
-	"PSU 2-1",
-	"PSU 2-2",
+	"PSU 1",
+	"PSU 2",
+	"PSU 3",
+	"PSU 4",
 };
 int main(int argc, char **argv) {
 	int critical_temp;
