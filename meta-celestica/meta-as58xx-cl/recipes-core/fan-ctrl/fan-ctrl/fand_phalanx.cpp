@@ -2031,7 +2031,7 @@ int fan_speed_okay(const int fan, int speed, const int slop)
 			syslog(LOG_WARNING, "%s-1 speed %d, less than %d%% of max speed(%d) detected", 
 				fantray->name, front_speed, 100 - slop, speed);
 		if(fan_info->front_failed == FAN_FAIL_COUNT)
-			syslog(LOG_ERR, "%s-1 status is ABNORMAL, speed is set to 100% but real speed is lower than 70% of max speed", 
+			syslog(LOG_ERR, "%s-1 status is ABNORMAL, speed is set to 100%% but real speed is lower than 70%% of max speed", 
 				fantray->name);
 		if(fan_info->front_failed > FAN_FAIL_COUNT)
 			fan_info->front_failed = FAN_FAIL_COUNT;
@@ -2072,7 +2072,7 @@ int fan_speed_okay(const int fan, int speed, const int slop)
 			syslog(LOG_WARNING, "%s-2 speed %d, less than %d%% of max speed(%d) detected", 
 				fantray->name, rear_speed, 100 - slop, speed);
 		if(fan_info->rear_failed == FAN_FAIL_COUNT)
-			syslog(LOG_ERR, "%s-2 status is ABNORMAL, speed is set to 100% but real speed is lower than 70% of max speed", 
+			syslog(LOG_ERR, "%s-2 status is ABNORMAL, speed is set to 100%% but real speed is lower than 70%% of max speed", 
 				fantray->name);
 		if(fan_info->rear_failed > FAN_FAIL_COUNT)
 			fan_info->rear_failed = FAN_FAIL_COUNT;
@@ -2156,7 +2156,7 @@ int psu_speed_okay(const int fan, int speed, const int slop)
 			syslog(LOG_WARNING, "%s speed %d, less than %d%% of max speed(%d) detected", 
 				fantray->name, psu_speed, 100 - slop, speed);
 		if(fan_info->front_failed == FAN_FAIL_COUNT)
-			syslog(LOG_ERR, "%s status is ABNORMAL, speed is set to 100% but real speed is lower than 70% of max speed", 
+			syslog(LOG_ERR, "%s status is ABNORMAL, speed is set to 100%% but real speed is lower than 70%% of max speed", 
 				fantray->name);
 		if(fan_info->front_failed > FAN_FAIL_COUNT)
 			fan_info->front_failed = FAN_FAIL_COUNT;
