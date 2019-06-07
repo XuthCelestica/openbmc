@@ -237,12 +237,14 @@ cpu_temp_update() {
         echo 0 >/sys/bus/i2c/devices/i2c-0/0-000d/temp2_input
         return 0
     fi
-    temp=$(get_cpu_temp)
-    if [ -z "$temp" ]; then
-        return 0
+    if /usr/local/bin/wedge_power.sh status |grep "on"; then
+        temp=$(get_cpu_temp)
+        if [ -z "$temp" ]; then
+            return 0
+        fi
+        val=$(($temp*1000))
+        echo $val >/sys/bus/i2c/devices/i2c-0/0-000d/temp2_input
     fi
-    val=$(($temp*1000))
-    echo $val >/sys/bus/i2c/devices/i2c-0/0-000d/temp2_input
 }
 
 fan_wdt_monitor() {

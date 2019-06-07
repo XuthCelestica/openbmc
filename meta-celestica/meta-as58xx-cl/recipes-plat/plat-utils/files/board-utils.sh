@@ -29,6 +29,9 @@ wedge_power() {
 	elif [ "$1" == "reset" ]; then
 		echo 0 > $PWR_RESET_SYSFS
 		sleep 10
+	elif [ "$1" == "cycle" ]; then
+		echo 0 > /sys/bus/i2c/devices/0-000d/pwr_cycle
+		sleep 25
 	else
 		echo -n "Invalid parameter"
 		return 1

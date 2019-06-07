@@ -29,6 +29,8 @@ usage() {
     echo
     echo "  on: Power on cpu"
     echo
+    echo "  cycle: Power cycle cpu"
+    echo
 }
 
 do_status() {
@@ -66,7 +68,7 @@ do_on() {
         # need to check if uS is on or not
         if wedge_is_us_on 10 "."; then
             echo "Operation failed, current CPU power status is ON"
-            logger "Operation failed, current CPU power status is ON"
+            logger -p user.warning "Operation failed, current CPU power status is ON"
             return 1
         fi
     fi
@@ -79,23 +81,23 @@ do_on() {
 	    ret=$?
         if [ $ret -eq 0 ]; then
             echo "Operation done, current CPU power status is ON"
-            logger "Operation done, current CPU power status is ON"
+            logger -p user.warning "Operation done, current CPU power status is ON"
 	    else
             echo "Operation done, current CPU power status is UNKNOWN"
-            logger "Operation done, current CPU power status is UNKNOWN"
+            logger -p user.warning "Operation done, current CPU power status is UNKNOWN"
         fi
     else
 	    wedge_is_us_on
 	    ret=$?
         if [ $ret -eq 0 ]; then
             echo "Operation failed, current CPU power status is ON"
-            logger "Operation failed, current CPU power status is ON"
+            logger -p user.warning "Operation failed, current CPU power status is ON"
         elif [ $ret -eq 1 ]; then
             echo "Operation failed, current CPU power status is OFF"
-            logger "Operation failed, current CPU power status is OFF"
+            logger -p user.warning "Operation failed, current CPU power status is OFF"
 	    else
             echo "Operation failed, current CPU power status is UNKNOWN"
-            logger "Operation failed, current CPU power status is UNKNOWN"
+            logger -p user.warning "Operation failed, current CPU power status is UNKNOWN"
         fi
     fi
     return $ret
@@ -110,23 +112,54 @@ do_off() {
 	    ret=$?
         if [ $ret -eq 1 ]; then
             echo "Operation done, current CPU power status is OFF"
-            logger "Operation done, current CPU power status is OFF"
+            logger -p user.warning "Operation done, current CPU power status is OFF"
 	    else
             echo "Operation done, current CPU power status is UNKNOWN"
-            logger "Operation done, current CPU power status is UNKNOWN"
+            logger -p user.warning "Operation done, current CPU power status is UNKNOWN"
         fi
     else
 	    wedge_is_us_on
 	    ret=$?
         if [ $ret -eq 0 ]; then
             echo "Operation failed, current CPU power status is ON"
-            logger "Operation failed, current CPU power status is ON"
+            logger -p user.warning "Operation failed, current CPU power status is ON"
         elif [ $ret -eq 1 ]; then
             echo "Operation failed, current CPU power status is OFF"
-            logger "Operation failed, current CPU power status is OFF"
+            logger -p user.warning "Operation failed, current CPU power status is OFF"
 	    else
             echo "Operation failed, current CPU power status is UNKNOWN"
-            logger "Operation failed, current CPU power status is UNKNOWN"
+            logger -p user.warning "Operation failed, current CPU power status is UNKNOWN"
+        fi
+    fi
+    return $ret
+}
+
+do_cycle() {
+    local ret
+    wedge_power cycle
+    ret=$?
+    if [ $ret -eq 0 ]; then
+	    wedge_is_us_on
+	    ret=$?
+        if [ $ret -eq 0 ]; then
+            echo "Operation done, current CPU power status is ON"
+            logger -p user.warning "Operation done, current CPU power status is ON"
+	    else
+            echo "Operation done, current CPU power status is UNKNOWN"
+            logger -p user.warning "Operation done, current CPU power status is UNKNOWN"
+        fi
+    else
+	    wedge_is_us_on
+	    ret=$?
+        if [ $ret -eq 0 ]; then
+            echo "Operation failed, current CPU power status is ON"
+            logger -p user.warning "Operation failed, current CPU power status is ON"
+        elif [ $ret -eq 1 ]; then
+            echo "Operation failed, current CPU power status is OFF"
+            logger -p user.warning "Operation failed, current CPU power status is OFF"
+	    else
+            echo "Operation failed, current CPU power status is UNKNOWN"
+            logger -p user.warning "Operation failed, current CPU power status is UNKNOWN"
         fi
     fi
     return $ret
@@ -150,6 +183,9 @@ case "$command" in
         ;;
     off)
         do_off $@
+        ;;
+    cycle)
+        do_cycle $@
         ;;
     *)
         usage
