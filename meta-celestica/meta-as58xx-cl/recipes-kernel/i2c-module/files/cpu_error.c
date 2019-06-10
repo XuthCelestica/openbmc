@@ -25,6 +25,9 @@
 #include <linux/input.h>
 #include <linux/interrupt.h>
 #include <linux/gpio.h>
+#include <linux/miscdevice.h>
+#include <asm/uaccess.h>
+
 
 #ifdef DEBUG
 
@@ -67,6 +70,8 @@ static int aer_0_assert = 0;
 static int aer_1_assert = 0;
 static int aer_2_assert = 0;
 static int mca_assert = 0;
+
+static int error_assert = 0;
 
 static irqreturn_t cpu_error_handler(int irq, void *dev_id)
 {
@@ -192,6 +197,54 @@ static int gpio_data_init(struct cpu_error_struct *cpu_error)
 	return 0;
 }
 
+static ssize_t cpu_error_show(struct device *dev,
+        struct device_attribute *attr, char *buf)
+{
+
+	error_assert = (aer_0_assert || aer_1_assert || aer_2_assert || mca_assert);
+
+	return sprintf(buf, "%d\n", error_assert);
+}
+
+static ssize_t cpu_error_store(struct device *dev,
+        struct device_attribute *attr, const char *buf, size_t count)
+{
+	int ret;
+	int val;
+
+	ret = kstrtol(buf, 0, &val);
+
+	if(ret != 0) {
+		return -EFAULT;
+	}
+	error_assert = val;
+
+	return count;
+}
+
+static DEVICE_ATTR(error, S_IRUGO | S_IWUSR,
+		cpu_error_show, cpu_error_store);
+
+static struct attribute *cpu_error_attrs[] = {
+	 &dev_attr_error.attr,
+	 NULL
+};
+static struct attribute_group cpu_error_attr_group = {
+     .attrs = cpu_error_attrs,
+};
+
+
+static const struct file_operations cpu_error_fops = {
+	.owner          = THIS_MODULE,
+	//.read           = cpu_error_read,
+	//.write          = cpu_error_write,
+};
+
+static struct miscdevice cpu_error_misc_device = {
+	.minor    = MISC_DYNAMIC_MINOR,
+	.name     = "cpu_error",
+	.fops     = &cpu_error_fops,
+};
 
 static int __init cpu_error_init(void)
 {
@@ -210,11 +263,22 @@ static int __init cpu_error_init(void)
 
 	mca_wq = create_workqueue("CPU error workqueue");
 	if (mca_wq == NULL) {
-		printk(KERN_ERR "%s: error creating CPU error workqueue", __func__);
+		printk(KERN_ERR "%s: error creating CPU error workqueue\n", __func__);
 		return -1;
 	} else {
 		INIT_DELAYED_WORK(&mca_dwq, mca_error_delay_worker);
 		queue_delayed_work(mca_wq, &mca_dwq, MAC_ERROR_POLL_TIME * HZ);
+	}
+
+	ret = misc_register(&cpu_error_misc_device);
+	if (ret) {
+		printk(KERN_ERR "%s: unable to register a misc device, ret=%d\n", __func__, ret);
+		return ret;
+	}
+	ret = sysfs_create_group(&cpu_error_misc_device.this_device->kobj, &cpu_error_attr_group);
+	if (ret) {
+		printk(KERN_ERR "%s: create sysfs node error, ret=%d\n", __func__, ret);
+		return ret;
 	}
 
 	CPU_ERROR_DEBUG("done\n");
@@ -224,6 +288,8 @@ static int __init cpu_error_init(void)
 static void __exit cpu_error_exit(void)
 {
 	kfree(cpu_error);
+	sysfs_remove_group(&cpu_error_misc_device.this_device->kobj, &cpu_error_attr_group);
+	misc_deregister(&cpu_error_misc_device);
 	return ;
 }
 

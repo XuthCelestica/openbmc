@@ -460,6 +460,15 @@ cpld_refresh_monitor() {
     fi
 }
 
+cpu_error_autodump() {
+    val=$(cat /sys/class/misc/cpu_error/error)
+    if [ "$val" = "1" ]; then
+        logger -p user.warning "CPU error detected, auto dump it"
+        /usr/local/bin/autodump.sh &
+        echo 0 >/sys/class/misc/cpu_error/error
+    fi
+}
+
 if [ "$board_type" = "Fishbone48" -o "$board_type" = "Fishbone32" ]; then
     psu_status_init
 else
@@ -547,6 +556,8 @@ while true; do
             logger -p user.warning "BMC boot from master flash succeded"
         fi
     fi
+
+    cpu_error_autodump
 
     usleep 3000000
 done
