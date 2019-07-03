@@ -92,21 +92,21 @@ set_value 4 16 curr1_label "CPU_VCC/VCCIO_1.05V Current"
 
 #Fan1-4
 set_value 8 0d fan1_min 1000
-set_value 8 0d fan1_max 26000
+set_value 8 0d fan1_max 27170
 set_value 8 0d fan2_min 1000
-set_value 8 0d fan2_max 30000
+set_value 8 0d fan2_max 32670
 set_value 8 0d fan3_min 1000
-set_value 8 0d fan3_max 26000
+set_value 8 0d fan3_max 27170
 set_value 8 0d fan4_min 1000
-set_value 8 0d fan4_max 30000
+set_value 8 0d fan4_max 32670
 set_value 8 0d fan5_min 1000
-set_value 8 0d fan5_max 26000
+set_value 8 0d fan5_max 27170
 set_value 8 0d fan6_min 1000
-set_value 8 0d fan6_max 30000
+set_value 8 0d fan6_max 32670
 set_value 8 0d fan7_min 1000
-set_value 8 0d fan7_max 26000
+set_value 8 0d fan7_max 27170
 set_value 8 0d fan8_min 1000
-set_value 8 0d fan8_max 30000
+set_value 8 0d fan8_max 32670
 
 #PSU1
 #add it to sensors.config
@@ -114,8 +114,8 @@ val=$(get_hwmon_id 24 58 in1_min)
 if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 24 58 $val in1_min 90000
 	set_hwmon_value 24 58 $val in1_max 264000
-	set_hwmon_value 24 58 $val in2_min 11640
-	set_hwmon_value 24 58 $val in2_max 12360
+	set_hwmon_value 24 58 $val in2_min 10800
+	set_hwmon_value 24 58 $val in2_max 13200
 	set_hwmon_value 24 58 $val fan1_min 1000
 	set_hwmon_value 24 58 $val fan1_max 30000
 	set_hwmon_value 24 58 $val temp1_max_hyst 60000
@@ -135,8 +135,8 @@ val=$(get_hwmon_id 25 59 in1_min)
 if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 25 59 $val in1_min 90000
 	set_hwmon_value 25 59 $val in1_max 264000
-	set_hwmon_value 25 59 $val in2_min 11640
-	set_hwmon_value 25 59 $val in2_max 12360
+	set_hwmon_value 25 59 $val in2_min 10800
+	set_hwmon_value 25 59 $val in2_max 13200
 	set_hwmon_value 25 59 $val fan1_min 1000
 	set_hwmon_value 25 59 $val fan1_max 30000
 	set_hwmon_value 25 59 $val temp1_max_hyst 60000

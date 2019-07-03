@@ -24,17 +24,17 @@ psu_path=(
 "/sys/bus/i2c/devices/i2c-24/24-0058/hwmon"
 )
 psu_register=(
-"i2c_device_delete 25 0x59;i2c_device_delete 25 0x51;i2c_device_add 25 0x59 dps1100;i2c_device_add 25 0x51 24c32"
-"i2c_device_delete 24 0x58;i2c_device_delete 24 0x50;i2c_device_add 24 0x58 dps1100;i2c_device_add 24 0x50 24c32"
+"i2c_device_delete 25 0x59;i2c_device_delete 25 0x51;i2c_device_add 25 0x59 dps1100;i2c_device_add 25 0x51 24c32;set_hwmon_threshold 25 59 in1_min 90000;set_hwmon_threshold 25 59 in1_max 264000"
+"i2c_device_delete 24 0x58;i2c_device_delete 24 0x50;i2c_device_add 24 0x58 dps1100;i2c_device_add 24 0x50 24c32;set_hwmon_threshold 24 58 in1_min 90000;set_hwmon_threshold 24 58 in1_max 264000"
 )
 
 PHALANX_PSU_NUM=4
 phalanx_psu_status=(0 0 0 0)
 phalanx_psu_register=(
-"i2c_device_delete 27 0x58;i2c_device_delete 27 0x50;i2c_device_add 27 0x58 dps1100;i2c_device_add 27 0x50 24c32"
-"i2c_device_delete 26 0x58;i2c_device_delete 26 0x50;i2c_device_add 26 0x58 dps1100;i2c_device_add 26 0x50 24c32"
-"i2c_device_delete 25 0x58;i2c_device_delete 25 0x50;i2c_device_add 25 0x58 dps1100;i2c_device_add 25 0x50 24c32"
-"i2c_device_delete 24 0x58;i2c_device_delete 24 0x50;i2c_device_add 24 0x58 dps1100;i2c_device_add 24 0x50 24c32"
+"i2c_device_delete 27 0x58;i2c_device_delete 27 0x50;i2c_device_add 27 0x58 dps1100;i2c_device_add 27 0x50 24c32;set_hwmon_threshold 27 58 in1_min 90000;set_hwmon_threshold 27 58 in1_max 264000"
+"i2c_device_delete 26 0x58;i2c_device_delete 26 0x50;i2c_device_add 26 0x58 dps1100;i2c_device_add 26 0x50 24c32;set_hwmon_threshold 26 58 in1_min 90000;set_hwmon_threshold 26 58 in1_max 264000"
+"i2c_device_delete 25 0x58;i2c_device_delete 25 0x50;i2c_device_add 25 0x58 dps1100;i2c_device_add 25 0x50 24c32;set_hwmon_threshold 25 58 in1_min 90000;set_hwmon_threshold 25 58 in1_max 264000"
+"i2c_device_delete 24 0x58;i2c_device_delete 24 0x50;i2c_device_add 24 0x58 dps1100;i2c_device_add 24 0x50 24c32;set_hwmon_threshold 24 58 in1_min 90000;set_hwmon_threshold 24 58 in1_max 264000"
 )
 
 board_type=$(board_type)
