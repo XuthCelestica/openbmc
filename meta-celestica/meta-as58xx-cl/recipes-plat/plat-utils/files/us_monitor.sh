@@ -317,7 +317,7 @@ bios_boot_monitor() {
             fi
             return 1
         else
-            if [ $1 -ne 2 -a $1 -ge 5 ]; then
+            if [ $1 -ne 2 -a $1 -ge 72 ]; then
                 logger -p user.crit "BIOS boot from secondary flash failed"
                 sys_led yellow slow
                 return 2
@@ -334,7 +334,7 @@ bios_boot_monitor() {
             fi
             return 1
         else
-            if [ $1 -ne 2 -a $1 -ge 5 ]; then
+            if [ $1 -ne 2 -a $1 -ge 72 ]; then
                 logger -p user.error "BIOS boot from primary flash failed"
                 return 2
             elif [ $1 -ne 2 ]; then
