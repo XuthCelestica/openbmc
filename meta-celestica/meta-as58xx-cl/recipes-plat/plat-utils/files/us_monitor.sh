@@ -24,17 +24,17 @@ psu_path=(
 "/sys/bus/i2c/devices/i2c-24/24-0058/hwmon"
 )
 psu_register=(
-"i2c_device_delete 25 0x59;i2c_device_delete 25 0x51;i2c_device_add 25 0x59 dps1100;i2c_device_add 25 0x51 24c32"
-"i2c_device_delete 24 0x58;i2c_device_delete 24 0x50;i2c_device_add 24 0x58 dps1100;i2c_device_add 24 0x50 24c32"
+"i2c_device_delete 25 0x59;i2c_device_delete 25 0x51;i2c_device_add 25 0x59 dps1100;i2c_device_add 25 0x51 24c32;set_hwmon_threshold 25 59 in1_min 90000;set_hwmon_threshold 25 59 in1_max 264000"
+"i2c_device_delete 24 0x58;i2c_device_delete 24 0x50;i2c_device_add 24 0x58 dps1100;i2c_device_add 24 0x50 24c32;set_hwmon_threshold 24 58 in1_min 90000;set_hwmon_threshold 24 58 in1_max 264000"
 )
 
 PHALANX_PSU_NUM=4
 phalanx_psu_status=(0 0 0 0)
 phalanx_psu_register=(
-"i2c_device_delete 27 0x58;i2c_device_delete 27 0x50;i2c_device_add 27 0x58 dps1100;i2c_device_add 27 0x50 24c32"
-"i2c_device_delete 26 0x58;i2c_device_delete 26 0x50;i2c_device_add 26 0x58 dps1100;i2c_device_add 26 0x50 24c32"
-"i2c_device_delete 25 0x58;i2c_device_delete 25 0x50;i2c_device_add 25 0x58 dps1100;i2c_device_add 25 0x50 24c32"
-"i2c_device_delete 24 0x58;i2c_device_delete 24 0x50;i2c_device_add 24 0x58 dps1100;i2c_device_add 24 0x50 24c32"
+"i2c_device_delete 27 0x58;i2c_device_delete 27 0x50;i2c_device_add 27 0x58 dps1100;i2c_device_add 27 0x50 24c32;set_hwmon_threshold 27 58 in1_min 90000;set_hwmon_threshold 27 58 in1_max 264000"
+"i2c_device_delete 26 0x58;i2c_device_delete 26 0x50;i2c_device_add 26 0x58 dps1100;i2c_device_add 26 0x50 24c32;set_hwmon_threshold 26 58 in1_min 90000;set_hwmon_threshold 26 58 in1_max 264000"
+"i2c_device_delete 25 0x58;i2c_device_delete 25 0x50;i2c_device_add 25 0x58 dps1100;i2c_device_add 25 0x50 24c32;set_hwmon_threshold 25 58 in1_min 90000;set_hwmon_threshold 25 58 in1_max 264000"
+"i2c_device_delete 24 0x58;i2c_device_delete 24 0x50;i2c_device_add 24 0x58 dps1100;i2c_device_add 24 0x50 24c32;set_hwmon_threshold 24 58 in1_min 90000;set_hwmon_threshold 24 58 in1_max 264000"
 )
 
 board_type=$(board_type)
@@ -237,12 +237,14 @@ cpu_temp_update() {
         echo 0 >/sys/bus/i2c/devices/i2c-0/0-000d/temp2_input
         return 0
     fi
-    temp=$(get_cpu_temp)
-    if [ -z "$temp" ]; then
-        return 0
+    if /usr/local/bin/wedge_power.sh status |grep "on"; then
+        temp=$(get_cpu_temp)
+        if [ -z "$temp" ]; then
+            return 0
+        fi
+        val=$(($temp*1000))
+        echo $val >/sys/bus/i2c/devices/i2c-0/0-000d/temp2_input
     fi
-    val=$(($temp*1000))
-    echo $val >/sys/bus/i2c/devices/i2c-0/0-000d/temp2_input
 }
 
 fan_wdt_monitor() {
@@ -315,7 +317,7 @@ bios_boot_monitor() {
             fi
             return 1
         else
-            if [ $1 -ne 2 -a $1 -ge 5 ]; then
+            if [ $1 -ne 2 -a $1 -ge 72 ]; then
                 logger -p user.crit "BIOS boot from secondary flash failed"
                 sys_led yellow slow
                 return 2
@@ -332,7 +334,7 @@ bios_boot_monitor() {
             fi
             return 1
         else
-            if [ $1 -ne 2 -a $1 -ge 5 ]; then
+            if [ $1 -ne 2 -a $1 -ge 72 ]; then
                 logger -p user.error "BIOS boot from primary flash failed"
                 return 2
             elif [ $1 -ne 2 ]; then
@@ -458,6 +460,15 @@ cpld_refresh_monitor() {
     fi
 }
 
+cpu_error_autodump() {
+    val=$(cat /sys/class/misc/cpu_error/error)
+    if [ "$val" = "1" ]; then
+        logger -p user.warning "CPU error detected, auto dump it"
+        /usr/local/bin/autodump.sh &
+        echo 0 >/sys/class/misc/cpu_error/error
+    fi
+}
+
 if [ "$board_type" = "Fishbone48" -o "$board_type" = "Fishbone32" ]; then
     psu_status_init
 else
@@ -545,6 +556,8 @@ while true; do
             logger -p user.warning "BMC boot from master flash succeded"
         fi
     fi
+
+    cpu_error_autodump
 
     usleep 3000000
 done

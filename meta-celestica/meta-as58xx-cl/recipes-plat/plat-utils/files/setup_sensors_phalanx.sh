@@ -77,10 +77,10 @@ set_value 8 0d fan9_max 18000
 set_value 8 0d fan10_min 1000
 set_value 8 0d fan10_max 18000
 
-set_value 16 70 in0_label "Switch_PVDD_0.8V Voltage"
+set_value 16 70 in0_label "Switch_TRVDD_0.8V Voltage"
 set_value 16 70 in0_max 840
 set_value 16 70 in0_min 760
-set_value 16 70 curr1_label "Switch_PVDD_0.8V Current"
+set_value 16 70 curr1_label "Switch_TRVDD_0.8V Current"
 set_value 16 70 curr1_max 75000
 set_value 16 70 curr1_min 0
 set_value 16 49 in0_label "Switch_TVDD_1.2V Voltage"
@@ -95,10 +95,10 @@ set_value 17 45 in0_min 950
 set_value 17 45 curr1_label "Switch_FPGA_1.0V Current"
 set_value 17 45 curr1_max 1500
 set_value 17 45 curr1_min 0
-set_value 17 49 in0_label "Switch_TRVDD_0.8V Voltage"
-set_value 17 49 in0_max 860
+set_value 17 49 in0_label "Switch_PVDD_0.8V Voltage"
+set_value 17 49 in0_max 880
 set_value 17 49 in0_min 760
-set_value 17 49 curr1_label "Switch_TRVDD_0.8V Current"
+set_value 17 49 curr1_label "Switch_PVDD_0.8V Current"
 set_value 17 49 curr1_max 15000
 set_value 17 49 curr1_min 0
 set_value 19 30 in0_label "TOP_LC_port&CPLD_Supply_3.3V Voltage"
@@ -202,8 +202,8 @@ val=$(get_hwmon_id 24 58 in1_min)
 if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 24 58 $val in1_min 90000
 	set_hwmon_value 24 58 $val in1_max 264000
-	set_hwmon_value 24 58 $val in2_min 11640
-	set_hwmon_value 24 58 $val in2_max 12360
+	set_hwmon_value 24 58 $val in2_min 10800
+	set_hwmon_value 24 58 $val in2_max 13200
 	set_hwmon_value 24 58 $val fan1_min 1000
 	set_hwmon_value 24 58 $val fan1_max 30000
 	set_hwmon_value 24 58 $val temp1_max_hyst 60000
@@ -224,8 +224,8 @@ val=$(get_hwmon_id 25 58 in1_min)
 if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 25 58 $val in1_min 90000
 	set_hwmon_value 25 58 $val in1_max 264000
-	set_hwmon_value 25 58 $val in2_min 11640
-	set_hwmon_value 25 58 $val in2_max 12360
+	set_hwmon_value 25 58 $val in2_min 10800
+	set_hwmon_value 25 58 $val in2_max 13200
 	set_hwmon_value 25 58 $val fan1_min 1000
 	set_hwmon_value 25 58 $val fan1_max 30000
 	set_hwmon_value 25 58 $val temp1_max_hyst 60000
@@ -245,8 +245,8 @@ val=$(get_hwmon_id 26 58 in1_min)
 if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 26 58 $val in1_min 90000
 	set_hwmon_value 26 58 $val in1_max 264000
-	set_hwmon_value 26 58 $val in2_min 11640
-	set_hwmon_value 26 58 $val in2_max 12360
+	set_hwmon_value 26 58 $val in2_min 10800
+	set_hwmon_value 26 58 $val in2_max 13200
 	set_hwmon_value 26 58 $val fan1_min 1000
 	set_hwmon_value 26 58 $val fan1_max 30000
 	set_hwmon_value 26 58 $val temp1_max_hyst 60000
@@ -266,8 +266,8 @@ val=$(get_hwmon_id 27 58 in1_min)
 if [ "$val" -gt "0" ] ; then
 	set_hwmon_value 27 58 $val in1_min 90000
 	set_hwmon_value 27 58 $val in1_max 264000
-	set_hwmon_value 27 58 $val in2_min 11640
-	set_hwmon_value 27 58 $val in2_max 12360
+	set_hwmon_value 27 58 $val in2_min 10800
+	set_hwmon_value 27 58 $val in2_max 13200
 	set_hwmon_value 27 58 $val fan1_min 1000
 	set_hwmon_value 27 58 $val fan1_max 30000
 	set_hwmon_value 27 58 $val temp1_max_hyst 60000

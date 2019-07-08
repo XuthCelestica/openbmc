@@ -53,10 +53,10 @@ powerchip_name_map = [
 	['ir3584-i2c-4-15'     , 'CPU_CORE VCCIN_1.82V(CPU core 1.82V'],
 	['ir3584-i2c-4-16'     , 'CPU_VCC/VCCIO_1.05V(CPU 1.05V voltage'],
 	['ir38062-i2c-4-42'    , 'Baseboard_Standby_3.3V Voltage(Baseboard standby 3.3V'],
-	['ir3584-i2c-16-70'    , 'Switch_PVDD_0.8V Voltage(Switch PVDD 0.8V'],
+	['ir3584-i2c-16-70'    , 'Switch_TRVDD_0.8V Voltage(Switch TRVDD 0.8V'],
 	['ir38062-i2c-16-49'   , 'Switch_TVDD_1.2V(Switch TVDD 1.2V'],
 	['ir38060-i2c-17-45'   , 'Switch_FPGA_1.0V Voltage(Switch FPGA 1.0V'],
-	['ir38062-i2c-17-49'   , 'Switch_TRVDD_0.8V Voltage(Switch TRVDD 0.8V'],
+	['ir38062-i2c-17-49'   , 'Switch_PVDD_0.8V Voltage(Switch PVDD 0.8V'],
 	['ir3584-i2c-19-30'    , 'TOP_LC_port&CPLD_Supply_3.3V(TOP Linecard 3.3V'],
 	['ir3584-i2c-19-50'    , 'TOP_LC_VDD_A_0.8(TOP Linecard left DVDD 0.8V'],
 	['ir3584-i2c-19-70'    , 'TOP_LC_DVDDM_A_0.8V(TOP Linecard left DVDDM 0.8V'],
@@ -443,10 +443,10 @@ def psu_reinit():
 
 def psu_rename(num):
 	psu_name = {
-		1 : '1-1',
-		2 : '1-2',
-		3 : '2-1',
-		4 : '2-2'
+		1 : '1',
+		2 : '2',
+		3 : '3',
+		4 : '4'
 	}
 	return psu_name.get(num, None)
 

@@ -1871,7 +1871,7 @@ int fan_speed_okay(const int fan, int speed, const int slop)
 			syslog(LOG_WARNING, "%s-1 speed %d, less than %d%% of max speed(%d) detected", 
 				fantray->name, front_speed, 100 - slop, speed);
 		if(fan_info->front_failed == FAN_FAIL_COUNT)
-			syslog(LOG_ERR, "%s-1 status is ABNORMAL, speed is set to 100% but real speed is lower than 70% of max speed", 
+			syslog(LOG_ERR, "%s-1 status is ABNORMAL, speed is set to 100%% but real speed is lower than 70%% of max speed", 
 				fantray->name);
 		if(fan_info->front_failed > FAN_FAIL_COUNT)
 			fan_info->front_failed = FAN_FAIL_COUNT;
@@ -1906,7 +1906,7 @@ int fan_speed_okay(const int fan, int speed, const int slop)
 			syslog(LOG_WARNING, "%s-2 speed %d, less than %d%% of max speed(%d) detected", 
 				fantray->name, rear_speed, 100 - slop, speed);
 		if(fan_info->rear_failed == FAN_FAIL_COUNT)
-			syslog(LOG_ERR, "%s-2 status is ABNORMAL, speed is set to 100% but real speed is lower than 70% of max speed", 
+			syslog(LOG_ERR, "%s-2 status is ABNORMAL, speed is set to 100%% but real speed is lower than 70%% of max speed", 
 				fantray->name);
 		if(fan_info->rear_failed > FAN_FAIL_COUNT)
 			fan_info->rear_failed = FAN_FAIL_COUNT;
@@ -1984,7 +1984,7 @@ int psu_speed_okay(const int fan, int speed, const int slop)
 			syslog(LOG_WARNING, "%s speed %d, less than %d%% of max speed(%d) detected", 
 				fantray->name, psu_speed, 100 - slop, speed);
 		if(fan_info->front_failed == FAN_FAIL_COUNT)
-			syslog(LOG_ERR, "%s status is ABNORMAL, speed is set to 100% but real speed is lower than 70% of max speed", 
+			syslog(LOG_ERR, "%s status is ABNORMAL, speed is set to 100%% but real speed is lower than 70%% of max speed", 
 				fantray->name);
 		if(fan_info->front_failed > FAN_FAIL_COUNT)
 			fan_info->front_failed = FAN_FAIL_COUNT;
@@ -2127,11 +2127,11 @@ static int get_fan_direction(int direction)
 			if(pn = find_sub_string(buffer, FAN_DIR_F2B_STR, sizeof(buffer))) {
 				f2r_fan_cnt++;
 				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
 					if(fantray->eeprom_fail) {
-						syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
-						fantray->eeprom_fail = 0;
-					} else
 						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, FAN_DIR_F2B_STR);
+						fantray->eeprom_fail = 0;
+					}
 				}
 				fantray->direction = FAN_DIR_F2B;
 				if(direction != fantray->direction)
@@ -2141,11 +2141,11 @@ static int get_fan_direction(int direction)
 			} else if(find_sub_string(buffer, FAN_DIR_B2F_STR, sizeof(buffer))) {
 				r2f_fan_cnt++;
 				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
 					if(fantray->eeprom_fail) {
-						syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
-						fantray->eeprom_fail = 0;
-					} else
 						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, FAN_DIR_B2F_STR);
+						fantray->eeprom_fail = 0;
+					}
 				}
 				fantray->direction = FAN_DIR_B2F;
 				if(direction != fantray->direction)
@@ -2155,21 +2155,20 @@ static int get_fan_direction(int direction)
 			} else {
 				fantray->direction = FAN_DIR_FAULT;
 				if(ret > 0) {
-					fantray->eeprom_fail = 0;
+					fantray->eeprom_fail = 1;
 					syslog(LOG_CRIT, "%s model mismatch, part number is %s", fantray->name, pn);
 				} else {
-					fantray->eeprom_fail = 1;
 					syslog(LOG_WARNING, "%s eeprom is ABNORMAL, read %s eeprom failed", fantray->name, fantray->name);
 				}
 			}
 		} else {
 			if(pn = find_sub_string(buffer, DELTA_PSU_DIR_F2B_STR, sizeof(buffer))) {
 				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
 					if(fantray->eeprom_fail) {
-						syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
-						fantray->eeprom_fail = 0;
-					} else
 						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, DELTA_PSU_DIR_F2B_STR);
+						fantray->eeprom_fail = 0;
+					}
 				}
 				fantray->direction = FAN_DIR_F2B;
 				if(direction != fantray->direction)
@@ -2178,11 +2177,11 @@ static int get_fan_direction(int direction)
 					syslog(LOG_WARNING, "%s airflow direction match, direction is F2B, system direction is F2B", fantray->name);
 			} else if(find_sub_string(buffer, DELTA_PSU_DIR_B2F_STR, sizeof(buffer))) {
 				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
 					if(fantray->eeprom_fail) {
-						syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
-						fantray->eeprom_fail = 0;
-					} else
 						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, DELTA_PSU_DIR_B2F_STR);
+						fantray->eeprom_fail = 0;
+					}
 				}
 				fantray->direction = FAN_DIR_B2F;
 				if(direction != fantray->direction)
@@ -2191,11 +2190,11 @@ static int get_fan_direction(int direction)
 					syslog(LOG_WARNING, "%s airflow direction match, direction is B2F, system direction is B2F", fantray->name);
 			} else if(find_sub_string(buffer, ACBEL_PSU_DIR_F2B_STR, sizeof(buffer))) {
 				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
 					if(fantray->eeprom_fail) {
-						syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
-						fantray->eeprom_fail = 0;
-					} else
 						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, ACBEL_PSU_DIR_F2B_STR);
+						fantray->eeprom_fail = 0;
+					}
 				}
 				fantray->direction = FAN_DIR_F2B;
 				if(direction != fantray->direction)
@@ -2204,11 +2203,11 @@ static int get_fan_direction(int direction)
 					syslog(LOG_WARNING, "%s airflow direction match, direction is F2B, system direction is F2B", fantray->name);
 			} else if(find_sub_string(buffer, ACBEL_PSU_DIR_B2F_STR, sizeof(buffer))) {
 				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
 					if(fantray->eeprom_fail) {
-						syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
-						fantray->eeprom_fail = 0;
-					} else
 						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, ACBEL_PSU_DIR_B2F_STR);
+						fantray->eeprom_fail = 0;
+					}
 				}
 				fantray->direction = FAN_DIR_B2F;
 				if(direction != fantray->direction)
@@ -2218,10 +2217,9 @@ static int get_fan_direction(int direction)
 			} else {
 				fantray->direction = FAN_DIR_FAULT;
 				if(ret > 0) {
-					fantray->eeprom_fail = 0;
+					fantray->eeprom_fail = 1;
 					syslog(LOG_CRIT, "%s model mismatch, part number is %s", fantray->name, pn);
 				} else {
-					fantray->eeprom_fail = 1;
 					syslog(LOG_WARNING, "%s eeprom is ABNORMAL, read %s eeprom failed", fantray->name, fantray->name);
 				}
 			}
