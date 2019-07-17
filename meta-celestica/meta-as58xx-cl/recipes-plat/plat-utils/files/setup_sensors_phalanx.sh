@@ -94,7 +94,7 @@ set_value 17 45 in0_max 1050
 set_value 17 45 in0_min 950
 set_value 17 45 curr1_label "Switch_FPGA_1.0V Current"
 set_value 17 45 curr1_max 1500
-set_value 17 45 curr1_min 0
+set_value 17 45 curr1_min -100
 set_value 17 49 in0_label "Switch_PVDD_0.8V Voltage"
 set_value 17 49 in0_max 880
 set_value 17 49 in0_min 760
@@ -136,7 +136,7 @@ set_value 20 45 in0_max 1890
 set_value 20 45 in0_min 1710
 set_value 20 45 curr1_label "TOP_LC_VDDIO_1.8V Current"
 set_value 20 45 curr1_max 2000
-set_value 20 45 curr1_min 0
+set_value 20 45 curr1_min -100
 set_value 21 30 in0_label "BOTTOM_LC_port&CPLD_Supply_3.3V Voltage"
 set_value 21 30 in0_max 1732
 set_value 21 30 in0_min 1568
@@ -172,7 +172,7 @@ set_value 22 45 in0_max 1890
 set_value 22 45 in0_min 1710
 set_value 22 45 curr1_label "BOTTOM_LC_VDDIO_1.8V Current"
 set_value 22 45 curr1_max 2000
-set_value 22 45 curr1_min 0
+set_value 22 45 curr1_min -100
 set_value 23 45 in0_label "Switch_Standby_3.3V Voltage"
 set_value 23 45 in0_max 3465
 set_value 23 45 in0_min 3135
