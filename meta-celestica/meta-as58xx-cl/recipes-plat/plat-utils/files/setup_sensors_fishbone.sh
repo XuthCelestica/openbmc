@@ -31,14 +31,14 @@ board_type=$(board_type)
 #IR38060
 set_value 4 43 in0_min 950
 set_value 4 43 in0_max 1100
-set_value 4 43 curr1_min 0
+set_value 4 43 curr1_min -100
 set_value 4 43 curr1_max 6000
 set_value 4 43 in0_label "Basebord_FPGA_1.0V Voltage"
 set_value 4 43 curr1_label "Basebord_FPGA_1.0V Current"
 
 set_value 17 47 in0_min 1160
 set_value 17 47 in0_max 1240
-set_value 17 47 curr1_min 0
+set_value 17 47 curr1_min -100
 set_value 17 47 curr1_max 6000
 set_value 17 47 in0_label "SWITCH_Analog/Digital_1.2V Voltage"
 set_value 17 47 curr1_label "SWITCH_Analog/Digital_1.2V Current"
