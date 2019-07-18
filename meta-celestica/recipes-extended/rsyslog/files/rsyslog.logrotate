@@ -14,11 +14,12 @@
         endscript
 }
 
-/var/log/console.log
+/var/log/console_syslog.log
 {
         rotate 9
         missingok
         notifempty
+        size 20M
         delaycompress
         compress
 }

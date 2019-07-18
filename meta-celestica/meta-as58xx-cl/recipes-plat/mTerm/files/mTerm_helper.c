@@ -139,7 +139,7 @@ bufStore* createBuffer(const char *dev, int fsize) {
   }
 
   int ret;
-  ret = snprintf(buf->file, sizeof(buf->file), "/var/log/mTerm_%s.log", dev);
+  ret = snprintf(buf->file, sizeof(buf->file), "/var/log/%s.log", dev);
   if ((ret < 0) || (ret >= sizeof(buf->file))) {
     perror("mTerm: Received dev name too long to create buffer file");
     free(buf);
