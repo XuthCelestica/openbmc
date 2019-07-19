@@ -17,4 +17,4 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 #
-exec /usr/local/bin/mTerm_server  as58xx-cl /dev/ttyS1
+exec /usr/local/bin/mTerm_server  console /dev/ttyS1

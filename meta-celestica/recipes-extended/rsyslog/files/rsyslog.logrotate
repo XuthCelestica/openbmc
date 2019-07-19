@@ -10,7 +10,7 @@
         delaycompress
         compress
         postrotate
-		/bin/kill -HUP `cat /var/run/rsyslogd.pid 2> /dev/null` 2> /dev/null || true
+		/bin/kill -HUP `cat /var/run/rsyslogd.pid 2> /dev/null` 2> /dev/null || /etc/init.d/syslog.rsyslog restart 2> /dev/null
         endscript
 }
 
@@ -22,4 +22,7 @@
         size 20M
         delaycompress
         compress
+        postrotate
+		/bin/kill -HUP `cat /var/run/rsyslogd.pid 2> /dev/null` 2> /dev/null || /etc/init.d/syslog.rsyslog restart 2> /dev/null
+        endscript
 }
