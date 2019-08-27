@@ -522,6 +522,7 @@ bmc_reboot() {
         fi
         if [ -f /var/log/boot_slave ]; then
             rm /var/log/boot_slave
+            sync
         fi
         return 0
     elif [ "$1" == "slave" ]; then
@@ -530,6 +531,7 @@ bmc_reboot() {
             logger -p user.warning "Set BMC booting flash to slave"
         fi
         echo 1 > /var/log/boot_slave
+        sync
         return 0
     elif [ "$1" == "reboot" ]; then
         ((val=$(devmem 0x1e78502c)))
