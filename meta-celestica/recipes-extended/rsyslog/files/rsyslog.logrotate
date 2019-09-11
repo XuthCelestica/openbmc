@@ -1,42 +1,28 @@
 # /etc/logrotate.d/rsyslog
 
-/var/log/dhclient.log
-/var/log/messages
-{
-        rotate 4
-        missingok
-        notifempty
-        size 10M
-        delaycompress
-        compress
-        postrotate
-		/bin/kill -HUP `cat /var/run/rsyslogd.pid 2> /dev/null` 2> /dev/null || true
-        endscript
-}
-
-/var/log/auth.log
-/var/log/daemon.log
-/var/log/kern.log
-/var/log/user.log
-/var/log/cron.log
-/var/log/debug
-{
-        rotate 3
-        size 5M
-        missingok
-        notifempty
-        compress
-        delaycompress
-        sharedscripts
-        postrotate
-		/bin/kill -HUP `cat /var/run/rsyslogd.pid 2> /dev/null` 2> /dev/null || true
-        endscript
-}
-/var/log/console.log
+/var/log/bmc_debug.log
+/var/log/syslog
 {
         rotate 9
         missingok
         notifempty
+        size 20M
         delaycompress
         compress
+        postrotate
+		/bin/kill -HUP `cat /var/run/rsyslogd.pid 2> /dev/null` 2> /dev/null || /etc/init.d/syslog.rsyslog restart 2> /dev/null
+        endscript
+}
+
+/var/log/console_syslog.log
+{
+        rotate 9
+        missingok
+        notifempty
+        size 20M
+        delaycompress
+        compress
+        postrotate
+		/bin/kill -HUP `cat /var/run/rsyslogd.pid 2> /dev/null` 2> /dev/null || /etc/init.d/syslog.rsyslog restart 2> /dev/null
+        endscript
 }

@@ -50,7 +50,7 @@ start_sol_session() {
 
 if mTerm_server_running; then
   sol_ctrl BMC
-  exec /usr/local/bin/mTerm_client as58xx-cl
+  exec /usr/local/bin/mTerm_client console
 else
   start_sol_session
 fi

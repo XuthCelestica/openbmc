@@ -109,8 +109,8 @@
 #define FAN_DIR_FAULT 0
 #define FAN_DIR_B2F 1
 #define FAN_DIR_F2B 2
-#define THERMAL_DIR_F2B_STR "R1241-F0001"
-#define THERMAL_DIR_B2F_STR "R1241-F0002"
+#define THERMAL_DIR_F2B_STR "R1241-F1001"
+#define THERMAL_DIR_B2F_STR "R1241-F1002"
 #define FAN_DIR_F2B_STR "R1241-F9001"
 #define FAN_DIR_B2F_STR "R1241-F9002"
 #define DELTA_PSU_DIR_F2B_STR "DPS-1100FB"
@@ -476,7 +476,7 @@ static struct fan_info_stu_sysfs psu1_fan_info = {
 static struct board_info_stu_sysfs board_info[] = {
 	/*B2F*/
 	{
-		.name = "inlet_u52",
+		.name = "INLET_TEMP",
 		.slot_id = FAN_DIR_B2F,
 		.correction = -1,
 		.lwarn = 40,
@@ -489,7 +489,7 @@ static struct board_info_stu_sysfs board_info[] = {
 	},
 #ifdef CONFIG_FSC_CONTROL_PID
 	{
-		.name = "Switch_inlet",
+		.name = "SWITCH_TEMP",
 		.slot_id = FAN_DIR_B2F,
 		.correction = 15,
 		.lwarn = 108,
@@ -501,7 +501,7 @@ static struct board_info_stu_sysfs board_info[] = {
 		.alarm = &sensor_bcm5870_inlet_critical_info_b2f,
 	},
 	{
-		.name = "cpu_inlet",
+		.name = "CPU_TEMP",
 		.slot_id = FAN_DIR_B2F,
 		.correction = -104,
 		.lwarn = -3,
@@ -516,7 +516,7 @@ static struct board_info_stu_sysfs board_info[] = {
 
 	/*F2B*/
 	{
-		.name = "inlet_u29",
+		.name = "INLET_TEMP",
 		.slot_id = FAN_DIR_F2B,
 		.correction = -5,
 		.lwarn = 40,
@@ -529,7 +529,7 @@ static struct board_info_stu_sysfs board_info[] = {
 	},
 #ifdef CONFIG_FSC_CONTROL_PID
 	{
-		.name = "Switch_inlet",
+		.name = "SWITCH_TEMP",
 		.slot_id = FAN_DIR_F2B,
 		.correction = 15,
 		.lwarn = 108,
@@ -541,7 +541,7 @@ static struct board_info_stu_sysfs board_info[] = {
 		.alarm = &sensor_bcm5870_inlet_critical_info_f2b,
 	},
 	{
-		.name = "cpu_inlet",
+		.name = "CPU_TEMP",
 		.slot_id = FAN_DIR_F2B,
 		.correction = -104,
 		.lwarn = -3,
@@ -558,57 +558,63 @@ static struct board_info_stu_sysfs board_info[] = {
 
 static struct fantray_info_stu_sysfs fantray_info[] = {
   {
-    .name = "Fantray 1",
+    .name = "FAN1",
     .present = 1,
     .read_eeprom = 1,
     .status = 1,
     .failed = 0,
     .direction = FAN_DIR_INIT,
+    .eeprom_fail = 0,
     .fan1 = fan1_info,
   },
   {
-    .name = "Fantray 2",
+    .name = "FAN2",
     .present = 1,
     .read_eeprom = 1,
     .status = 1,
     .failed = 0,
     .direction = FAN_DIR_INIT,
+    .eeprom_fail = 0,
     .fan1 = fan2_info,
   },
   {
-    .name = "Fantray 3",
+    .name = "FAN3",
     .present = 1,
     .read_eeprom = 1,
     .status = 1,
     .failed = 0,
     .direction = FAN_DIR_INIT,
+    .eeprom_fail = 0,
     .fan1 = fan3_info,
   },
   {
-    .name = "Fantray 4",
+    .name = "FAN4",
     .present = 1,
     .read_eeprom = 1,
     .status = 1,
     .failed = 0,
     .direction = FAN_DIR_INIT,
+    .eeprom_fail = 0,
     .fan1 = fan4_info,
   },
   {
-	.name = "PSU 1",
+	.name = "PSU1",
 	.present = 1,
 	.read_eeprom = 1,
 	.status = 1,
 	.failed = 0,
 	.direction = FAN_DIR_INIT,
+	.eeprom_fail = 0,
 	.fan1 = psu1_fan_info,
   },
   {
-	.name = "PSU 2",
+	.name = "PSU2",
 	.present = 1,
 	.read_eeprom = 1,
 	.status = 1,
 	.failed = 0,
 	.direction = FAN_DIR_INIT,
+	.eeprom_fail = 0,
 	.fan1 = psu2_fan_info,
   },
   NULL,
@@ -843,7 +849,7 @@ static int read_sysfs_raw_internal(const char *device, char *value, int log)
 	if (!fp) {
 		if (log) {
 			err = errno;
-			syslog(LOG_INFO, "failed to open device %s for read: %s",
+			syslog(LOG_ERR, "failed to open device %s for read: %s",
 			     device, strerror(err));
 			errno = err;
 		}
@@ -856,7 +862,7 @@ static int read_sysfs_raw_internal(const char *device, char *value, int log)
 	if (rc != 1) {
 		if (log) {
 			err = errno;
-			syslog(LOG_INFO, "failed to read device %s: %s",
+			syslog(LOG_ERR, "failed to read device %s: %s",
 			     device, strerror(err));
 			errno = err;
 		}
@@ -902,7 +908,7 @@ static int write_sysfs_raw_internal(const char *device, char *value, int log)
 	if (!fp) {
 		if (log) {
 			err = errno;
-			syslog(LOG_INFO, "failed to open device %s for write : %s",
+			syslog(LOG_ERR, "failed to open device %s for write : %s",
 			     device, strerror(err));
 			errno = err;
 		}
@@ -915,7 +921,7 @@ static int write_sysfs_raw_internal(const char *device, char *value, int log)
 	if (rc < 0) {
 		if (log) {
 			err = errno;
-			syslog(LOG_INFO, "failed to write to device %s", device);
+			syslog(LOG_ERR, "failed to write to device %s", device);
 			errno = err;
 		}
 		return -1;
@@ -953,7 +959,7 @@ static int read_temp_directly_sysfs(struct sensor_info_sysfs *sensor)
 	int cache_str_len = 0;
 
 	if (sensor == NULL) {
-		syslog(LOG_NOTICE, "sensor is null\n");
+		syslog(LOG_ERR, "sensor is null\n");
 		return BAD_TEMP;
 	}
 	// Check if cache is available
@@ -1004,7 +1010,7 @@ static int read_temp_sysfs(struct sensor_info_sysfs *sensor)
 	int cache_str_len = 0;
 
 	if (sensor == NULL) {
-		syslog(LOG_NOTICE, "sensor is null\n");
+		syslog(LOG_ERR, "sensor is null\n");
 		return BAD_TEMP;
 	}
 	// Check if cache is available
@@ -1018,7 +1024,7 @@ static int read_temp_sysfs(struct sensor_info_sysfs *sensor)
 		// No cached value yet. Calculate the full path first
 		ret = assemble_sysfs_path(sensor->prefix, sensor->suffix, fullpath, sizeof(fullpath));
 		if(ret != 0) {
-			syslog(LOG_NOTICE, "%s: I2C bus %s not available. Failed reading %s\n", __FUNCTION__, sensor->prefix, sensor->suffix);
+			syslog(LOG_ERR, "%s: I2C bus %s not available. Failed reading %s\n", __FUNCTION__, sensor->prefix, sensor->suffix);
 			return BAD_TEMP;
 		}
 		// Update cache, if possible.
@@ -1071,7 +1077,7 @@ static int read_critical_max_temp(void)
 			temp = info->critical->read_sysfs(info->critical);
 			if(temp != BAD_TEMP) {
 				if(info->critical->error_cnt)
-					syslog(LOG_WARNING, "Sensor [%s] temp lost recovered, set fan normal speed", info->name);
+					syslog(LOG_WARNING, "%s is NORMAL", info->name);
 				info->critical->error_cnt = 0;
 				temp += info->correction;
 				if((info->critical->t2 == BAD_TEMP) || (info->critical->t2 == 0))
@@ -1087,7 +1093,7 @@ static int read_critical_max_temp(void)
 				if(info->critical->error_cnt < ERROR_TEMP_MAX)
 					info->critical->error_cnt++;
 				if(info->critical->error_cnt == 1)
-					syslog(LOG_WARNING, "Sensor [%s] temp lost detected, set fan normal speed", info->name);
+					syslog(LOG_WARNING, "Sensor [%s] temp lost detected", info->name);
 			}
 			if(info->critical->temp > max_temp)
 				max_temp = info->critical->temp;
@@ -1122,7 +1128,7 @@ static int calculate_line_pwm(void)
 			if(info->critical->error_cnt) {
 				if(info->critical->error_cnt == ERROR_TEMP_MAX) {
 					if(policy->old_pwm != FAN_MAX)
-						syslog(LOG_WARNING, "Sensor [%s] temp lost time out, set fan max speed", info->name);
+						syslog(LOG_ERR, "%s status is ABNORMAL, get %s failed", info->name, info->name);
 					pwm = FAN_MAX;
 				}
 				else {
@@ -1153,7 +1159,7 @@ static int read_pid_max_temp(void)
 			temp = info->critical->read_sysfs(info->critical);
 			if(temp != BAD_TEMP) {
 				if(info->critical->error_cnt)
-					syslog(LOG_WARNING, "Sensor [%s] temp lost recovered, set fan normal speed", info->name);
+					syslog(LOG_WARNING, "%s is NORMAL", info->name);
 				info->critical->error_cnt = 0;
 				temp += info->correction;
 				if((info->critical->t2 == BAD_TEMP) || (info->critical->t2 == 0))
@@ -1169,7 +1175,7 @@ static int read_pid_max_temp(void)
 				if(info->critical->error_cnt < ERROR_TEMP_MAX) {
 					info->critical->error_cnt++;
 					if(info->critical->error_cnt == 1)
-						syslog(LOG_WARNING, "Sensor [%s] temp lost detected, set fan normal speed", info->name);
+						syslog(LOG_WARNING, "Sensor [%s] temp lost detected", info->name);
 				}
 			}
 			if(info->critical->temp > max_temp)
@@ -1202,7 +1208,7 @@ static int calculate_pid_pwm(int fan_pwm)
 			if(critical->error_cnt) {
 				if(critical->error_cnt == ERROR_TEMP_MAX) {
 					if(critical->old_pwm != FAN_MAX)
-						syslog(LOG_WARNING, "Sensor [%s] temp lost time out, set fan max speed", info->name);
+						syslog(LOG_ERR, "%s status is ABNORMAL, get %s failed", info->name, info->name);
 					pwm = FAN_MAX;
 				}
 				else {
@@ -1257,7 +1263,7 @@ static int alarm_temp_update(int *alarm)
 				(info->hwarn - temp <= ALARM_TEMP_THRESHOLD) && info->warn_count))) {
 				if(++info->warn_count >= ALARM_START_REPORT) {
 					if(!(info->flag & HIGH_WARN_BIT))
-						syslog(LOG_WARNING, "Major temp alarm: %s arrived %d C(High Warning: >= %d C), set fan max speed",
+						syslog(LOG_ERR, "%s exceeded upper critical, value is %d C, upper critical is %d C",
 							info->name, temp, info->hwarn);
 					for (fan = 0; fan < TOTAL_FANS; fan++) {
 						write_fan_speed(fan, FAN_MAX);
@@ -1272,7 +1278,7 @@ static int alarm_temp_update(int *alarm)
 				(info->lwarn - temp <= ALARM_TEMP_THRESHOLD) && info->warn_count))) {
 				if(++info->warn_count >= ALARM_START_REPORT) {
 					if(!(info->flag & LOW_WARN_BIT))
-						syslog(LOG_WARNING, "Minor temp alarm: %s arrived %d C(Low Warning: >= %d C)",
+						syslog(LOG_WARNING, "%s exceeded upper high, value is %d C, upper high is %d C",
 							info->name, temp, info->lwarn);
 					info->warn_count = 0;
 					info->flag |= LOW_WARN_BIT;
@@ -1280,16 +1286,16 @@ static int alarm_temp_update(int *alarm)
 				}
 			} else {
 				if(info->flag & HIGH_WARN_BIT) {
-					syslog(LOG_INFO, "Recovery major temp alarm: %s arrived %d C", info->name, temp);
+					syslog(LOG_INFO, "%s is NORMAL, value is %d C", info->name, temp);
 					info->flag &= ~HIGH_WARN_BIT;
 				} else if(info->flag & LOW_WARN_BIT) {
-					syslog(LOG_INFO, "Recovery minor temp alarm: %s arrived %d C", info->name, temp);
+					syslog(LOG_INFO, "%s is NORMAL, value is %d C", info->name, temp);
 					info->flag &= ~LOW_WARN_BIT;
 				} else if(info->flag & HIGH_MAX_BIT) {
 					info->recovery_count++;
 					if(info->recovery_count >= WARN_RECOVERY_COUNT) {
 						info->flag &= ~HIGH_MAX_BIT;
-						syslog(LOG_WARNING, "Major temp alarm resumed, set fan normal speed");
+						syslog(LOG_INFO, "%s is NORMAL, set fan normal speed", info->name);
 					}
 #ifdef DEBU
 					syslog(LOG_DEBUG, "[xuth] Major max bit: %d, recovery count: %d", *alarm & HIGH_MAX_BIT ? 1 : 0, info->recovery_count);
@@ -1521,14 +1527,14 @@ static int fan_is_present_sysfs(int fan, struct fan_info_stu_sysfs *fan_info)
 
 	if (ret != 0) {
 		if(fantray->present == 1) {
-			syslog(LOG_ERR, "%s not present", fantray->name);
+			syslog(LOG_ERR, "%s is ABSENT", fantray->name);
 			fantray->present = 0;
 			fantray->read_eeprom = 1;
 		}
 	} else {
 		if(fan < TOTAL_FANS) {
 			if(fantray->present == 0) {
-				syslog(LOG_INFO, "%s present", fantray->name);
+				syslog(LOG_WARNING, "%s is PRESENT", fantray->name);
 				fantray->present = 1;
 				fantray->read_eeprom = 1;
 			}
@@ -1546,20 +1552,20 @@ static int fan_is_present_sysfs(int fan, struct fan_info_stu_sysfs *fan_info)
 		if (ret == 0) {
 			if((fantray->present == 1) && (fantray->status == 1)) {
 				fantray->status = 0;
-				syslog(LOG_WARNING, "%s power off", fantray->name);
+				syslog(LOG_ERR, "%s is power off", fantray->name);
 			}
 			psu_led_color |= (0x1 << (fan - TOTAL_FANS));
 		} else {
 			if((fantray->present == 1) && (fantray->status == 0)) {
 				fantray->status = 1;
 				fantray->read_eeprom = 1;
-				syslog(LOG_WARNING, "%s power on", fantray->name);
+				syslog(LOG_WARNING, "%s is power on", fantray->name);
 			}
 			if(fantray->direction != direction)
 				psu_led_color |= (0x1 << (fan - TOTAL_FANS));
 		}
 		if(fantray->present == 0) {
-			syslog(LOG_INFO, "%s present", fantray->name);
+			syslog(LOG_WARNING, "%s is PRESENT", fantray->name);
 			fantray->present = 1;
 			fantray->read_eeprom = 1;
 		}
@@ -1601,7 +1607,7 @@ static int set_fan_sysfs(int fan, int value)
 
 	if(fantray->direction != direction) {
 		if(fantray->direction != FAN_DIR_FAULT)
-			value = 26;
+			value = 89;
 		sys_fan_led_color |= (0x1 << fan);
 	}
 	snprintf(fullpath, PATH_CACHE_SIZE, "%s/%s", fan_info->prefix, fan_info->pwm_prefix);
@@ -1758,7 +1764,7 @@ static int write_psu_fan_speed(const int fan, int value)
 		if(fantray->direction == direction) {
 			ret = write_sysfs_int(fullpath, value);
 		} else {
-			ret = write_sysfs_int(fullpath, 0);
+			ret = write_sysfs_int(fullpath, 35);
 		}
 		if(ret < 0) {
 			syslog(LOG_ERR, "failed to set fan %s/%s, value %#x",
@@ -1835,6 +1841,8 @@ int fan_speed_okay(const int fan, int speed, const int slop)
 		return 0;
 	} else if(ret == 1) {
 		fantray->present = 1;
+	} else {
+		return 0;
 	}
 	if(fantray->direction != direction)
 		return 0;
@@ -1850,26 +1858,26 @@ int fan_speed_okay(const int fan, int speed, const int slop)
 	if(front_speed < FAN_FAIL_RPM) {
 		fan_info->front_failed++;
 		if(fan_info->front_failed == 1)
-			syslog(LOG_WARNING, "%s front speed %d, less than %d detected", 
+			syslog(LOG_WARNING, "%s-1 speed %d, less than %d detected", 
 				fantray->name, front_speed, FAN_FAIL_RPM);
 		if(fan_info->front_failed == FAN_FAIL_COUNT)
-			syslog(LOG_WARNING, "%s front speed %d, less than %d time out", 
-				fantray->name, front_speed, FAN_FAIL_RPM);
+			syslog(LOG_ERR, "%s-1 status is ABNORMAL, speed less than 1000 RPM for over 30 seconds", 
+				fantray->name);
 		if(fan_info->front_failed > FAN_FAIL_COUNT)
 			fan_info->front_failed = FAN_FAIL_COUNT;
 	} else if(speed == FAN_MAX && (front_speed < (FAN_FRONTT_SPEED_MAX * (100 - slop) / 100))){
 		fan_info->front_failed++;
 		if(fan_info->front_failed == 1)
-			syslog(LOG_WARNING, "%s front speed %d, less than %d%% of max speed(%d) detected", 
+			syslog(LOG_WARNING, "%s-1 speed %d, less than %d%% of max speed(%d) detected", 
 				fantray->name, front_speed, 100 - slop, speed);
 		if(fan_info->front_failed == FAN_FAIL_COUNT)
-			syslog(LOG_WARNING, "%s front speed %d, less than %d%% of max speed(%d) time out", 
-				fantray->name, front_speed, 100 - slop, speed);
+			syslog(LOG_ERR, "%s-1 status is ABNORMAL, speed is set to 100%% but real speed is lower than 70%% of max speed", 
+				fantray->name);
 		if(fan_info->front_failed > FAN_FAIL_COUNT)
 			fan_info->front_failed = FAN_FAIL_COUNT;
 	} else {
 		if(fan_info->front_failed)
-			syslog(LOG_WARNING, "%s front speed resumed normal", fantray->name);
+			syslog(LOG_WARNING, "%s-1 status is NORMAL", fantray->name);
 		fan_info->front_failed = 0;
 	}
 
@@ -1885,26 +1893,26 @@ int fan_speed_okay(const int fan, int speed, const int slop)
 	if(rear_speed < FAN_FAIL_RPM) {
 		fan_info->rear_failed++;
 		if(fan_info->rear_failed == 1)
-			syslog(LOG_WARNING, "%s rear speed %d, less than %d detected", 
+			syslog(LOG_WARNING, "%s-2 speed %d, less than %d detected", 
 				fantray->name, rear_speed, FAN_FAIL_RPM);
 		if(fan_info->rear_failed == FAN_FAIL_COUNT)
-			syslog(LOG_WARNING, "%s rear speed %d, less than %d time out", 
-				fantray->name, rear_speed, FAN_FAIL_RPM);
+			syslog(LOG_ERR, "%s-2 status is ABNORMAL, speed less than 1000 RPM for over 30 seconds", 
+				fantray->name);
 		if(fan_info->rear_failed > FAN_FAIL_COUNT)
 			fan_info->rear_failed = FAN_FAIL_COUNT;
 	} else if(speed == FAN_MAX && (rear_speed < (FAN_REAR_SPEED_MAX * (100 - slop) / 100))){
 		fan_info->rear_failed++;
 		if(fan_info->rear_failed == 1)
-			syslog(LOG_WARNING, "%s rear speed %d, less than %d%% of max speed(%d) detected", 
+			syslog(LOG_WARNING, "%s-2 speed %d, less than %d%% of max speed(%d) detected", 
 				fantray->name, rear_speed, 100 - slop, speed);
 		if(fan_info->rear_failed == FAN_FAIL_COUNT)
-			syslog(LOG_WARNING, "%s rear speed %d, less than %d%% of max speed(%d) time out", 
-				fantray->name, rear_speed, 100 - slop, speed);
+			syslog(LOG_ERR, "%s-2 status is ABNORMAL, speed is set to 100%% but real speed is lower than 70%% of max speed", 
+				fantray->name);
 		if(fan_info->rear_failed > FAN_FAIL_COUNT)
 			fan_info->rear_failed = FAN_FAIL_COUNT;
 	} else {
 		if(fan_info->rear_failed)
-			syslog(LOG_WARNING, "%s rear speed resumed normal", fantray->name);
+			syslog(LOG_WARNING, "%s-2 status is NORMAL", fantray->name);
 		fan_info->rear_failed = 0;
 	}
 
@@ -1947,6 +1955,8 @@ int psu_speed_okay(const int fan, int speed, const int slop)
 		fantray->present = 1;
 		if(fantray->status == 0)
 			return 0;
+	} else {
+		return 0;
 	}
 
 	snprintf(buf, PATH_CACHE_SIZE, "%s/%s", fan_info->rear_fan_prefix, fan_info->front_fan_prefix);
@@ -1964,8 +1974,8 @@ int psu_speed_okay(const int fan, int speed, const int slop)
 			syslog(LOG_WARNING, "%s speed %d, less than %d detected", 
 				fantray->name, psu_speed, FAN_FAIL_RPM);
 		if(fan_info->front_failed == FAN_FAIL_COUNT)
-			syslog(LOG_WARNING, "%s speed %d, less than %d time out", 
-				fantray->name, psu_speed, FAN_FAIL_RPM);
+			syslog(LOG_ERR, "%s status is ABNORMAL, speed less than 1000 RPM for over 30 seconds", 
+				fantray->name);
 		if(fan_info->front_failed > FAN_FAIL_COUNT)
 			fan_info->front_failed = FAN_FAIL_COUNT;
 	} else if(speed == FAN_MAX && (psu_speed < (PSU_SPEED_MAX * (100 - slop) / 100))){
@@ -1974,13 +1984,13 @@ int psu_speed_okay(const int fan, int speed, const int slop)
 			syslog(LOG_WARNING, "%s speed %d, less than %d%% of max speed(%d) detected", 
 				fantray->name, psu_speed, 100 - slop, speed);
 		if(fan_info->front_failed == FAN_FAIL_COUNT)
-			syslog(LOG_WARNING, "%s speed %d, less than %d%% of max speed(%d) time out", 
-				fantray->name, psu_speed, 100 - slop, speed);
+			syslog(LOG_ERR, "%s status is ABNORMAL, speed is set to 100%% but real speed is lower than 70%% of max speed", 
+				fantray->name);
 		if(fan_info->front_failed > FAN_FAIL_COUNT)
 			fan_info->front_failed = FAN_FAIL_COUNT;
 	} else {
 		if(fan_info->front_failed)
-			syslog(LOG_WARNING, "%s speed resumed normal", fantray->name);
+			syslog(LOG_WARNING, "%s status is NORMAL", fantray->name);
 		fan_info->front_failed = 0;
 	}
 
@@ -2066,7 +2076,7 @@ const char *fan_path[] = {
 	"/sys/bus/i2c/devices/25-0051/eeprom",
 	"/sys/bus/i2c/devices/24-0050/eeprom",
 };
-static int get_fan_direction(void)
+static int get_fan_direction(int direction)
 {
 // #ifdef FOR_F2B
 // 	return FAN_DIR_F2B;
@@ -2080,6 +2090,9 @@ static int get_fan_direction(void)
 	int r2f_fan_cnt = 0;
 	FILE *fp;
 	int i = 0;
+	char *pn;
+	int ret;
+
 	for(; i < TOTAL_FANS + TOTAL_PSUS; i++)
 	{
 		if(i >= sizeof(fan_path)/sizeof(fan_path[0]))
@@ -2108,37 +2121,107 @@ static int get_fan_direction(void)
 		char temp;
 		int len;
 		memset(buffer, 0, sizeof(buffer));
-		fread(buffer, sizeof(char), sizeof(buffer), fp);
+		ret = fread(buffer, sizeof(char), sizeof(buffer), fp);
 		fclose(fp);
 		if(i < TOTAL_FANS) {
-			if(find_sub_string(buffer, FAN_DIR_F2B_STR, sizeof(buffer))) {
+			if(pn = find_sub_string(buffer, FAN_DIR_F2B_STR, sizeof(buffer))) {
 				f2r_fan_cnt++;
+				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
+					if(fantray->eeprom_fail) {
+						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, FAN_DIR_F2B_STR);
+						fantray->eeprom_fail = 0;
+					}
+				}
 				fantray->direction = FAN_DIR_F2B;
-				syslog(LOG_WARNING, "%s direction changed to [Front to rear]", fantray->name);
+				if(direction != fantray->direction)
+					syslog(LOG_ERR, "%s airflow direction mismatch, direction is F2B, system direction is B2F", fantray->name);
+				else
+					syslog(LOG_WARNING, "%s airflow direction match, direction is F2B, system direction is F2B", fantray->name);
 			} else if(find_sub_string(buffer, FAN_DIR_B2F_STR, sizeof(buffer))) {
 				r2f_fan_cnt++;
+				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
+					if(fantray->eeprom_fail) {
+						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, FAN_DIR_B2F_STR);
+						fantray->eeprom_fail = 0;
+					}
+				}
 				fantray->direction = FAN_DIR_B2F;
-				syslog(LOG_WARNING, "%s direction changed to [Rear to front]", fantray->name);
+				if(direction != fantray->direction)
+					syslog(LOG_ERR, "%s airflow direction mismatch, direction is B2F, system direction is F2B", fantray->name);
+				else
+					syslog(LOG_WARNING, "%s airflow direction match, direction is B2F, system direction is B2F", fantray->name);
 			} else {
 				fantray->direction = FAN_DIR_FAULT;
-				syslog(LOG_WARNING, "%s module unrecognized, set to [Fault]", fantray->name);
+				if(ret > 0) {
+					fantray->eeprom_fail = 1;
+					syslog(LOG_CRIT, "%s model mismatch, part number is %s", fantray->name, pn);
+				} else {
+					syslog(LOG_WARNING, "%s eeprom is ABNORMAL, read %s eeprom failed", fantray->name, fantray->name);
+				}
 			}
 		} else {
-			if(find_sub_string(buffer, DELTA_PSU_DIR_F2B_STR, sizeof(buffer))) {
+			if(pn = find_sub_string(buffer, DELTA_PSU_DIR_F2B_STR, sizeof(buffer))) {
+				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
+					if(fantray->eeprom_fail) {
+						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, DELTA_PSU_DIR_F2B_STR);
+						fantray->eeprom_fail = 0;
+					}
+				}
 				fantray->direction = FAN_DIR_F2B;
-				syslog(LOG_WARNING, "%s direction changed to [Front to rear]", fantray->name);
+				if(direction != fantray->direction)
+					syslog(LOG_ERR, "%s airflow direction mismatch, direction is F2B, system direction is B2F", fantray->name);
+				else
+					syslog(LOG_WARNING, "%s airflow direction match, direction is F2B, system direction is F2B", fantray->name);
 			} else if(find_sub_string(buffer, DELTA_PSU_DIR_B2F_STR, sizeof(buffer))) {
+				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
+					if(fantray->eeprom_fail) {
+						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, DELTA_PSU_DIR_B2F_STR);
+						fantray->eeprom_fail = 0;
+					}
+				}
 				fantray->direction = FAN_DIR_B2F;
-				syslog(LOG_WARNING, "%s direction changed to [Rear to front]", fantray->name);
+				if(direction != fantray->direction)
+					syslog(LOG_ERR, "%s airflow direction mismatch, direction is B2F, system direction is F2B", fantray->name);
+				else
+					syslog(LOG_WARNING, "%s airflow direction match, direction is B2F, system direction is B2F", fantray->name);
 			} else if(find_sub_string(buffer, ACBEL_PSU_DIR_F2B_STR, sizeof(buffer))) {
+				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
+					if(fantray->eeprom_fail) {
+						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, ACBEL_PSU_DIR_F2B_STR);
+						fantray->eeprom_fail = 0;
+					}
+				}
 				fantray->direction = FAN_DIR_F2B;
-				syslog(LOG_WARNING, "%s direction changed to [Front to rear]", fantray->name);
+				if(direction != fantray->direction)
+					syslog(LOG_ERR, "%s airflow direction mismatch, direction is F2B, system direction is B2F", fantray->name);
+				else
+					syslog(LOG_WARNING, "%s airflow direction match, direction is F2B, system direction is F2B", fantray->name);
 			} else if(find_sub_string(buffer, ACBEL_PSU_DIR_B2F_STR, sizeof(buffer))) {
+				if(fantray->direction == FAN_DIR_FAULT) {
+					syslog(LOG_WARNING, "%s eeprom is NORMAL", fantray->name);
+					if(fantray->eeprom_fail) {
+						syslog(LOG_WARNING, "%s model match, part number is %s", fantray->name, ACBEL_PSU_DIR_B2F_STR);
+						fantray->eeprom_fail = 0;
+					}
+				}
 				fantray->direction = FAN_DIR_B2F;
-				syslog(LOG_WARNING, "%s direction changed to [Rear to front]", fantray->name);
+				if(direction != fantray->direction)
+					syslog(LOG_ERR, "%s airflow direction mismatch, direction is B2F, system direction is F2B", fantray->name);
+				else
+					syslog(LOG_WARNING, "%s airflow direction match, direction is B2F, system direction is B2F", fantray->name);
 			} else {
 				fantray->direction = FAN_DIR_FAULT;
-				syslog(LOG_WARNING, "%s module unrecognized, set to [Fault]", fantray->name);
+				if(ret > 0) {
+					fantray->eeprom_fail = 1;
+					syslog(LOG_CRIT, "%s model mismatch, part number is %s", fantray->name, pn);
+				} else {
+					syslog(LOG_WARNING, "%s eeprom is ABNORMAL, read %s eeprom failed", fantray->name, fantray->name);
+				}
 			}
 		}
 		fantray->read_eeprom = 0;
@@ -2164,7 +2247,9 @@ int get_thermal_direction(void)
 	memset(command, 0, sizeof(command));
 	sprintf(command, "/usr/local/bin/fruid-util sys | grep 'Product Part Number' 2>/dev/null");
 	fp = popen(command, "r");
-	int thermal_dir = get_fan_direction();
+	int thermal_dir;
+	int fan, fan_speed;
+
 	if (!fp) {
 		syslog(LOG_ERR, "failed to get thermal direction");
 		syslog(LOG_WARNING, "thermal direction judged by fan direction");
@@ -2175,15 +2260,22 @@ int get_thermal_direction(void)
 		fread(buffer, sizeof(char), sizeof(buffer), fp);
 		pclose(fp);
 		if(find_sub_string(buffer, THERMAL_DIR_F2B_STR, sizeof(buffer))) {
-			syslog(LOG_WARNING, "thermal direction changed to [Front to rear]");
-			// return FAN_DIR_F2B;
+			syslog(LOG_INFO, "system direction is F2B");
+			thermal_dir = FAN_DIR_F2B;
 		} else if(find_sub_string(buffer, THERMAL_DIR_B2F_STR, sizeof(buffer))) {
-			syslog(LOG_WARNING, "thermal direction changed to [Rear to front]");
-			// return FAN_DIR_B2F;
+			syslog(LOG_INFO, "system direction is B2F");
+			thermal_dir = FAN_DIR_B2F;
+		} else {
+			syslog(LOG_ERR, "system direction is unknown, FAN speed is set to 100%");
+			fan_speed = FAN_MAX;
+			for (fan = 0; fan < TOTAL_FANS; fan++) {
+				write_fan_speed(fan, fan_speed);
+			}
+			write_psu_fan_speed(fan, fan_speed);
 		}
 	}
-	syslog(LOG_WARNING, "thermal module direction unrecognized");
-	syslog(LOG_WARNING, "thermal direction judged by fan direction");
+	get_fan_direction(thermal_dir);
+
 	return thermal_dir;
 }
 
@@ -2194,11 +2286,11 @@ static void update_thermal_direction()
 	if(direction != dir) {
 		direction = dir;
 		if(direction == FAN_DIR_F2B) {
-			syslog(LOG_INFO, "Thermal direction changed to [Front to rear]");
+			syslog(LOG_INFO, "setting F2B thermal policy");
 			policy = &f2b_normal_policy;
 		}
 		if(direction == FAN_DIR_B2F) {
-			syslog(LOG_INFO, "Thermal direction changed to [Rear to front]");
+			syslog(LOG_INFO, "setting B2F thermal policy");
 			policy = &b2f_normal_policy;
 		}
 	}
@@ -2373,13 +2465,6 @@ int main(int argc, char **argv) {
 	// Initialize path cache
 	init_path_cache();
 
-	struct sigaction sa;
-	sa.sa_handler = fand_interrupt;
-	sa.sa_flags = 0;
-	sigemptyset(&sa.sa_mask);
-	sigaction(SIGTERM, &sa, NULL);
-	sigaction(SIGINT, &sa, NULL);
-	sigaction(SIGUSR1, &sa, NULL);
 
 	// Start writing to syslog as early as possible for diag purposes.
 	openlog("fand32_v2", LOG_CONS, LOG_DAEMON);
@@ -2389,11 +2474,11 @@ int main(int argc, char **argv) {
 	syslog(LOG_DEBUG, "Starting up;  system should have %d fans.", TOTAL_FANS);
 
 	/* Start watchdog in manual mode */
-	start_watchdog(0);
+	//start_watchdog(0);
 
 	/* Set watchdog to persistent mode so timer expiry will happen independent
 	* of this process's liveliness. */
-	set_persistent_watchdog(WATCHDOG_SET_PERSISTENT);
+	//set_persistent_watchdog(WATCHDOG_SET_PERSISTENT);
 
 	fancpld_watchdog_enable();
 
@@ -2629,10 +2714,10 @@ int main(int argc, char **argv) {
 		/* if everything is fine, restart the watchdog countdown. If this process
 		 * is terminated, the persistent watchdog setting will cause the system
 		 * to reboot after the watchdog timeout. */
-		kick_watchdog();
+		//kick_watchdog();
 		usleep(11000);
 		// update_thermal_direction();
-		get_fan_direction();
+		get_fan_direction(direction);
 	}
 
 	return 0;

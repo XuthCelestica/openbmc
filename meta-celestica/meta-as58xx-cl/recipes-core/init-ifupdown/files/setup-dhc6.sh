@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright 2015-present Facebook. All Rights Reserved.
 #
@@ -17,4 +17,6 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 #
-exec /usr/local/bin/mTerm_server  console /dev/ttyS1
+#echo -n "Setup dhclient for IPv6... "
+#runsv /etc/sv/dhc6 > /dev/null 2>&1 &
+#echo "done."

@@ -40,6 +40,8 @@
 #define SYSFS_READ 0
 #define SYSFS_WRITE 1
 
+#define DPS1100_PSU_NUM 4
+
 #define DPS1100_OP_REG_ADDR     PMBUS_OPERATION
 #define DPS1100_OP_SHUTDOWN_CMD 0x0
 #define DPS1100_OP_POWERON_CMD  0x80
@@ -159,13 +161,34 @@ struct dps1100_data {
 	struct sysfs_attr_t *sysfs_attr;
 };
 
-
+struct dps1100_vin_threshold_t {
+	int bus;
+	int vin_min;
+	int vin_max;
+};
 
 static const struct i2c_device_id dps1100_id[] = {
 	{"dps550", DPS550 },
 	{"dps1100", DPS1100 },
 	{ }
 };
+struct dps1100_vin_threshold_t dps1100_vin_threshold[DPS1100_PSU_NUM];
+
+enum PSU {
+	PSU1 = 1,
+	PSU2,
+};
+/*
+ * 0 is not OK, 1 is OK
+ */
+extern int psu_ok(int bus, unsigned short addr);
+static ssize_t dps1100_ok(struct i2c_client *client)
+{
+	if(client == NULL)
+		return 0;
+
+	return psu_ok(client->adapter->nr, client->addr);
+}
 
 static ssize_t dps1100_shutdown_show(struct device *dev,
         struct device_attribute *attr, char *buf)
@@ -174,6 +197,9 @@ static ssize_t dps1100_shutdown_show(struct device *dev,
 	struct i2c_client *client = to_i2c_client(dev);
 	const struct pmbus_driver_info *info = pmbus_get_driver_info(client);
 	struct dps1100_data *data = TO_DPS1100_DATA(info);
+
+	if(dps1100_ok(client) != 1)
+		return -1;
 
 	//client->flags |= I2C_CLIENT_PEC;
 	read_val = pmbus_read_byte_data(client, 0, DPS1100_OP_REG_ADDR);
@@ -197,6 +223,9 @@ static int dps1100_shutdown_store(struct device *dev,
 	struct i2c_client *client = to_i2c_client(dev);
 	const struct pmbus_driver_info *info = pmbus_get_driver_info(client);
 	struct dps1100_data *data = TO_DPS1100_DATA(info);
+
+	if(dps1100_ok(client) != 1)
+		return -1;
 
 	//client->flags |= I2C_CLIENT_PEC;
 	if (buf == NULL) {
@@ -231,7 +260,9 @@ static ssize_t dps1100_reg_byte_show(struct device *dev,
 	struct sysfs_attr_t *sysfs_attr = TO_I2C_SYSFS_ATTR(attr);
 	struct i2c_dev_attr_t *dev_attr = sysfs_attr->i2c_attr;
 
-	//client->flags |= I2C_CLIENT_PEC;
+	if(dps1100_ok(client) != 1)
+		return -1;
+
 	read_val = pmbus_read_byte_data(client, 0, dev_attr->reg);
 	if(read_val < 0)
 		return -1;
@@ -248,6 +279,9 @@ static int dps1100_reg_byte_store(struct device *dev,
 	struct i2c_client *client = to_i2c_client(pdata->dev);
 	struct sysfs_attr_t *sysfs_attr = TO_I2C_SYSFS_ATTR(attr);
 	struct i2c_dev_attr_t *dev_attr = sysfs_attr->i2c_attr;
+
+	if(dps1100_ok(client) != 1)
+		return -1;
 
 	//client->flags |= I2C_CLIENT_PEC;
 	if (buf == NULL) {
@@ -268,6 +302,89 @@ static int dps1100_reg_byte_store(struct device *dev,
 }
 
 
+
+static ssize_t dps1100_vin_threshold_show(struct device *dev,
+        struct device_attribute *attr, char *buf)
+{
+	int i;
+	int read_val = 0;
+	int bus = -1;
+	struct pmbus_data *pdata = dev_get_drvdata(dev);
+	struct i2c_client *client = to_i2c_client(pdata->dev);
+	struct sysfs_attr_t *sysfs_attr = TO_I2C_SYSFS_ATTR(attr);
+	struct i2c_dev_attr_t *dev_attr = sysfs_attr->i2c_attr;
+
+	if(client->adapter)
+		bus = client->adapter->nr;
+
+	if(bus < 0)
+		return -1;
+
+	for(i = 0; i < DPS1100_PSU_NUM; i++) {
+		if(dps1100_vin_threshold[i].bus == bus) {
+			if(dev_attr->reg == 0)
+				read_val = dps1100_vin_threshold[i].vin_min;
+			else
+				read_val = dps1100_vin_threshold[i].vin_max;
+			break;
+		}
+	}
+
+	return sprintf(buf, "%d\n", read_val);
+}
+
+static int dps1100_vin_threshold_store(struct device *dev,
+        struct device_attribute *attr, const char *buf, size_t count)
+{
+	int i;
+	int rc = 0;
+	int write_value = 0;
+	int bus = -1;
+	struct pmbus_data *pdata = dev_get_drvdata(dev);
+	struct i2c_client *client = to_i2c_client(pdata->dev);
+	struct sysfs_attr_t *sysfs_attr = TO_I2C_SYSFS_ATTR(attr);
+	struct i2c_dev_attr_t *dev_attr = sysfs_attr->i2c_attr;
+
+
+	if (buf == NULL) {
+		return -ENXIO;
+	}
+
+	if(client->adapter)
+		bus = client->adapter->nr;
+
+	if(bus < 0)
+		return -1;
+
+	rc = kstrtol(buf, 0, &write_value);
+	if (rc != 0)	{
+		return count;
+	}
+
+	for(i = 0; i < DPS1100_PSU_NUM; i++) {
+		if(dps1100_vin_threshold[i].bus == bus) {
+			if(dev_attr->reg == 0)
+				dps1100_vin_threshold[i].vin_min = write_value;
+			else
+				dps1100_vin_threshold[i].vin_max = write_value;
+			return count;
+		}
+	}
+	for(i = 0; i < DPS1100_PSU_NUM; i++) {
+		if(dps1100_vin_threshold[i].bus == 0) {
+			if(dev_attr->reg == 0)
+				dps1100_vin_threshold[i].vin_min = write_value;
+			else
+				dps1100_vin_threshold[i].vin_max = write_value;
+			dps1100_vin_threshold[i].bus = bus;
+			break;
+		}
+	}
+
+	return count;
+}
+
+
 static ssize_t dps1100_reg_word_show(struct device *dev,
         struct device_attribute *attr, char *buf)
 {
@@ -277,7 +394,9 @@ static ssize_t dps1100_reg_word_show(struct device *dev,
 	struct sysfs_attr_t *sysfs_attr = TO_I2C_SYSFS_ATTR(attr);
 	struct i2c_dev_attr_t *dev_attr = sysfs_attr->i2c_attr;
 
-	//client->flags |= I2C_CLIENT_PEC;
+	if(dps1100_ok(client) != 1)
+		return -1;
+
 	read_val = pmbus_read_word_data(client, 0, dev_attr->reg);
 	if (read_val < 0)
 	{
@@ -296,6 +415,9 @@ static int dps1100_reg_word_store(struct device *dev,
 	struct i2c_client *client = to_i2c_client(pdata->dev);
 	struct sysfs_attr_t *sysfs_attr = TO_I2C_SYSFS_ATTR(attr);
 	struct i2c_dev_attr_t *dev_attr = sysfs_attr->i2c_attr;
+
+	if(dps1100_ok(client) != 1)
+		return -1;
 
 	//client->flags |= I2C_CLIENT_PEC;
 	if (buf == NULL) {
@@ -320,16 +442,16 @@ static const struct i2c_dev_attr_t psu_attr_table[] = {
 	{
 		"in1_min",
 		NULL,
-		I2C_DEV_ATTR_SHOW_DEFAULT,
-		I2C_DEV_ATTR_STORE_DEFAULT,
+		dps1100_vin_threshold_show,
+		dps1100_vin_threshold_store,
 		0,
 	},
 	{
 		"in1_max",
 		NULL,
-		I2C_DEV_ATTR_SHOW_DEFAULT,
-		I2C_DEV_ATTR_STORE_DEFAULT,
-		0,
+		dps1100_vin_threshold_show,
+		dps1100_vin_threshold_store,
+		1,
 	},
 	{
 		"in2_min",
@@ -631,6 +753,53 @@ static int dps1100_remove(struct i2c_client *client)
 	return pmbus_do_remove(client);
 }
 
+static int dps1100_pmbus_read_word_data(struct i2c_client *client, u8 page, u8 reg)
+{
+	int ret;
+
+	if(dps1100_ok(client) != 1)
+		return -1;
+	ret = pmbus_read_word_data(client, page, reg);
+
+	return ret;
+}
+
+static int dps1100_pmbus_write_word_data(struct i2c_client *client, u8 page, u8 reg, u16 word)
+{
+	int ret;
+
+	if(dps1100_ok(client) != 1)
+		return -1;
+
+	ret = pmbus_write_word_data(client, page, reg, word);
+
+	return ret;
+}
+
+static int dps1100_pmbus_read_byte_data(struct i2c_client *client, int page, u8 reg)
+{
+	int ret;
+
+	if(dps1100_ok(client) != 1)
+		return -1;
+
+	ret = pmbus_read_byte_data(client, page, reg);
+
+	return ret;
+}
+
+static int dps1100_pmbus_write_byte(struct i2c_client *client, int page, u8 value)
+{
+	int ret;
+
+	if(dps1100_ok(client) != 1)
+		return -1;
+
+	ret = pmbus_write_byte(client, page, value);
+
+	return ret;
+}
+
 static int dps1100_probe(struct i2c_client *client,
 			const struct i2c_device_id *id)
 {
@@ -675,10 +844,10 @@ static int dps1100_probe(struct i2c_client *client,
 	  | PMBUS_HAVE_FAN12
 	  | PMBUS_HAVE_IIN | PMBUS_HAVE_TEMP2;
 #endif
-	info->read_word_data = pmbus_read_word_data;
-	info->write_word_data = pmbus_write_word_data;
-	info->read_byte_data = pmbus_read_byte_data;
-	info->write_byte = pmbus_write_byte;
+	info->read_word_data = dps1100_pmbus_read_word_data;
+	info->write_word_data = dps1100_pmbus_write_word_data;
+	info->read_byte_data = dps1100_pmbus_read_byte_data;
+	info->write_byte = dps1100_pmbus_write_byte;
 
 
 	ret = pmbus_do_probe(client, id, info);

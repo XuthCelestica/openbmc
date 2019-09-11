@@ -29,6 +29,9 @@ wedge_power() {
 	elif [ "$1" == "reset" ]; then
 		echo 0 > $PWR_RESET_SYSFS
 		sleep 10
+	elif [ "$1" == "cycle" ]; then
+		echo 0 > /sys/bus/i2c/devices/0-000d/pwr_cycle
+		sleep 25
 	else
 		echo -n "Invalid parameter"
 		return 1
@@ -385,43 +388,43 @@ come_rest_status() {
 	val=$(cat $COME_RESET_STATUS_SYSFS 2> /dev/null | head -n 1)
 	case "$val" in
 		0x11)
-			info="Power on reset"
+			info="Last reset type is POWER_ON_RESET"
 	        ret=0 #0x11 powered on reset
 			;;
 		0x22)
-			info="Software trigger CPU to warm reset"
+			info="Last reset type is Software trigger WARM_RESET"
 	        ret=1 #0x22 Software trigger CPU warm reset
 			;;
 		0x33)
-			info="Software trigger CPU to cold reset"
+			info="Last reset type is Software trigger COLD_RESET"
 	        ret=2 #0x33 Software trigger CPU cold reset
 			;;
 		0x44)
-			info="CPU warm reset"
+			info="Last reset type is WARM_RESET"
 	        ret=3 #0x44 CPU warm reset
 			;;
 		0x55)
-			info="CPU cold reset"
+			info="Last reset type is COLD_RESET"
 	        ret=4 #0x55 CPU cold reset
 			;;
 		0x66)
-			info="Watchdog reset"
+			info="Last reset type is WDT_RESET"
 	        ret=5 #0x66 CPU watchdog reset
 			;;
 		0x77)
-			info="CPU power cycle"
+			info="Last reset type is POWER_CYCLE"
 	        ret=6 #0x77 CPU power cycle
 			;;
 		*)
-			info="Power on reset"
+			info="Last reset type is POWER_ON_RESET"
 			ret=0 #default power on reset
 			;;
 	esac
 
 	if [ $silent -eq 0 ]; then
-		echo "COMe reset status: $info"
+		echo "$info"
 	elif [ $silent -eq 2 ]; then
-		logger "COMe reset status: $info"
+		logger -p user.crit "$info"
 	fi
 
 	return $ret
@@ -447,4 +450,187 @@ get_cpu_temp() {
     echo $temp
 
     return 0
+}
+
+upgrade_syslog_server() {
+    port=514
+    if [ $# -ge 2 ]; then
+        port=$2
+    fi
+    str="*.* action(type=\"omfwd\" target=\"$1\" port=\"$port\" template=\"ForwardFormatInContainer\" protocol=\"udp\""
+    num=$(sed -n -e '/target=/=' /etc/rsyslog.conf)
+    if [ ! -n $num ]; then
+        echo "fail"
+    fi
+    cmd="${num}c $str"
+    sed -i -e "$cmd" /etc/rsyslog.conf
+    if [ $? -eq 0 ]; then
+        /etc/init.d/syslog.rsyslog restart
+        echo "success"
+    else
+        echo "fail"
+    fi
+}
+
+set_hwmon_value() {
+	echo ${5} > /sys/bus/i2c/devices/i2c-${1}/${1}-00${2}/hwmon/hwmon${3}/${4} 2> /dev/null
+}
+
+get_hwmon_id() {
+	path="/sys/bus/i2c/devices/i2c-${1}/${1}-00${2}/"
+	str=$(find $path -name "$3")
+	id=$(echo $str | awk -F 'hwmon' '{print $3}' | awk -F '/' '{print $1}')
+	if [ $id ]; then
+		if [ "$id" -gt 0 ] 2>/dev/null; then
+			echo $id
+		else
+			echo 0
+		fi
+		return 0
+	fi
+	echo 0
+}
+
+set_hwmon_threshold() {
+    id=$(get_hwmon_id $1 $2 in1_min)
+    if [ "$id" -gt "0" ] ; then
+        set_hwmon_value $1 $2 $id $3 $4
+        if [ $? -eq 0 ]; then
+            echo "0"
+        else
+            echo "-1"
+        fi
+    else
+        echo "-1"
+    fi
+}
+
+bmc_reboot() {
+    slave=0
+    if [ $# -lt 1 ] ; then
+        return 1
+    fi
+    if /usr/local/bin/boot_info.sh |grep "Slave Flash" ; then
+        slave=1
+    else
+        slave=0
+    fi
+    if [ "$1" == "master" ]; then
+        if [ $slave -eq 1 ]; then #current is slave booting
+            devmem_set_bit 0x1e78502c 7
+            logger -p user.warning "Set BMC booting flash to master"
+        fi
+        if [ -f /var/log/boot_slave ]; then
+            rm /var/log/boot_slave
+            sync
+        fi
+        return 0
+    elif [ "$1" == "slave" ]; then
+        if [ $slave -eq 0 ]; then ##current is master booting
+            devmem_set_bit 0x1e78502c 7
+            logger -p user.warning "Set BMC booting flash to slave"
+        fi
+        echo 1 > /var/log/boot_slave
+        sync
+        return 0
+    elif [ "$1" == "reboot" ]; then
+        ((val=$(devmem 0x1e78502c)))
+        ((ret=$val&0x80))
+        if [ $ret -gt 0 ]; then
+            if [ $slave -eq 1 ]; then #current is slave, switch to master
+                logger -p user.warning "BMC will be booting from master flash"
+                boot_from master
+            else
+                logger -p user.warning "BMC will be booting from slave flash"
+                boot_from slave
+            fi
+        else
+            logger -p user.warning "BMC will be booting from current flash"
+            reboot #not set boot flash, just reboot bmc
+        fi
+        return 0
+    fi
+    return 1
+}
+
+cpld_refresh() {
+    ret=1
+	if [ $# -lt 1 ]; then
+		echo "cpld_refresh <type> [image_path]"
+		return 1
+	fi
+    logger -p user.info "cpld_refresh para: $@"
+	boardtype=$(board_type)
+	if [ "$boardtype" = "Fishbone32" ] || [ "$boardtype" = "Fishbone48" ]; then
+        #power off CPU
+        logger -p user.warning "cpld_refresh: power off CPU"
+        /usr/local/bin/wedge_power.sh off
+        sleep 1
+        logger -p user.warning "cpld_refresh: power on Switch"
+        i2cset -f -y 0 0x0d 0x40 0x1
+        sleep 3
+
+        if [ $# -ge 2 ]; then
+            logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
+		    gpio_set L2 1
+		    #ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+		    ispvm dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+            ret=$?
+		    gpio_set L2 0
+            logger -p user.warning "cpld_refresh: done, result=$ret"
+        fi
+        sleep 5
+        if [ $# -ge 4 ]; then
+            logger -p user.warning "cpld_refresh: start $3 CPLD refreshing"
+		    gpio_set L2 1
+		    #ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $4 --tdo 212 --tdi 213 --tms 214 --tck 215
+		    ispvm dll /usr/lib/libcpldupdate_dll_gpio.so $4 --tdo 212 --tdi 213 --tms 214 --tck 215
+            ret=$?
+		    gpio_set L2 0
+            logger -p user.warning "cpld_refresh: done, result=$ret"
+        fi
+        sleep 5
+        logger -p user.warning "cpld_refresh: power cycle CPU"
+        /usr/local/bin/wedge_power.sh cycle
+        logger -p user.warning "cpld_refresh: BMC rebooting"
+        reboot
+	elif [ $boardtype = "Phalanx" ]; then
+        #power off CPU
+        logger -p user.warning "cpld_refresh: power off CPU"
+        /usr/local/bin/wedge_power.sh off
+        sleep 1
+		if [ $# -ge 2 ]; then
+            logger -p user.warning "cpld_refresh: start $1 CPLD refreshing"
+			gpio_set L2 1
+			gpio_set P0 0
+			#ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+			ispvm dll /usr/lib/libcpldupdate_dll_gpio.so $2 --tdo 212 --tdi 213 --tms 214 --tck 215
+            ret=$?
+			gpio_set L2 0
+			gpio_set P0 0
+			gpio_set O0 0
+            logger -p user.warning "cpld_refresh: done, result=$ret"
+		fi
+        sleep 5
+		if [ $# -ge 4 ]; then
+            logger -p user.warning "cpld_refresh: start $3 CPLD refreshing"
+			gpio_set L2 1
+			gpio_set P0 0
+			#ispvm -f 1000 dll /usr/lib/libcpldupdate_dll_gpio.so $4 --tdo 212 --tdi 213 --tms 214 --tck 215
+			ispvm dll /usr/lib/libcpldupdate_dll_gpio.so $4 --tdo 212 --tdi 213 --tms 214 --tck 215
+            ret=$?
+			gpio_set L2 0
+			gpio_set P0 0
+			gpio_set O0 0
+            logger -p user.warning "cpld_refresh: done, result=$ret"
+		fi
+        sleep 5
+        logger -p user.warning "cpld_refresh: power cycle CPU"
+        /usr/local/bin/wedge_power.sh cycle
+        logger -p user.warning "cpld_refresh: BMC rebooting"
+        reboot
+	else
+		echo "Board not support"
+	fi
+    return $ret
 }

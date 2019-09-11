@@ -94,28 +94,7 @@ int dump_eeprom(const char * eeprom_file, const char * bin_file) {
 /* Populate the platform specific eeprom for fruid info */
 int plat_fruid_init(void) {
 
-  int fru, ret;
-
-  char eeprom[128];
-  char binfile[128];
-
-  for (fru = 1; fru < MAX_NUM_FRUS; fru++) {
-    ret = pal_get_fruid_eeprom_path(fru, eeprom);
-    if (ret < 0) {
-      syslog(LOG_WARNING, "plat_fruid_init: pal_get_fruid_eeprom_path failed for fru: %d", fru);
-      continue;
-    }
-
-    ret = pal_get_fruid_path(fru, binfile);
-    if (ret < 0) {
-      syslog(LOG_WARNING, "plat_fruid_init: pal_get_fruid_path failed for fru: %d", fru);
-      continue;
-    }
-
-    ret = dump_eeprom(eeprom, binfile);
-  }
-
-  return ret;
+  return 0;
 }
 
 int plat_fruid_size(unsigned char payload_id) {

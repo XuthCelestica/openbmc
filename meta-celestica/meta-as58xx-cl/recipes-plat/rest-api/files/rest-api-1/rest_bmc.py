@@ -84,7 +84,10 @@ def get_bmc():
                        shell=True, stdout=PIPE).communicate()
     data = data.decode()
     adata = data.split()
-    disk_usage = 'EMMC: {}K total, {}K used, {}K available, {} use'.format(adata[1], adata[2], adata[3], adata[4])
+    if len(adata) >= 5:
+        disk_usage = 'EMMC: {}K total, {}K used, {}K available, {} use'.format(adata[1], adata[2], adata[3], adata[4])
+    else:
+        disk_usage = ""
 
     # Get OpenBMC version
     version = ""
@@ -256,6 +259,9 @@ def bmc_action(data):
         err = ex.error
 
     if data != '' and data != '\n':
+        (data, _) = Popen('echo {}: failed, firmware: {}, time: $(date) >> '
+                    '/var/log/bmc_upgrade.log'.format(flash, file_name),
+                    shell=True, stdout=PIPE).communicate()
         return {"result": data}
     else:
         if reboot == 1:
@@ -263,7 +269,13 @@ def bmc_action(data):
             return {"result": "success, and reboot BMC"}
         else:
             if flash == 'master':
+                (data, _) = Popen('echo {}: success, firmware: {}, time: $(date) >> '
+                            '/var/log/bmc_upgrade.log'.format(flash, file_name),
+                            shell=True, stdout=PIPE).communicate()
                 return {"result": "success! Do you need to reboot BMC?"}
             else:
+                (data, _) = Popen('echo {}: success, firmware: {}, time: $(date) >> '
+                            '/var/log/bmc_upgrade.log'.format(flash, file_name),
+                            shell=True, stdout=PIPE).communicate()
                 return {"result": "success"}
 

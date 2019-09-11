@@ -100,18 +100,30 @@ def bios_upgrade(flash, image_path, reboot):
                 data = data.decode()
                 if data.find('Verifying') != -1 and data.find('VERIFIED') != -1:
                     if reboot == 'yes':
-                        Popen('/usr/local/bin/wedge_power.sh off; sleep 3; /usr/local/bin/wedge_power.sh on',
+                        Popen('{}; come_reset {}'.format(cmd, flash),
                             shell=True, stdout=PIPE).communicate(timeout=20)
                     else:
                         pass
+                    (data, _) = Popen('echo {}: success, firmware: {}, time: $(date) >> '
+                                '/var/log/bios_upgrade.log'.format(flash, image_path.split("/")[-1]),
+                                shell=True, stdout=PIPE).communicate()
                     result = {"result":"success"}
                 elif data.find('identical') != -1:
+                    (data, _) = Popen('echo {}: success, firmware: {}, time: $(date) >> '
+                                '/var/log/bios_upgrade.log'.format(flash, image_path.split("/")[-1]),
+                                shell=True, stdout=PIPE).communicate()
                     result = {"result":"success", "Description":"Chip content is identical to the requested image"}
                 else:
+                    (data, _) = Popen('echo {}: failed, firmware: {}, time: $(date) >> '
+                                '/var/log/bios_upgrade.log'.format(flash, image_path.split("/")[-1]),
+                                shell=True, stdout=PIPE).communicate()
                     result = {"result":"failed", "Description":"BIOS upgrade failed",False:True}
                 return result
         return {"result":"failed", "Description":"Can't find BIOS flash chip", False:True}
     except TimeoutExpired as exp:
+        (data, _) = Popen('echo {}: failed, firmware: {}, time: $(date) >> '
+                    '/var/log/bios_upgrade.log'.format(flash, image_path.split("/")[-1]),
+                    shell=True, stdout=PIPE).communicate()
         return {"result":"failed", "Description":"BMC bios_upgrade command timeout", False:True}
     return {"result": "failed", False:True}
 
@@ -132,13 +144,11 @@ def cpld_upgrade(cpld_type, image_path):
             (data, _) = Popen('echo {}: success, firmware: {}, time: $(date) >> '
                 '/var/log/cpld_upgrade.log'.format(cpld_type, image_path.split("/")[-1]),
                 shell=True, stdout=PIPE).communicate()
-            data = data.decode()
             result = {"result": "success"}
         else:
             (data, _) = Popen('echo {}: failed, firmware: {}, time: $(date) >> '
                 '/var/log/cpld_upgrade.log'.format(cpld_type, image_path.split("/")[-1]),
                 shell=True, stdout=PIPE).communicate()
-            data = data.decode()
             return { "result":"failed", "Description":"BMC cpld upgrade failed", False:True }
 
         if operation[cpld_type] == "none":
@@ -146,12 +156,10 @@ def cpld_upgrade(cpld_type, image_path):
         elif operation[cpld_type] == "power_on":
             (data, _) = Popen('{}; sleep 3; /usr/local/bin/wedge_power.sh on'.format(cmd),
                 shell=True, stdout=PIPE).communicate(timeout=5)
-            data = data.decode()
         elif operation[cpld_type] == "power_cycle":
             # Only Phalanx support power cycle
             (data, _) = Popen('{}; i2cset -f -y 30 0x20 0x9 0x3f'.format(cmd),
                 shell=True, stdout=PIPE).communicate()
-            data = data.decode()
         else:
             return { "result":"failed", False:True }
     except KeyError as exp:
@@ -160,7 +168,6 @@ def cpld_upgrade(cpld_type, image_path):
         (data, _) = Popen('echo {}: failed, firmware: {}, time: $(date) >> '
             '/var/log/cpld_upgrade.log'.format(cpld_type, image_path.split("/")[-1]),
             shell=True, stdout=PIPE).communicate()
-        data = data.decode()
         result = { "result": "failed", "Description": "BMC cpld_upgrade command timeout", False:True }
 
     return result
@@ -201,13 +208,21 @@ def upgrade_action(data):
         return result
 
 def get_upgrade_log():
-    if os.path.exists('/var/log/cpld_upgrade.log'):
+    result = {"result":"success"}
+    log_path = {
+        "CPLD upgrade log":"/var/log/cpld_upgrade.log",
+        "BIOS upgrade log":"/var/log/bios_upgrade.log",
+        "BMC upgrade log":"/var/log/bmc_upgrade.log",
+    }
+    for key in log_path.keys():
         log = []
-        with open('/var/log/cpld_upgrade.log', 'rt') as log_file:
-            for line in log_file:
-                log.append(line.strip())
-            log_file.close()
-        result = {"result":"success", "CPLD upgrade log":log}
-    else:
-        result = {"result":"success", "CPLD upgrade log":'None'}
+        if os.path.exists(log_path[key]):
+            with open(log_path[key], 'rt') as log_file:
+                for line in log_file:
+                    log.append(line.strip())
+                log_file.close()
+            result[key] = log
+        else:
+            result[key] = 'None'
+    
     return result

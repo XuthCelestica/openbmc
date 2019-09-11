@@ -164,72 +164,7 @@ int pal_get_fru_id(char *str, uint8_t *fru)
 
 int pal_get_fruid_path(uint8_t fru, char *path)
 {
-	char fname[16] = {0};
-	switch(fru) {
-		case FRU_SYS:
-			sprintf(fname, "sys");
-			break;
-		case FRU_BMC:
-			sprintf(fname, "bmc");
-			break;
-		case FRU_CPU:
-			sprintf(fname, "cpu");
-			break;
-		case FRU_FB:
-			sprintf(fname, "fb");
-			break;
-		case FRU_SWITCH:
-			sprintf(fname, "switch");
-			break;
-		case FRU_PSU1:
-			sprintf(fname, "psu1");
-			break;
-		case FRU_PSU2:
-			sprintf(fname, "psu2");
-			break;
-		case FRU_PSU3:
-			if(pal_get_iom_board_id() == 0)
-				return -1;
-			sprintf(fname, "psu3");
-			break;
-		case FRU_PSU4:
-			if(pal_get_iom_board_id() == 0)
-				return -1;
-			sprintf(fname, "psu4");
-			break;
-		case FRU_FAN1:
-			sprintf(fname, "fan1");
-			break;
-		case FRU_FAN2:
-			sprintf(fname, "fan2");
-			break;
-		case FRU_FAN3:
-			sprintf(fname, "fan3");
-			break;
-		case FRU_FAN4:
-			sprintf(fname, "fan4");
-			break;
-		case FRU_FAN5:
-			if(pal_get_iom_board_id() == 0)
-				return -1;
-			sprintf(fname, "fan5");
-			break;
-		case FRU_LINE_CARD1:
-			if(pal_get_iom_board_id() == 0)
-				return -1;
-			sprintf(fname, "lc1");
-			break;
-		case FRU_LINE_CARD2:
-			if(pal_get_iom_board_id() == 0)
-				return -1;
-			sprintf(fname, "lc2");
-			break;
-		default:
-			return -1;
-	}
-
-	sprintf(path, FRU_TMP_PATH, fname);
-	return 0;
+    return pal_get_fruid_eeprom_path(fru, path);
 }
 
 int pal_get_fruid_eeprom_path(uint8_t fru, char *path)

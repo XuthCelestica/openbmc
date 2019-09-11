@@ -19,5 +19,16 @@
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 
-# config rsyslog to remote push log
-echo "*.* @240.1.1.2:1514" >> /etc/rsyslog.conf
+# restart rsyslog with runsv
+#pid=$(ps |grep rsyslogd |grep -v grep | awk -F ' ' '{print $1}')
+#if [ -n $pid ]; then
+#    kill $pid
+#    sleep 1
+#fi
+#mkdir /etc/sv/rsyslog
+#echo "#!/bin/sh" > /etc/sv/rsyslog/run
+#echo "exec /usr/sbin/rsyslogd" >> /etc/sv/rsyslog/run
+#chmod +x /etc/sv/rsyslog/run
+#runsv /etc/sv/rsyslog > /dev/null 2>&1 &
+#sv restapi
+

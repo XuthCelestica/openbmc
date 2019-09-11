@@ -7,7 +7,7 @@
 # Default-Stop:
 # Short-Description: Set hostname based on /etc/hostname
 ### END INIT INFO
-HOSTNAME="bmc-oob"
+HOSTNAME="bmc"
 
 set_hostname() {
   local name=$1
@@ -46,10 +46,10 @@ update_hostname() {
   fi
 }
 
-if [ -e /mnt/data/hostname ]; then
-  # Use the cached copy to set the hostname
-  HOSTNAME=$(cat /mnt/data/hostname)
-fi
+#if [ -e /mnt/data/hostname ]; then
+#  # Use the cached copy to set the hostname
+#  HOSTNAME=$(cat /mnt/data/hostname)
+#fi
 set_hostname $HOSTNAME
 # Start the update process in the background so
 # we may update the cached copy if it has changed.

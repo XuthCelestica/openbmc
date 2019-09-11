@@ -46,6 +46,8 @@ SRC_URI = "file://ast-functions \
            file://version_dump \
            file://led_location.sh \
            file://rc.local \
+           file://power \
+           file://led_location \
            file://COPYING \
           "
 
@@ -111,6 +113,8 @@ do_install() {
   install -m 755 come_power.sh ${D}${localbindir}/come_power.sh
   install -m 755 version_dump ${D}${localbindir}/version_dump
   install -m 755 led_location.sh ${D}${localbindir}/led_location.sh
+  install -m 755 power ${D}${localbindir}/power
+  install -m 755 led_location ${D}${localbindir}/led_location
 }
 
 FILES_${PN} += "/usr/local ${sysconfdir} /mnt"

@@ -8,11 +8,11 @@ KERNEL_MODULE_AUTOLOAD += " \
     pfe3000 \
 "
 
-KERNEL_MODULE_PROBECONF += "                    \
- i2c-mux-pca954x                                \
-"
+# KERNEL_MODULE_PROBECONF += "                    \
+#  i2c-mux-pca954x                                \
+# "
 
-module_conf_i2c-mux-pca954x = "options i2c-mux-pca954x ignore_probe=1"
+# module_conf_i2c-mux-pca954x = "options i2c-mux-pca954x ignore_probe=1"
 
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
